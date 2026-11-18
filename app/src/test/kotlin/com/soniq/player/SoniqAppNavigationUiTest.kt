@@ -13,6 +13,8 @@ import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.ThemeMode
+import com.soniq.player.core.model.media.AudioTrack
+import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.permissions.MediaAccessState
 import com.soniq.player.feature.music.MusicScreen
 import com.soniq.player.feature.music.MusicUiState
@@ -34,20 +36,60 @@ class SoniqAppNavigationUiTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun switchesBetweenMusicVideoAndSettingsDestinations() {
+    fun switchesBetweenMusicVideoAndSettingsDestinationsAndRendersLibraryItems() {
+        val sampleTrack = AudioTrack(
+            id = 1L,
+            contentUri = "content://audio/1",
+            title = "Solaris",
+            artist = "Rival Consoles",
+            album = "Persona",
+            albumId = 0L,
+            albumArtUri = null,
+            durationMs = 245_000L,
+            sizeBytes = 8_000_000L,
+            mimeType = "audio/flac",
+            folderPath = "Music",
+            folderName = "Music",
+            trackNumber = 1,
+            year = 2026,
+            dateAddedSeconds = 10L,
+            dateModifiedSeconds = 10L,
+        )
+        val sampleVideo = VideoItem(
+            id = 2L,
+            contentUri = "content://video/2",
+            title = "Mountain Timelapse",
+            displayName = "Mountain Timelapse.mp4",
+            durationMs = 95_000L,
+            sizeBytes = 64_000_000L,
+            mimeType = "video/mp4",
+            width = 1920,
+            height = 1080,
+            folderPath = "Movies",
+            folderName = "Movies",
+            dateAddedSeconds = 20L,
+            dateModifiedSeconds = 20L,
+        )
+
         composeRule.setContent {
             SoniqTheme {
                 SoniqApp(
                     musicContent = {
                         MusicScreen(
-                            uiState = MusicUiState(accessState = MediaAccessState.NOT_GRANTED),
+                            uiState = MusicUiState(
+                                accessState = MediaAccessState.GRANTED,
+                                tracks = listOf(sampleTrack),
+                            ),
                             onRequestPermission = {},
                             onOpenAppSettings = {},
                         )
                     },
                     videoContent = {
                         VideoScreen(
-                            uiState = VideoUiState(accessState = MediaAccessState.GRANTED),
+                            uiState = VideoUiState(
+                                accessState = MediaAccessState.PARTIAL,
+                                videos = listOf(sampleVideo),
+                            ),
                             onRequestPermission = {},
                             onOpenAppSettings = {},
                         )
@@ -76,12 +118,13 @@ class SoniqAppNavigationUiTest {
             }
         }
 
-        // Start destination is Music.
-        composeRule.onNodeWithText("Access your music").assertIsDisplayed()
+        // Start destination is Music with indexed track visible.
+        composeRule.onNodeWithText("Solaris").assertIsDisplayed()
 
-        // Navigate to Video.
+        // Navigate to Video: partial-access banner and indexed video are both displayed.
         composeRule.onNodeWithText("Video").performClick()
-        composeRule.onNodeWithText("Video access granted").assertIsDisplayed()
+        composeRule.onNodeWithText("Showing only selected videos").assertIsDisplayed()
+        composeRule.onNodeWithText("Mountain Timelapse").assertIsDisplayed()
 
         // Navigate to Settings.
         composeRule.onNodeWithText("Settings").performClick()

@@ -15,12 +15,53 @@
     <string name="permission_grant">Grant access</string>
     <string name="permission_open_settings">Open app settings</string>
     <string name="permission_denied_permanently">Access was denied. You can enable it in the system app settings.</string>
-    <string name="library_music_ready_title">Music access granted</string>
-    <string name="library_video_ready_title">Video access granted</string>
-    <string name="library_video_partial_title">Selected videos accessible</string>
-    <string name="library_video_partial_message">SONIQ can access the videos you selected. You can allow additional videos anytime.</string>
     <string name="permission_manage_video_access">Manage selected videos</string>
-    <string name="library_indexing_pending">Library indexing will be available in the next development stage.</string>
+
+    <!-- Music & Video library -->
+    <string name="music_tab_songs">Songs</string>
+    <string name="music_tab_albums">Albums</string>
+    <string name="music_tab_artists">Artists</string>
+    <string name="music_tab_folders">Folders</string>
+    <string name="music_empty_title">No music found</string>
+    <string name="music_empty_message">Add local audio files to your device and tap refresh to scan your library.</string>
+    <string name="music_search_hint">Search songs, artists, albums</string>
+    <string name="music_sort_title">Title (A–Z)</string>
+    <string name="music_sort_artist">Artist (A–Z)</string>
+    <string name="music_sort_date_added">Recently added</string>
+    <string name="music_sort_duration">Duration</string>
+
+    <string name="video_tab_videos">Videos</string>
+    <string name="video_tab_folders">Folders</string>
+    <string name="video_empty_title">No videos found</string>
+    <string name="video_empty_message">Add local video files to your device and tap refresh to scan your library.</string>
+    <string name="video_search_hint">Search videos or folders</string>
+    <string name="video_sort_date_added">Recently added</string>
+    <string name="video_sort_title">Title (A–Z)</string>
+    <string name="video_sort_duration">Duration</string>
+    <string name="video_sort_size">File size</string>
+    <string name="video_partial_access_banner">Showing only selected videos</string>
+
+    <string name="library_action_refresh">Rescan library</string>
+    <string name="library_action_sort">Sort library</string>
+    <string name="library_action_search">Search library</string>
+    <string name="library_action_close_search">Close search</string>
+    <string name="library_action_clear_filter">Back to all</string>
+    <string name="library_sync_error">Could not scan local media. Tap retry to try again.</string>
+    <string name="library_action_retry">Retry</string>
+    <string name="library_no_search_matches_title">No matches</string>
+    <string name="library_no_search_matches_message">Try a different search term.</string>
+    <plurals name="library_track_count">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+    <plurals name="library_video_count">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+    <plurals name="library_album_count">
+        <item quantity="one">%d album</item>
+        <item quantity="other">%d albums</item>
+    </plurals>
 
     <!-- Settings -->
     <string name="settings_section_appearance">Appearance</string>

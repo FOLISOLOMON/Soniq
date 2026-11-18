@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import com.soniq.player.core.database.SoniqDatabase
 import com.soniq.player.core.database.dao.ThemePresetDao
+import com.soniq.player.core.database.media.SoniqMediaDatabase
+import com.soniq.player.core.database.media.dao.AudioTrackDao
+import com.soniq.player.core.database.media.dao.VideoItemDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,4 +28,18 @@ object DatabaseModule {
 
     @Provides
     fun provideThemePresetDao(database: SoniqDatabase): ThemePresetDao = database.themePresetDao()
+
+    @Provides
+    @Singleton
+    fun provideMediaDatabase(@ApplicationContext context: Context): SoniqMediaDatabase =
+        Room.databaseBuilder(context, SoniqMediaDatabase::class.java, SoniqMediaDatabase.NAME)
+            // Pure rebuildable MediaStore cache (excluded from backup): safe to rebuild on schema bump.
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
+
+    @Provides
+    fun provideAudioTrackDao(database: SoniqMediaDatabase): AudioTrackDao = database.audioTrackDao()
+
+    @Provides
+    fun provideVideoItemDao(database: SoniqMediaDatabase): VideoItemDao = database.videoItemDao()
 }

@@ -132,8 +132,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // Images
+    // Images (offline local fetchers & video frame decoder only)
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.android)

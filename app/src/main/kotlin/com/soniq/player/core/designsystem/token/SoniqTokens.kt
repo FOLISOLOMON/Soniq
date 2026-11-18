@@ -116,6 +116,9 @@ data class SoniqSizes(
     val emptyStateIcon: Dp = 72.dp,
     val accentSwatch: Dp = 44.dp,
     val minTouchTarget: Dp = 48.dp,
+    val trackArtwork: Dp = 52.dp,
+    val videoThumbnailWidth: Dp = 120.dp,
+    val videoThumbnailHeight: Dp = 68.dp,
     val contentMaxWidth: Dp = 640.dp,
 )
 
@@ -154,6 +157,8 @@ data class SoniqAlpha(
     val gradientAccent: Float = 0.35f,
     /** Translucent top app bar fill when content scrolls underneath. */
     val topBarScrolled: Float = 0.92f,
+    /** Translucent badge overlay placed on video thumbnails. */
+    val mediaBadgeScrim: Float = 0.78f,
     val disabled: Float = 0.38f,
 )
 

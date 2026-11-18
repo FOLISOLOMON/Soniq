@@ -81,8 +81,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 
-# Images (core + compose only: no network fetcher is included on purpose)
+# Images (core + compose + local video frame decoder only: no network fetcher is included on purpose)
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 # Kotlin
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
