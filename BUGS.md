@@ -1,6 +1,6 @@
 # SONIQ — Defect & Technical Debt Register
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 3)  
+**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
 **Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
 
 ---
@@ -9,15 +9,19 @@
 
 | ID | Severity | Area | Description | Status | Proposed Fix | Verification |
 |---|---|---|---|---|---|---|
-| **DEBT-005** | Low | Testing / Device | Physical device `Infinix_X6528` (`112173741O045288`, Android 13) was disconnected during Session 3 (`adb devices` empty) and previously timed out on `adb install -r` (`>25s`) because Infinix XOS requires interactive "Install via USB" approval. Real-device & physical Bluetooth/headset verification remain pending. | **OPEN** (External) | Reconnect phone via USB, enable Developer Options → **Install via USB** & disable **Verify apps over USB**, keep screen unlocked, and run `ANDROID_SERIAL=112173741O045288 ./gradlew connectedDebugAndroidTest` + manual Bluetooth/headset QA. | Run on physical device and record results in `TEST_REPORT.md`. |
+| **DEBT-005** | Low | Testing / Device | Physical device `Infinix_X6528` (`112173741O045288`, Android 13) was not attached to ADB during Session 4 (`adb devices` listed only `emulator-5554`). Automated physical-device instrumented tests and hardware Bluetooth/headset QA remain pending. | **OPEN** (External) | Reconnect phone via reliable data USB cable in File Transfer (MTP) mode with Developer Options → **Install via USB** enabled, run `ANDROID_SERIAL=112173741O045288 ./gradlew connectedDebugAndroidTest`, and execute physical Bluetooth/headset QA checklist. | Run on physical device and record results in `TEST_REPORT.md`. |
 | **DEBT-006** | Info | Manifest Merger | `tools:node="remove"` on `INTERNET` / `ACCESS_NETWORK_STATE` emits informational manifest merger warnings confirming no dependency declared them. | **ACCEPTED** | Keep as intentional defense-in-depth privacy safeguard. | Verify merged manifest remains free of network permissions. |
-| **DEBT-008** | Low | UI / Deprecation | `SoniqApp.kt:109` calls deprecated `currentWindowAdaptiveInfo()` instead of the V2 adaptive info helper, emitting one Kotlin compiler warning. | **OPEN** (Targeted Stage 8) | Migrate to the non-deprecated V2 adaptive window info API and verify compact/medium/expanded/large navigation rail behavior. | Compile with 0 warnings + adaptive layout UI tests in Stage 8. |
+| **DEBT-009** | Low | Roadmap / Deferred | Optional Stage 6 features (**Sleep Timer** and **Picture-in-Picture (PiP)**) were not implemented in Sessions 3–4 and remain deferred for Stage 9 / user prioritization. | **DEFERRED** (Optional) | Implement Sleep Timer in `SoniqPlaybackService` and PiP in `MainActivity`/`VideoPlayerScreen` if prioritized before release. | Unit + UI tests when implemented. |
 
 ---
 
 ## Resolved Issues (Historical Audit Trail)
 
 | ID | Severity | Area | Description | Status | Resolution & Verification |
+|---|---|---|---|---|---|
+| **DEBT-008** | Low | UI / Deprecation | `SoniqApp.kt` called deprecated `currentWindowAdaptiveInfo()`, emitting 1 Kotlin compiler warning. | **RESOLVED** (Session 4 / Stage 8 / `c2b9264`) | Migrated to `currentWindowAdaptiveInfoV2()` in `SoniqApp.kt`. Verified **0 Kotlin compiler warnings** across debug, release, and test builds. |
+| **BUG-013** | Medium | Performance / Concurrency | `DefaultMusicLibraryRepository` and `DefaultVideoLibraryRepository` executed `toDomain()`, `groupBy`, and `sortedBy` on the collector's dispatcher (Main thread when collected by ViewModels) and lacked periodic cancellation checks during MediaStore cursor loops. | **RESOLVED** (Session 4 / Stage 8 / `c2b9264`) | Added `.flowOn(Dispatchers.Default)`, `withContext(Dispatchers.IO)` in `sync()`, and periodic `coroutineContext.ensureActive()` in `MediaStoreAudioScanner` / `MediaStoreVideoScanner`. Verified with 10,000-track stress test. |
+| **BUG-014** | Low | Accessibility | `SoniqSizes.accentSwatch` was `44.dp` (< `48.dp` Android minimum touch target) and section/sheet headings lacked `heading()` TalkBack semantics. | **RESOLVED** (Session 4 / Stage 8 / `c2b9264`) | Updated `accentSwatch` to `48.dp` and added `Modifier.semantics { heading() }` to `SoniqSectionHeader` and modal sheet titles (`AudioEffectsSheet`, `Up Next`, `Audio & Subtitles`). |
 |---|---|---|---|---|---|
 | **DEBT-003** | Low | Design System / Settings | `AppearanceConfig.accentColorArgb` supported arbitrary ARGB values, but `SettingsScreen` only exposed 8 curated swatches. | **RESOLVED** (Session 3 / Stage 7 Foundation / `3f1fd87`) | Added `CustomAccentColorDialog` in `SettingsScreen.kt` with HSL sliders (`ColorMath.toHsl`/`fromHsl`), Hex readout, and live WCAG contrast preview (`ColorMath.readableOn`). Verified via build, Lint (0 warnings), and emulator regression. |
 | **DEBT-004** | Low | Design System / Background | Revoked/deleted SAF `BackgroundStyle.IMAGE` URI degraded silently without notifying the user or offering recovery. | **RESOLVED** (Session 3 / Stage 7 Foundation / `3f1fd87`) | Added `ContentResolver.openAssetFileDescriptor` readability check and inline recovery row (`Clear`) in `SettingsScreen.kt` + `SettingsViewModel.clearBackgroundImage()`. Verified in `SettingsViewModelTest` and `lintDebug`. |

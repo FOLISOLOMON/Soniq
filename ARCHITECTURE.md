@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-18 (Commit `3f1fd87`, Stages 1–6 Complete + Stage 7 Foundation)  
+**Last Updated**: 2026-11-18 (Commit `c2b9264`, Stages 1–8 Complete)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -106,7 +106,7 @@ com.soniq.player
 
 - **Appearance Preferences DataStore (`appearance.preferences_pb`)**: Stores active `AppearanceConfig` with `ReplaceFileCorruptionHandler` and eager loading in `MainViewModel`. Included in Android backup rules.
 - **Playback State DataStore (`playback_state.preferences_pb`)**: Stores `PlaybackPreferences` (`continueVideoInBackground`, `notificationPromptShown`) and `PlaybackSessionSnapshot` (active audio queue IDs, index, position, repeat, shuffle, speed). **Excluded from backup rules** because MediaStore track IDs are device-specific.
-- **Persistent User Room DB (`soniq.db`, `SoniqDatabase` v2)**: Stores user-authored `theme_presets`, `playlists`, `playlist_tracks` (FK `ON DELETE CASCADE`), `favorite_media`, `playback_history`, and `playback_resume`. Exported schemas committed at `app/schemas/com.soniq.player.core.database.SoniqDatabase/1.json` and `2.json`. **No destructive migrations permitted**; `MIGRATION_1_2` is verified by both unit and instrumented `MigrationTestHelper` tests. Included in Android backup rules.
+- **Persistent User Room DB (`soniq.db`, `SoniqDatabase` v3)**: Stores user-authored `theme_presets` (including `background_scrim_alpha` and `background_blur_dp`), `playlists`, `playlist_tracks` (FK `ON DELETE CASCADE`), `favorite_media`, `playback_history`, and `playback_resume`. Exported schemas committed at `app/schemas/com.soniq.player.core.database.SoniqDatabase/1.json`, `2.json`, and `3.json`. **No destructive migrations permitted**; `MIGRATION_1_2` and `MIGRATION_2_3` are verified by both unit and instrumented `MigrationTestHelper` tests. Included in Android backup rules.
 - **Rebuildable Media Index Room DB (`soniq_media.db`, `SoniqMediaDatabase` v1)**: Stores indexed `AudioTrackEntity` and `VideoItemEntity` rows scanned from local MediaStore. Exported schema committed at `app/schemas/com.soniq.player.core.database.media.SoniqMediaDatabase/1.json`. **Excluded from backup rules** and allowed to rebuild cleanly on schema changes.
 
 ---

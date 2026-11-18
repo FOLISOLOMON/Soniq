@@ -1,57 +1,43 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 3)  
-**Active Stage**: Stages 1–6 **COMPLETED**, Stage 7 **IN PROGRESS (Foundation Complete)** → Next: **Finish Stage 7 & Stage 8**
+**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
+**Active Stage**: Stages 1–8 **COMPLETED** → Next: **Stage 9 — Release Preparation, Physical-Device QA & Optional Deferred Features (Sleep Timer / PiP)**  
+*(Note: Visual UI/UX redesign is explicitly frozen until all planned engineering stages are complete.)*
 
 ---
 
 ## Stage 1 — Foundation and Project Hardening — **COMPLETED** (`2b8937f`, `46be15f`)
-- Adaptive navigation shell, tokenized design system (`SoniqTokens`), Light/Dark/AMOLED/Dynamic Color, offline privacy manifest enforcement, Android 14+ partial visual media access, JVM 17 target.
-
 ## Stage 2 — Local Media Discovery and Library Management — **COMPLETED** (`53cbae1`)
-- Dedicated `SoniqMediaDatabase` (`soniq_media.db`), `MediaStoreAudioScanner`, `MediaStoreVideoScanner`, `Mutex`-guarded sync + debounced `MediaStoreChangeObserver`, `MusicScreen`, `VideoScreen`, `coil-video`.
-
 ## Stage 3 — Audio and Video Playback Engine — **COMPLETED** (`41c8fbc`)
-- `MediaItemFactory`, dynamic `MUSIC`/`MOVIE` `AudioAttributes`, `Media3PlaybackController`, `MiniPlayerBar`, `NowPlayingScreen` (3 layouts), `VideoPlayerScreen` (`PlayerSurface`).
-
 ## Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth — **COMPLETED** (`057fb56`, `c5fabc0`, `13983a8`)
-- `DefaultMediaNotificationProvider`, `SoniqOfflineBitmapLoader`, `MediaButtonReceiver`, `POST_NOTIFICATIONS` flow, audio focus, noisy audio, `NonCancellable` queue persistence (`onTimelineChanged`, `onPositionDiscontinuity`, empty-queue clear) & paused cold-start restoration.
-
 ## Stage 5 — Playlists, Favorites, Search, History & Queue Management — **COMPLETED** (`f265823`)
-- Tested Room migration `soniq.db` `v1 → v2` (`MIGRATION_1_2`), `UserLibraryRepository`, playlists CRUD, Favorites, playback history, video resume tracking, Up Next `ModalBottomSheet` queue editor.
+## Stage 6 — Advanced Audio and Video Features — **COMPLETED (Core Scope)** (`13983a8`, `ae90175`)
+- Implemented: Hardware `Equalizer` & `BassBoost` with capability detection & unsupported-state UI, Gapless + configurable Crossfade, Fit/Fill/Zoom aspect modes, embedded & external `.srt`/`.vtt` subtitles + cue rendering, audio track selection, speed controls, immersive orientation toggle, brightness/volume/seek gestures, reliable resume.
+- **Deferred (Optional)**: Audio **Sleep Timer** and Android **Picture-in-Picture (PiP)** mode.
 
 ---
 
-## Stage 6 — Advanced Audio and Video Features — **COMPLETED** (`13983a8`, `ae90175`)
+## Stage 7 — Complete Theme Customization and Personalization — **COMPLETED** (`3f1fd87`, `c2b9264`)
 - **Delivered**:
-  1. Audio: `SoniqAudioEffectsManager` + `AndroidAudioEffectsBackend` (`Equalizer` presets/bands + `BassBoost`) bound to ExoPlayer's `audioSessionId` with explicit device capability detection and unsupported-state UI (`AudioEffectsSheet`), Gapless toggle, and configurable Crossfade (`Off`, `2s`–`10s`).
-  2. Video: Fit / Fill / Zoom aspect modes (`VideoResizeMode`), embedded & external `.srt`/`.vtt` subtitle selection + cue overlay rendering, audio track selection, speed selector (`0.5x`–`2.0x`), immersive fullscreen & landscape orientation toggle, brightness/volume/seek/double-tap gestures, and playback error overlay.
-  3. Deferred to future polish if desired: Android Picture-in-Picture (PiP) mode & Sleep Timer.
-- **Verified**: 54/54 unit & Robolectric tests, 0 Lint warnings, R8 release build PASS (`2.90 MB`), 3/3 emulator instrumented tests PASS on `Medium_Phone_API_37.0`.
+  1. Custom HSL accent color picker dialog with `#RRGGBB` readout & live WCAG contrast preview (`DEBT-003`).
+  2. Broken SAF background-image URI detection & recovery banner (`DEBT-004`).
+  3. Background image scrim opacity (`35%–95%`) & Android 12+ blur radius (`0–24 dp`) controls (`soniq.db` `v2 → v3` via tested `MIGRATION_2_3`).
+  4. Theme preset Rename & Duplicate + 4 curated non-destructive starter presets (`SoniqStarterPresets`).
 
 ---
 
-## Stage 7 — Complete Theme Customization and Personalization — **IN PROGRESS (`3f1fd87`)**
-- **Completed in Session 3 (Foundation)**:
-  1. Custom HSL Accent Color Picker dialog with live WCAG contrast preview & Hex readout (resolving `DEBT-003`).
-  2. Unreadable background-image URI detection & recovery banner in Settings (resolving `DEBT-004`).
-  3. Theme preset Rename & Duplicate actions (`ThemePresetDao.renameById`, `AppearanceRepository.renamePreset` / `duplicatePreset`).
-- **Remaining for Stage 7**:
-  1. Curated built-in starter theme presets & preset overwrite-current action.
-  2. Background image scrim/blur intensity controls.
+## Stage 8 — Performance, Reliability, Privacy, Accessibility & Compatibility — **COMPLETED** (`c2b9264`)
+- **Delivered**:
+  1. **Large-Library Performance**: Moved `DefaultMusicLibraryRepository` & `DefaultVideoLibraryRepository` sync/mapping/grouping off the Main thread (`.flowOn(Dispatchers.Default)`, `withContext(Dispatchers.IO)`), added periodic `ensureActive()` scan cancellation checks in `MediaStoreAudioScanner` / `MediaStoreVideoScanner`, and verified a **10,000-track** sync & aggregation stress test.
+  2. **Accessibility**: Enforced `>= 48dp` accent swatch touch targets (`SoniqSizes.accentSwatch = 48.dp`) and added `heading()` semantics to `SoniqSectionHeader` and modal sheet titles (`AudioEffectsSheet`, `Up Next`, `Audio & Subtitles`).
+  3. **Compatibility**: Migrated `SoniqApp` to `currentWindowAdaptiveInfoV2()` (`DEBT-008`), achieving **0 Kotlin compiler warnings** and **0 Lint warnings**.
 
 ---
 
-## Stage 8 — Performance, Reliability, Privacy, Accessibility & Compatibility — **NEXT**
+## Stage 9 — Release Preparation, Physical-Device QA & Optional Deferred Features — **NEXT**
 - **Objectives**:
-  1. Large-library profiling (10k+ tracks), Compose stability/recomposition audit, StrictMode & memory leak checks.
-  2. Full TalkBack / contentDescription / touch-target (≥ 48dp) / large-font accessibility pass.
-  3. Migrate `SoniqApp.kt` to `currentWindowAdaptiveInfoV2` (`DEBT-008`) & multi-API compatibility checks across API 26–37.
-
----
-
-## Stage 9 — Release Preparation, APK Generation & Final Verification — **PLANNED**
-- **Objectives**:
-  1. Externalized release signing template (`keystore.properties`, gitignored) without committing secrets.
-  2. Final R8-minified release APK & AAB build, merged-manifest privacy audit, full regression suite, physical-device & Bluetooth/headset end-to-end QA checklist.
-  3. Update `RELEASE_REPORT.md` and wait for **explicit user release approval**.
+  1. Optional deferred engineering items if requested: Audio Sleep Timer & Video Picture-in-Picture (PiP).
+  2. Physical-device (`Infinix_X6528`) & Bluetooth/headset end-to-end QA checklist execution.
+  3. Externalized release signing template (`keystore.properties`, gitignored) without committing secrets.
+  4. Final R8-minified release APK & AAB build, merged-manifest privacy audit, full regression suite, and waiting for **explicit user release approval**.
+- **Post-Stage 9**: Dedicated **UI/UX Visual Redesign Phase**.

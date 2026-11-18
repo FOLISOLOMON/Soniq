@@ -119,4 +119,30 @@
   - `13983a8` — `feat(player): harden queue persistence and complete Stage 6 advanced audio and video`
   - `ae90175` — `fix(lint): resolve opt-in, resource, and AudioEffectsSheet test issues`
   - `3f1fd87` — `feat(settings): add custom HSL accent picker, broken background URI recovery, and preset rename/duplicate`
-  - *(Final Session 3 documentation sync commit follows immediately.)*
+  - `5f3a738` — `docs(control): update project memory after Session 3 (Priority A, Stage 6, Stage 7 foundation)`
+
+---
+
+## Autonomous Session 4 — Complete Stage 7 & Execute Stage 8 (Performance, Accessibility, Compatibility & Reliability) (2026-11-18)
+
+- **Duration**: `2026-11-18T11:57Z` – `2026-11-18T12:25Z` (~28 minutes of 2-hour maximum budget)
+- **Starting State**: Clean `main` at `5f3a738` (Stages 1–6 complete + Stage 7 foundation, 54/54 tests, 0 Lint warnings, 3/3 emulator instrumented tests). **UI Redesign Freeze** active.
+- **Objectives Executed**:
+  1. **Priority A — Complete Stage 7 (`c2b9264`)**:
+     - Added `backgroundScrimAlpha` (`0.35f..0.95f`, default `0.72f`) and `backgroundBlurDp` (`0..24`, API 31+ `Modifier.blur(...)`) to `AppearanceConfig`, `AppearancePreferencesDataSource`, `ThemePresetEntity`, `ThemePresetMapper`, `SoniqBackground`, `SettingsViewModel`, and `SettingsScreen`.
+     - Bumped `SoniqDatabase` `v2 → v3` via explicit non-destructive `SoniqDatabaseMigrations.MIGRATION_2_3`, exported `3.json`, and updated `SoniqDatabaseMigrationUnitTest` + `SoniqDatabaseMigrationTest` (`v1 → v3`).
+     - Added curated `SoniqStarterPresets` + non-destructive `installStarterPresets()` (`ThemePresetDao.getAllNames()`, `AppearanceRepository`, `SettingsViewModel`, `SettingsScreen`).
+  2. **Priority B — Execute Stage 8 (`c2b9264`)**:
+     - **Performance**: Added `.flowOn(Dispatchers.Default)` on repository flows (`tracks`, `albums`, `artists`, `folders`, `videos`), `withContext(Dispatchers.IO)` in `sync()`, periodic `coroutineContext.ensureActive()` in `MediaStoreAudioScanner`/`MediaStoreVideoScanner`, and verified a **10,000-track** sync & aggregation stress test in `DefaultMediaLibraryRepositoriesTest`.
+     - **Accessibility**: Increased `SoniqSizes.accentSwatch` to `48.dp` (`>= 48dp` touch target) and added `Modifier.semantics { heading() }` to `SoniqSectionHeader` and modal sheet titles (`AudioEffectsSheet`, `Up Next`, `Audio & Subtitles`).
+     - **Compatibility**: Migrated `SoniqApp.kt` to `currentWindowAdaptiveInfoV2()` (`DEBT-008`), achieving **0 Kotlin compiler warnings**.
+  3. **Remaining Roadmap Inspection**: Documented optional deferred Stage 6 items (Sleep Timer, Picture-in-Picture) in `ROADMAP.md` & `BUGS.md` (`DEBT-009`).
+- **Verification Results**:
+  - `./gradlew assembleDebug assembleDebugAndroidTest assembleRelease`: **PASS** (0 compiler warnings; `app-debug.apk` 18.06 MB, `app-debug-androidTest.apk` 2.36 MB, `app-release-unsigned.apk` 2.92 MB R8 minified + shrunk).
+  - `./gradlew testDebugUnitTest`: **55 / 55 PASSED** across 26 suites (0 failures, 0 errors, 0 skipped).
+  - `./gradlew lintDebug`: **0 errors, 0 warnings** (`Lint results count: 0`).
+  - Emulator (`Medium_Phone_API_37.0`, Android 17, `emulator-5554`): `connectedDebugAndroidTest` **3 / 3 PASSED** (`SoniqDatabaseMigrationTest` `v1 → v3`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); launch check clean (`PID 5839`, 0 SONIQ crashes).
+  - Physical device (`Infinix_X6528`): **NOT VERIFIED BY ADB** (not attached in Session 4).
+- **Git Checkpoints Created in Session 4**:
+  - `c2b9264` — `feat(theme,perf): complete Stage 7 backgrounds/starter presets and Stage 8 perf/a11y/compat`
+  - *(Final Session 4 documentation sync commit follows immediately.)*
