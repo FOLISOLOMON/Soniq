@@ -135,12 +135,66 @@ class Media3PlaybackController @Inject constructor(
         }
     }
 
-    override fun playVideo(video: VideoItem) {
+    override fun playNext(track: AudioTrack) {
+        val mediaItem = MediaItemFactory.fromAudioTrack(track)
+        executeWhenConnected { player ->
+            if (player.mediaItemCount == 0) {
+                player.setMediaItem(mediaItem, 0L)
+                player.prepare()
+                player.play()
+            } else {
+                val insertAt = (player.currentMediaItemIndex + 1).coerceIn(0, player.mediaItemCount)
+                player.addMediaItem(insertAt, mediaItem)
+                publishState(player)
+            }
+        }
+    }
+
+    override fun addToQueue(track: AudioTrack) {
+        val mediaItem = MediaItemFactory.fromAudioTrack(track)
+        executeWhenConnected { player ->
+            if (player.mediaItemCount == 0) {
+                player.setMediaItem(mediaItem, 0L)
+                player.prepare()
+                player.play()
+            } else {
+                player.addMediaItem(mediaItem)
+                publishState(player)
+            }
+        }
+    }
+
+    override fun skipToQueueIndex(index: Int) {
+        val active = controller ?: return
+        if (index in 0 until active.mediaItemCount) {
+            active.seekTo(index, 0L)
+            active.play()
+        }
+    }
+
+    override fun removeQueueItem(index: Int) {
+        val active = controller ?: return
+        if (index in 0 until active.mediaItemCount) {
+            active.removeMediaItem(index)
+            publishState(active)
+        }
+    }
+
+    override fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        val active = controller ?: return
+        val count = active.mediaItemCount
+        if (fromIndex in 0 until count && toIndex in 0 until count && fromIndex != toIndex) {
+            active.moveMediaItem(fromIndex, toIndex)
+            publishState(active)
+        }
+    }
+
+    override fun playVideo(video: VideoItem, startPositionMs: Long) {
         restoreJob?.cancel()
         hasAttemptedColdRestore = true
         val mediaItem = MediaItemFactory.fromVideoItem(video)
         executeWhenConnected { player ->
-            player.setMediaItem(mediaItem, 0L)
+            player.setMediaItem(mediaItem, startPositionMs.coerceAtLeast(0L))
             player.prepare()
             player.play()
         }
@@ -291,6 +345,25 @@ class Media3PlaybackController @Inject constructor(
         val duration = player.duration.takeIf { it != C.TIME_UNSET && it >= 0L } ?: 0L
         val subtitle = metadata?.artist?.toString()?.takeIf { it.isNotBlank() }
             ?: metadata?.subtitle?.toString()?.takeIf { it.isNotBlank() }
+        val currentIndex = player.currentMediaItemIndex.coerceAtLeast(0)
+        val count = player.mediaItemCount
+        val queueItems = buildList(count) {
+            for (i in 0 until count) {
+                val item = player.getMediaItemAt(i)
+                val meta = item.mediaMetadata
+                add(
+                    QueueItem(
+                        index = i,
+                        mediaId = item.mediaId,
+                        title = meta.title?.toString()?.takeIf { it.isNotBlank() } ?: item.mediaId,
+                        subtitle = meta.artist?.toString()?.takeIf { it.isNotBlank() }
+                            ?: meta.subtitle?.toString()?.takeIf { it.isNotBlank() },
+                        artworkUri = meta.artworkUri?.toString()?.takeIf { it.isNotBlank() },
+                        isCurrent = i == currentIndex,
+                    ),
+                )
+            }
+        }
 
         _state.value = PlaybackState(
             status = player.playbackState.toPlaybackStatus(),
@@ -307,8 +380,9 @@ class Media3PlaybackController @Inject constructor(
             repeatMode = player.repeatMode.toDomainRepeatMode(),
             shuffleEnabled = player.shuffleModeEnabled,
             playbackSpeed = player.playbackParameters.speed,
-            queueCount = player.mediaItemCount,
-            currentQueueIndex = player.currentMediaItemIndex.coerceAtLeast(0),
+            queueCount = count,
+            currentQueueIndex = currentIndex,
+            queue = queueItems,
         )
     }
 

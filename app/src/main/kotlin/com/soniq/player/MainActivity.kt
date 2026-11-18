@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
             val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
+            val isCurrentFavorite by playbackViewModel.isCurrentFavorite.collectAsStateWithLifecycle()
             val player by playbackViewModel.player.collectAsStateWithLifecycle()
 
             val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -95,8 +96,11 @@ class MainActivity : ComponentActivity() {
             ) {
                 SoniqApp(
                     playbackState = playbackState,
+                    isCurrentFavorite = isCurrentFavorite,
                     player = player,
                     onPlayAudioQueue = playbackViewModel::playAudioQueue,
+                    onPlayNext = playbackViewModel::playNext,
+                    onAddToQueue = playbackViewModel::addToQueue,
                     onPlayVideo = playbackViewModel::playVideo,
                     onTogglePlayPause = playbackViewModel::togglePlayPause,
                     onSkipNext = playbackViewModel::skipToNext,
@@ -107,6 +111,10 @@ class MainActivity : ComponentActivity() {
                     onCycleRepeatMode = playbackViewModel::cycleRepeatMode,
                     onCycleSpeed = playbackViewModel::cyclePlaybackSpeed,
                     onPauseIfVideo = playbackViewModel::pauseIfVideo,
+                    onToggleCurrentFavorite = playbackViewModel::toggleCurrentFavorite,
+                    onSelectQueueItem = playbackViewModel::skipToQueueIndex,
+                    onMoveQueueItem = playbackViewModel::moveQueueItem,
+                    onRemoveQueueItem = playbackViewModel::removeQueueItem,
                 )
             }
         }

@@ -47,8 +47,11 @@ fun SoniqApp(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     playbackState: PlaybackState = PlaybackState(),
+    isCurrentFavorite: Boolean = false,
     player: Player? = null,
     onPlayAudioQueue: (List<AudioTrack>, Int) -> Unit = { _, _ -> },
+    onPlayNext: (AudioTrack) -> Unit = {},
+    onAddToQueue: (AudioTrack) -> Unit = {},
     onPlayVideo: (VideoItem) -> Unit = {},
     onTogglePlayPause: () -> Unit = {},
     onSkipNext: () -> Unit = {},
@@ -59,12 +62,18 @@ fun SoniqApp(
     onCycleRepeatMode: () -> Unit = {},
     onCycleSpeed: () -> Unit = {},
     onPauseIfVideo: () -> Unit = {},
+    onToggleCurrentFavorite: () -> Unit = {},
+    onSelectQueueItem: (Int) -> Unit = {},
+    onMoveQueueItem: (Int, Int) -> Unit = { _, _ -> },
+    onRemoveQueueItem: (Int) -> Unit = {},
     musicContent: @Composable () -> Unit = {
         MusicRoute(
             onPlayTrack = { tracks, index ->
                 onPlayAudioQueue(tracks, index)
                 navController.navigate(SoniqRoute.AudioPlayer) { launchSingleTop = true }
             },
+            onPlayNext = onPlayNext,
+            onAddToQueue = onAddToQueue,
         )
     },
     videoContent: @Composable () -> Unit = {
@@ -120,6 +129,7 @@ fun SoniqApp(
                     audioPlayerContent = {
                         NowPlayingScreen(
                             playbackState = playbackState,
+                            isFavorite = isCurrentFavorite,
                             onNavigateBack = { navController.popBackStack() },
                             onTogglePlayPause = onTogglePlayPause,
                             onSkipNext = onSkipNext,
@@ -128,6 +138,10 @@ fun SoniqApp(
                             onToggleShuffle = onToggleShuffle,
                             onCycleRepeatMode = onCycleRepeatMode,
                             onCycleSpeed = onCycleSpeed,
+                            onToggleFavorite = onToggleCurrentFavorite,
+                            onSelectQueueItem = onSelectQueueItem,
+                            onMoveQueueItem = onMoveQueueItem,
+                            onRemoveQueueItem = onRemoveQueueItem,
                         )
                     },
                     videoPlayerContent = {

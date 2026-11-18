@@ -6,11 +6,13 @@ import com.soniq.player.core.mediadiscovery.domain.VideoLibraryRepository
 import com.soniq.player.core.model.media.LibrarySyncState
 import com.soniq.player.core.model.media.MediaFolderSummary
 import com.soniq.player.core.model.media.MediaKind
+import com.soniq.player.core.model.media.MediaResumePosition
 import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.model.media.VideoSortOrder
 import com.soniq.player.core.permissions.MediaAccessGrant
 import com.soniq.player.core.permissions.MediaAccessState
 import com.soniq.player.core.permissions.PermissionChecker
+import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -42,6 +44,7 @@ data class VideoUiState(
     val isSearchActive: Boolean = false,
     val activeFolder: VideoFolderFilter? = null,
     val videos: List<VideoItem> = emptyList(),
+    val resumePositions: Map<Long, MediaResumePosition> = emptyMap(),
     val folders: List<MediaFolderSummary> = emptyList(),
     val isScanning: Boolean = false,
     val hasSyncError: Boolean = false,
@@ -52,6 +55,7 @@ data class VideoUiState(
 class VideoViewModel @Inject constructor(
     private val permissionChecker: PermissionChecker,
     private val repository: VideoLibraryRepository,
+    userLibraryRepository: UserLibraryRepository,
 ) : ViewModel() {
 
     private data class ControlsState(
@@ -72,7 +76,8 @@ class VideoViewModel @Inject constructor(
         repository.videos,
         repository.folders,
         repository.syncState,
-    ) { ctrl, allVideos, allFolders, syncState ->
+        userLibraryRepository.observeResumePositions(MediaKind.VIDEO),
+    ) { ctrl, allVideos, allFolders, syncState, resumePositions ->
         val query = ctrl.searchQuery.trim()
         val filteredVideos = allVideos
             .let { list ->
@@ -103,6 +108,7 @@ class VideoViewModel @Inject constructor(
             isSearchActive = ctrl.isSearchActive,
             activeFolder = ctrl.activeFolder,
             videos = filteredVideos,
+            resumePositions = resumePositions,
             folders = filteredFolders,
             isScanning = syncState is LibrarySyncState.Scanning,
             hasSyncError = syncState is LibrarySyncState.Error,

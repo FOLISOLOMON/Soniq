@@ -10,12 +10,17 @@ import com.soniq.player.core.model.media.AudioTrack
 import com.soniq.player.core.model.media.LibrarySyncState
 import com.soniq.player.core.model.media.MediaFolderSummary
 import com.soniq.player.core.model.media.MediaKind
+import com.soniq.player.core.model.media.MediaResumePosition
 import com.soniq.player.core.model.media.MusicSortOrder
+import com.soniq.player.core.model.media.PlaybackHistoryEntry
+import com.soniq.player.core.model.media.PlaylistSummary
 import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.model.media.VideoSortOrder
+import com.soniq.player.core.model.media.mediaKey
 import com.soniq.player.core.permissions.MediaAccessGrant
 import com.soniq.player.core.permissions.MediaAccessState
 import com.soniq.player.core.permissions.PermissionChecker
+import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import com.soniq.player.feature.music.MusicViewModel
 import com.soniq.player.feature.video.VideoViewModel
 import com.soniq.player.testutil.MainDispatcherRule
@@ -23,6 +28,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -33,7 +40,7 @@ class MediaViewModelsTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun musicAndVideoTrackPermissionsSyncSortAndFilterIndependently() = runTest {
+    fun musicAndVideoTrackPermissionsSyncSortFilterPlaylistsAndFavoritesIndependently() = runTest {
         var audioGrant = MediaAccessGrant.FULL
         var videoGrant = MediaAccessGrant.NONE
         val checker = object : PermissionChecker {
@@ -44,9 +51,10 @@ class MediaViewModelsTest {
         }
         val musicRepo = FakeMusicLibraryRepository()
         val videoRepo = FakeVideoLibraryRepository()
+        val userRepo = FakeUserLibraryRepository()
 
-        val musicViewModel = MusicViewModel(checker, musicRepo)
-        val videoViewModel = VideoViewModel(checker, videoRepo)
+        val musicViewModel = MusicViewModel(checker, musicRepo, userRepo)
+        val videoViewModel = VideoViewModel(checker, videoRepo, userRepo)
 
         // Audio started granted, so it synced immediately; Video started NONE, so 0 syncs yet.
         assertThat(musicRepo.syncCount).isEqualTo(1)
@@ -56,6 +64,14 @@ class MediaViewModelsTest {
             val state = awaitItem()
             assertThat(state.accessState).isEqualTo(MediaAccessState.GRANTED)
             assertThat(state.tracks.map { it.title }).containsExactly("Aurora", "Zephyr").inOrder()
+
+            musicViewModel.toggleTrackFavorite(1L)
+            assertThat(awaitItem().favoriteTracks.map { it.title }).containsExactly("Aurora")
+
+            musicViewModel.onNewPlaylistNameChanged("Chill Mix")
+            awaitItem()
+            musicViewModel.createPlaylist()
+            assertThat(expectMostRecentItem().playlists.single().name).isEqualTo("Chill Mix")
 
             musicViewModel.selectSortOrder(MusicSortOrder.DURATION_DESC)
             assertThat(awaitItem().tracks.map { it.title }).containsExactly("Zephyr", "Aurora").inOrder()
@@ -76,7 +92,6 @@ class MediaViewModelsTest {
         videoViewModel.uiState.test {
             assertThat(awaitItem().accessState).isEqualTo(MediaAccessState.NOT_GRANTED)
 
-            // Android 14+ partial video access transitions to PARTIAL and triggers a library sync.
             videoGrant = MediaAccessGrant.PARTIAL
             videoViewModel.onPermissionResult(grant = MediaAccessGrant.PARTIAL, permanentlyDenied = false)
             val partial = expectMostRecentItem()
@@ -87,20 +102,57 @@ class MediaViewModelsTest {
             videoViewModel.selectSortOrder(VideoSortOrder.SIZE_DESC)
             assertThat(awaitItem().videos.map { it.title }).containsExactly("Large Clip", "Small Clip").inOrder()
 
-            // Permanent denial is preserved across resume until granted in system settings.
             videoGrant = MediaAccessGrant.NONE
             videoViewModel.onPermissionResult(grant = MediaAccessGrant.NONE, permanentlyDenied = true)
             assertThat(awaitItem().accessState).isEqualTo(MediaAccessState.DENIED_PERMANENTLY)
             videoViewModel.refreshPermission()
             assertThat(videoViewModel.uiState.value.accessState).isEqualTo(MediaAccessState.DENIED_PERMANENTLY)
 
-            // Granting full access transitions to GRANTED.
             videoGrant = MediaAccessGrant.FULL
             videoViewModel.refreshPermission()
             assertThat(expectMostRecentItem().accessState).isEqualTo(MediaAccessState.GRANTED)
 
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    private class FakeUserLibraryRepository : UserLibraryRepository {
+        private val _playlists = MutableStateFlow<List<PlaylistSummary>>(emptyList())
+        private val _favorites = MutableStateFlow<Set<String>>(emptySet())
+        private var nextId = 1L
+
+        override val playlists: Flow<List<PlaylistSummary>> = _playlists
+        override val favoriteKeys: Flow<Set<String>> = _favorites
+        override val recentHistory: Flow<List<PlaybackHistoryEntry>> = flowOf(emptyList())
+
+        override fun observePlaylistTracks(playlistId: Long): Flow<List<AudioTrack>> = flowOf(emptyList())
+        override fun observeResumePositions(kind: MediaKind): Flow<Map<Long, MediaResumePosition>> =
+            flowOf(emptyMap())
+
+        override suspend fun createPlaylist(name: String): Long {
+            val id = nextId++
+            _playlists.update { it + PlaylistSummary(id, name.trim(), 0, id, id) }
+            return id
+        }
+
+        override suspend fun renamePlaylist(playlistId: Long, newName: String): Boolean = true
+        override suspend fun deletePlaylist(playlistId: Long) = Unit
+        override suspend fun addTrackToPlaylist(playlistId: Long, trackId: Long) = Unit
+        override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) = Unit
+        override suspend fun reorderPlaylistTracks(playlistId: Long, orderedTrackIds: List<Long>) = Unit
+
+        override suspend fun toggleFavorite(kind: MediaKind, mediaId: Long): Boolean {
+            val key = mediaKey(kind, mediaId)
+            val nowFav = key !in _favorites.value
+            _favorites.update { if (nowFav) it + key else it - key }
+            return nowFav
+        }
+
+        override suspend fun recordPlayback(kind: MediaKind, mediaId: Long, title: String, subtitle: String?) = Unit
+        override suspend fun clearHistory() = Unit
+        override suspend fun getResumePosition(kind: MediaKind, mediaId: Long): MediaResumePosition? = null
+        override suspend fun saveResumePosition(kind: MediaKind, mediaId: Long, positionMs: Long, durationMs: Long) = Unit
+        override suspend fun clearResumePosition(kind: MediaKind, mediaId: Long) = Unit
     }
 
     private class FakeMusicLibraryRepository : MusicLibraryRepository {

@@ -2,23 +2,39 @@ package com.soniq.player.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.soniq.player.core.database.dao.PlaylistDao
 import com.soniq.player.core.database.dao.ThemePresetDao
+import com.soniq.player.core.database.dao.UserMediaDao
+import com.soniq.player.core.database.entity.FavoriteMediaEntity
+import com.soniq.player.core.database.entity.PlaybackHistoryEntity
+import com.soniq.player.core.database.entity.PlaybackResumeEntity
+import com.soniq.player.core.database.entity.PlaylistEntity
+import com.soniq.player.core.database.entity.PlaylistTrackEntity
 import com.soniq.player.core.database.entity.ThemePresetEntity
 
 /**
- * SONIQ's local database. Schemas are exported to `app/schemas` and must be committed so that
- * every future migration can be verified with `MigrationTestHelper`.
+ * SONIQ's persistent user-authored database (`soniq.db`).
  *
- * Later stages add the media index, playlists, play history and playback positions here.
+ * Schemas are exported to `app/schemas` and committed so every upgrade is verified with
+ * `MigrationTestHelper`. Destructive migrations are strictly forbidden on this database.
  */
 @Database(
-    entities = [ThemePresetEntity::class],
-    version = 1,
+    entities = [
+        ThemePresetEntity::class,
+        PlaylistEntity::class,
+        PlaylistTrackEntity::class,
+        FavoriteMediaEntity::class,
+        PlaybackHistoryEntity::class,
+        PlaybackResumeEntity::class,
+    ],
+    version = 2,
     exportSchema = true,
 )
 abstract class SoniqDatabase : RoomDatabase() {
 
     abstract fun themePresetDao(): ThemePresetDao
+    abstract fun playlistDao(): PlaylistDao
+    abstract fun userMediaDao(): UserMediaDao
 
     companion object {
         /** Referenced by the backup rules in res/xml; keep them in sync. */

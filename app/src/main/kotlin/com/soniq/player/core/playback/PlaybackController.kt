@@ -21,6 +21,16 @@ enum class PlaybackRepeatMode {
     ONE,
 }
 
+/** Lightweight projection of an item currently in the active playback queue. */
+data class QueueItem(
+    val index: Int,
+    val mediaId: String,
+    val title: String,
+    val subtitle: String?,
+    val artworkUri: String?,
+    val isCurrent: Boolean,
+)
+
 /** Immutable snapshot of the shared playback engine. */
 data class PlaybackState(
     val status: PlaybackStatus = PlaybackStatus.IDLE,
@@ -39,6 +49,7 @@ data class PlaybackState(
     val playbackSpeed: Float = 1.0f,
     val queueCount: Int = 0,
     val currentQueueIndex: Int = 0,
+    val queue: List<QueueItem> = emptyList(),
 ) {
     val hasActiveItem: Boolean get() = activeMediaId != null
 }
@@ -61,7 +72,12 @@ interface PlaybackController {
     fun connect()
     fun disconnect()
     fun playAudioQueue(tracks: List<AudioTrack>, startIndex: Int = 0)
-    fun playVideo(video: VideoItem)
+    fun playNext(track: AudioTrack)
+    fun addToQueue(track: AudioTrack)
+    fun skipToQueueIndex(index: Int)
+    fun removeQueueItem(index: Int)
+    fun moveQueueItem(fromIndex: Int, toIndex: Int)
+    fun playVideo(video: VideoItem, startPositionMs: Long = 0L)
     fun togglePlayPause()
     fun play()
     fun pause()

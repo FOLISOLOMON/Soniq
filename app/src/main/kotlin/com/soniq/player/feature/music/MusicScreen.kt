@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -20,7 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,6 +57,8 @@ import com.soniq.player.core.model.media.AudioTrack
 import com.soniq.player.core.model.media.MediaFolderSummary
 import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.model.media.MusicSortOrder
+import com.soniq.player.core.model.media.PlaylistSummary
+import com.soniq.player.core.model.media.mediaKey
 import com.soniq.player.core.permissions.MediaAccessState
 import com.soniq.player.core.permissions.rememberMediaPermissionController
 
@@ -62,6 +66,8 @@ import com.soniq.player.core.permissions.rememberMediaPermissionController
 fun MusicRoute(
     modifier: Modifier = Modifier,
     onPlayTrack: (tracks: List<AudioTrack>, startIndex: Int) -> Unit = { _, _ -> },
+    onPlayNext: (AudioTrack) -> Unit = {},
+    onAddToQueue: (AudioTrack) -> Unit = {},
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,15 +89,25 @@ fun MusicRoute(
         onSelectSortOrder = viewModel::selectSortOrder,
         onToggleSearch = viewModel::setSearchActive,
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
+        onNewPlaylistNameChanged = viewModel::onNewPlaylistNameChanged,
+        onCreatePlaylist = viewModel::createPlaylist,
+        onRenamePlaylist = viewModel::renamePlaylist,
+        onDeletePlaylist = viewModel::deletePlaylist,
+        onPlaylistClick = viewModel::selectPlaylist,
+        onAddTrackToPlaylist = viewModel::addTrackToPlaylist,
+        onRemoveTrackFromPlaylist = viewModel::removeTrackFromActivePlaylist,
+        onToggleFavorite = viewModel::toggleTrackFavorite,
         onAlbumClick = viewModel::selectAlbum,
         onArtistClick = viewModel::selectArtist,
         onFolderClick = viewModel::selectFolder,
         onClearFilter = viewModel::clearFilter,
         onRefresh = viewModel::refreshLibrary,
-        onTrackClick = { clicked ->
-            val index = uiState.tracks.indexOfFirst { it.id == clicked.id }.coerceAtLeast(0)
-            onPlayTrack(uiState.tracks, index)
+        onTrackClick = { clicked, list ->
+            val index = list.indexOfFirst { it.id == clicked.id }.coerceAtLeast(0)
+            onPlayTrack(list, index)
         },
+        onPlayNext = onPlayNext,
+        onAddToQueue = onAddToQueue,
         modifier = modifier,
     )
 }
@@ -106,12 +122,22 @@ fun MusicScreen(
     onSelectSortOrder: (MusicSortOrder) -> Unit = {},
     onToggleSearch: (Boolean) -> Unit = {},
     onSearchQueryChanged: (String) -> Unit = {},
+    onNewPlaylistNameChanged: (String) -> Unit = {},
+    onCreatePlaylist: () -> Unit = {},
+    onRenamePlaylist: (Long, String) -> Unit = { _, _ -> },
+    onDeletePlaylist: (Long) -> Unit = {},
+    onPlaylistClick: (PlaylistSummary) -> Unit = {},
+    onAddTrackToPlaylist: (playlistId: Long, trackId: Long) -> Unit = { _, _ -> },
+    onRemoveTrackFromPlaylist: (trackId: Long) -> Unit = {},
+    onToggleFavorite: (trackId: Long) -> Unit = {},
     onAlbumClick: (AlbumSummary) -> Unit = {},
     onArtistClick: (ArtistSummary) -> Unit = {},
     onFolderClick: (MediaFolderSummary) -> Unit = {},
     onClearFilter: () -> Unit = {},
     onRefresh: () -> Unit = {},
-    onTrackClick: (AudioTrack) -> Unit = {},
+    onTrackClick: (AudioTrack, List<AudioTrack>) -> Unit = { _, _ -> },
+    onPlayNext: (AudioTrack) -> Unit = {},
+    onAddToQueue: (AudioTrack) -> Unit = {},
 ) {
     val hasAccess = uiState.accessState == MediaAccessState.GRANTED ||
         uiState.accessState == MediaAccessState.PARTIAL
@@ -219,11 +245,21 @@ fun MusicScreen(
                     uiState = uiState,
                     onSelectTab = onSelectTab,
                     onSearchQueryChanged = onSearchQueryChanged,
+                    onNewPlaylistNameChanged = onNewPlaylistNameChanged,
+                    onCreatePlaylist = onCreatePlaylist,
+                    onRenamePlaylist = onRenamePlaylist,
+                    onDeletePlaylist = onDeletePlaylist,
+                    onPlaylistClick = onPlaylistClick,
+                    onAddTrackToPlaylist = onAddTrackToPlaylist,
+                    onRemoveTrackFromPlaylist = onRemoveTrackFromPlaylist,
+                    onToggleFavorite = onToggleFavorite,
                     onAlbumClick = onAlbumClick,
                     onArtistClick = onArtistClick,
                     onFolderClick = onFolderClick,
                     onRefresh = onRefresh,
                     onTrackClick = onTrackClick,
+                    onPlayNext = onPlayNext,
+                    onAddToQueue = onAddToQueue,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -236,14 +272,25 @@ private fun MusicLibraryContent(
     uiState: MusicUiState,
     onSelectTab: (MusicLibraryTab) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
+    onNewPlaylistNameChanged: (String) -> Unit,
+    onCreatePlaylist: () -> Unit,
+    onRenamePlaylist: (Long, String) -> Unit,
+    onDeletePlaylist: (Long) -> Unit,
+    onPlaylistClick: (PlaylistSummary) -> Unit,
+    onAddTrackToPlaylist: (Long, Long) -> Unit,
+    onRemoveTrackFromPlaylist: (Long) -> Unit,
+    onToggleFavorite: (Long) -> Unit,
     onAlbumClick: (AlbumSummary) -> Unit,
     onArtistClick: (ArtistSummary) -> Unit,
     onFolderClick: (MediaFolderSummary) -> Unit,
     onRefresh: () -> Unit,
-    onTrackClick: (AudioTrack) -> Unit,
+    onTrackClick: (AudioTrack, List<AudioTrack>) -> Unit,
+    onPlayNext: (AudioTrack) -> Unit,
+    onAddToQueue: (AudioTrack) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = SoniqTheme.tokens.spacing
+    var playlistPickerTrack by remember { mutableStateOf<AudioTrack?>(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
         if (uiState.isScanning) {
@@ -263,7 +310,10 @@ private fun MusicLibraryContent(
         }
 
         if (uiState.activeFilter == null) {
-            PrimaryTabRow(selectedTabIndex = uiState.selectedTab.ordinal) {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = uiState.selectedTab.ordinal,
+                edgePadding = spacing.screenHorizontal,
+            ) {
                 MusicLibraryTab.entries.forEach { tab ->
                     Tab(
                         selected = tab == uiState.selectedTab,
@@ -284,14 +334,58 @@ private fun MusicLibraryContent(
             SyncErrorBanner(onRetry = onRefresh)
         }
 
+        val isPlaylistDetail = uiState.activeFilter is MusicFilter.Playlist
         val showTracks = uiState.activeFilter != null || uiState.selectedTab == MusicLibraryTab.SONGS
         when {
             showTracks -> TrackListSection(
                 tracks = uiState.tracks,
+                favoriteKeys = uiState.favoriteKeys,
+                hasPlaylists = uiState.playlists.isNotEmpty(),
+                isPlaylistDetail = isPlaylistDetail,
                 hasSearchQuery = uiState.searchQuery.isNotBlank(),
                 onRefresh = onRefresh,
-                onTrackClick = onTrackClick,
+                onTrackClick = { track -> onTrackClick(track, uiState.tracks) },
+                onPlayNext = onPlayNext,
+                onAddToQueue = onAddToQueue,
+                onToggleFavorite = onToggleFavorite,
+                onRequestAddToPlaylist = { playlistPickerTrack = it },
+                onRemoveFromPlaylist = onRemoveTrackFromPlaylist,
             )
+
+            uiState.selectedTab == MusicLibraryTab.PLAYLISTS -> PlaylistsSection(
+                playlists = uiState.playlists,
+                newPlaylistDraft = uiState.newPlaylistDraft,
+                onNewPlaylistNameChanged = onNewPlaylistNameChanged,
+                onCreatePlaylist = onCreatePlaylist,
+                onRenamePlaylist = onRenamePlaylist,
+                onDeletePlaylist = onDeletePlaylist,
+                onPlaylistClick = onPlaylistClick,
+            )
+
+            uiState.selectedTab == MusicLibraryTab.FAVORITES -> {
+                if (uiState.favoriteTracks.isEmpty()) {
+                    SoniqEmptyState(
+                        icon = painterResource(R.drawable.ic_favorite_border),
+                        title = stringResource(R.string.favorites_empty_title),
+                        message = stringResource(R.string.favorites_empty_message),
+                    )
+                } else {
+                    TrackListSection(
+                        tracks = uiState.favoriteTracks,
+                        favoriteKeys = uiState.favoriteKeys,
+                        hasPlaylists = uiState.playlists.isNotEmpty(),
+                        isPlaylistDetail = false,
+                        hasSearchQuery = uiState.searchQuery.isNotBlank(),
+                        onRefresh = onRefresh,
+                        onTrackClick = { track -> onTrackClick(track, uiState.favoriteTracks) },
+                        onPlayNext = onPlayNext,
+                        onAddToQueue = onAddToQueue,
+                        onToggleFavorite = onToggleFavorite,
+                        onRequestAddToPlaylist = { playlistPickerTrack = it },
+                        onRemoveFromPlaylist = onRemoveTrackFromPlaylist,
+                    )
+                }
+            }
 
             uiState.selectedTab == MusicLibraryTab.ALBUMS -> AlbumListSection(
                 albums = uiState.albums,
@@ -315,14 +409,187 @@ private fun MusicLibraryContent(
             )
         }
     }
+
+    val targetTrack = playlistPickerTrack
+    if (targetTrack != null) {
+        AlertDialog(
+            onDismissRequest = { playlistPickerTrack = null },
+            title = { Text(text = stringResource(R.string.playlist_add_to)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                    uiState.playlists.forEach { playlist ->
+                        TextButton(
+                            onClick = {
+                                onAddTrackToPlaylist(playlist.id, targetTrack.id)
+                                playlistPickerTrack = null
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = playlist.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { playlistPickerTrack = null }) {
+                    Text(text = stringResource(R.string.playlist_cancel))
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun PlaylistsSection(
+    playlists: List<PlaylistSummary>,
+    newPlaylistDraft: String,
+    onNewPlaylistNameChanged: (String) -> Unit,
+    onCreatePlaylist: () -> Unit,
+    onRenamePlaylist: (Long, String) -> Unit,
+    onDeletePlaylist: (Long) -> Unit,
+    onPlaylistClick: (PlaylistSummary) -> Unit,
+) {
+    val spacing = SoniqTheme.tokens.spacing
+    var renamingPlaylist by remember { mutableStateOf<PlaylistSummary?>(null) }
+    var renameDraft by remember { mutableStateOf("") }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            horizontal = spacing.screenHorizontal,
+            vertical = spacing.md,
+        ),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+    ) {
+        item(key = "create_playlist") {
+            SoniqSurfaceCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = newPlaylistDraft,
+                        onValueChange = onNewPlaylistNameChanged,
+                        placeholder = { Text(text = stringResource(R.string.playlist_new_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(
+                        onClick = onCreatePlaylist,
+                        enabled = newPlaylistDraft.isNotBlank(),
+                    ) {
+                        Text(text = stringResource(R.string.playlist_create))
+                    }
+                }
+            }
+        }
+
+        if (playlists.isEmpty()) {
+            item(key = "empty_playlists") {
+                SoniqEmptyState(
+                    icon = painterResource(R.drawable.ic_queue_music),
+                    title = stringResource(R.string.playlist_empty_title),
+                    message = stringResource(R.string.playlist_empty_message),
+                )
+            }
+        } else {
+            items(items = playlists, key = { it.id }) { playlist ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .clickable { onPlaylistClick(playlist) }
+                        .padding(spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ArtworkThumbnail(artworkUri = null, placeholderIconRes = R.drawable.ic_queue_music)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = playlist.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = trackCountLabel(playlist.trackCount),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            renamingPlaylist = playlist
+                            renameDraft = playlist.name
+                        },
+                    ) {
+                        Text(text = stringResource(R.string.playlist_rename))
+                    }
+                    IconButton(onClick = { onDeletePlaylist(playlist.id) }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete),
+                            contentDescription = stringResource(R.string.playlist_delete, playlist.name),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    val activeRename = renamingPlaylist
+    if (activeRename != null) {
+        AlertDialog(
+            onDismissRequest = { renamingPlaylist = null },
+            title = { Text(text = stringResource(R.string.playlist_rename_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameDraft,
+                    onValueChange = { renameDraft = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRenamePlaylist(activeRename.id, renameDraft)
+                        renamingPlaylist = null
+                    },
+                    enabled = renameDraft.isNotBlank(),
+                ) {
+                    Text(text = stringResource(R.string.playlist_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { renamingPlaylist = null }) {
+                    Text(text = stringResource(R.string.playlist_cancel))
+                }
+            },
+        )
+    }
 }
 
 @Composable
 private fun TrackListSection(
     tracks: List<AudioTrack>,
+    favoriteKeys: Set<String>,
+    hasPlaylists: Boolean,
+    isPlaylistDetail: Boolean,
     hasSearchQuery: Boolean,
     onRefresh: () -> Unit,
     onTrackClick: (AudioTrack) -> Unit,
+    onPlayNext: (AudioTrack) -> Unit,
+    onAddToQueue: (AudioTrack) -> Unit,
+    onToggleFavorite: (Long) -> Unit,
+    onRequestAddToPlaylist: (AudioTrack) -> Unit,
+    onRemoveFromPlaylist: (Long) -> Unit,
 ) {
     if (tracks.isEmpty()) {
         MusicEmptyView(hasSearchQuery = hasSearchQuery, onRefresh = onRefresh)
@@ -338,7 +605,18 @@ private fun TrackListSection(
         verticalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         items(items = tracks, key = { it.id }) { track ->
-            AudioTrackRow(track = track, onClick = { onTrackClick(track) })
+            AudioTrackRow(
+                track = track,
+                isFavorite = mediaKey(MediaKind.AUDIO, track.id) in favoriteKeys,
+                hasPlaylists = hasPlaylists,
+                isPlaylistDetail = isPlaylistDetail,
+                onClick = { onTrackClick(track) },
+                onPlayNext = { onPlayNext(track) },
+                onAddToQueue = { onAddToQueue(track) },
+                onToggleFavorite = { onToggleFavorite(track.id) },
+                onRequestAddToPlaylist = { onRequestAddToPlaylist(track) },
+                onRemoveFromPlaylist = { onRemoveFromPlaylist(track.id) },
+            )
         }
     }
 }
@@ -445,16 +723,26 @@ private fun MusicFolderListSection(
 @Composable
 private fun AudioTrackRow(
     track: AudioTrack,
+    isFavorite: Boolean,
+    hasPlaylists: Boolean,
+    isPlaylistDetail: Boolean,
     onClick: () -> Unit,
+    onPlayNext: () -> Unit,
+    onAddToQueue: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onRequestAddToPlaylist: () -> Unit,
+    onRemoveFromPlaylist: () -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClick = onClick)
-            .padding(spacing.md),
+            .padding(start = spacing.md, top = spacing.sm, bottom = spacing.sm, end = spacing.xs),
         horizontalArrangement = Arrangement.spacedBy(spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -483,6 +771,64 @@ private fun AudioTrackRow(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Box {
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_more_vert),
+                    contentDescription = stringResource(R.string.track_action_more),
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.track_action_play_next)) },
+                    onClick = {
+                        menuExpanded = false
+                        onPlayNext()
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.track_action_add_queue)) },
+                    onClick = {
+                        menuExpanded = false
+                        onAddToQueue()
+                    },
+                )
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(
+                                if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
+                            ),
+                        )
+                    },
+                    onClick = {
+                        menuExpanded = false
+                        onToggleFavorite()
+                    },
+                )
+                if (hasPlaylists) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(R.string.playlist_add_to)) },
+                        onClick = {
+                            menuExpanded = false
+                            onRequestAddToPlaylist()
+                        },
+                    )
+                }
+                if (isPlaylistDetail) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(R.string.playlist_remove_track)) },
+                        onClick = {
+                            menuExpanded = false
+                            onRemoveFromPlaylist()
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -619,6 +965,8 @@ private fun albumCountLabel(count: Int): String =
 
 private fun MusicLibraryTab.labelRes(): Int = when (this) {
     MusicLibraryTab.SONGS -> R.string.music_tab_songs
+    MusicLibraryTab.PLAYLISTS -> R.string.music_tab_playlists
+    MusicLibraryTab.FAVORITES -> R.string.music_tab_favorites
     MusicLibraryTab.ALBUMS -> R.string.music_tab_albums
     MusicLibraryTab.ARTISTS -> R.string.music_tab_artists
     MusicLibraryTab.FOLDERS -> R.string.music_tab_folders

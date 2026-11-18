@@ -19,6 +19,8 @@
 
     <!-- Music & Video library -->
     <string name="music_tab_songs">Songs</string>
+    <string name="music_tab_playlists">Playlists</string>
+    <string name="music_tab_favorites">Favorites</string>
     <string name="music_tab_albums">Albums</string>
     <string name="music_tab_artists">Artists</string>
     <string name="music_tab_folders">Folders</string>
@@ -94,6 +96,31 @@
     <string name="settings_notifications_title">Playback notifications</string>
     <string name="settings_notifications_summary">Allow media controls in the notification shade and lock screen</string>
     <string name="settings_notifications_allow">Allow</string>
+
+    <!-- Playlists, Favorites, History & Queue -->
+    <string name="playlist_new_hint">New playlist name</string>
+    <string name="playlist_create">Create</string>
+    <string name="playlist_empty_title">No playlists yet</string>
+    <string name="playlist_empty_message">Create a custom playlist to organize your favorite tracks.</string>
+    <string name="playlist_delete">Delete playlist %1$s</string>
+    <string name="playlist_rename">Rename</string>
+    <string name="playlist_rename_title">Rename playlist</string>
+    <string name="playlist_save">Save</string>
+    <string name="playlist_cancel">Cancel</string>
+    <string name="playlist_add_to">Add to playlist</string>
+    <string name="playlist_remove_track">Remove from playlist</string>
+    <string name="favorites_empty_title">No favorites yet</string>
+    <string name="favorites_empty_message">Mark tracks as favorites to access them quickly here.</string>
+    <string name="track_action_more">More options</string>
+    <string name="track_action_play_next">Play next</string>
+    <string name="track_action_add_queue">Add to queue</string>
+    <string name="track_action_favorite">Add to favorites</string>
+    <string name="track_action_unfavorite">Remove from favorites</string>
+    <string name="player_action_queue">Up Next queue</string>
+    <string name="player_queue_title">Up Next</string>
+    <string name="player_queue_move_up">Move up</string>
+    <string name="player_queue_move_down">Move down</string>
+    <string name="player_queue_remove">Remove from queue</string>
 
     <!-- Settings -->
     <string name="settings_section_appearance">Appearance</string>

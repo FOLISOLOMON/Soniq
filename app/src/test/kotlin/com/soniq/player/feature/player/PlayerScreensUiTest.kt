@@ -11,6 +11,7 @@ import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.PlayerLayout
 import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.playback.PlaybackState
+import com.soniq.player.core.playback.QueueItem
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -120,5 +121,44 @@ class PlayerScreensUiTest {
         composeRule.onNodeWithText("Demo Reel").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Forward 10 seconds").performClick()
         assertThat(soughtDelta).isEqualTo(10_000L)
+    }
+
+    @Test
+    fun nowPlayingFavoriteAndQueueSheetTriggerCallbacks() {
+        var favoriteToggled = false
+        var selectedQueueIndex = -1
+        val stateWithQueue = activeAudioState.copy(
+            queue = listOf(
+                QueueItem(0, "audio:1", "Kiasmos", "Blurred", null, isCurrent = true),
+                QueueItem(1, "audio:2", "Looped", "Kiasmos", null, isCurrent = false),
+            ),
+        )
+
+        composeRule.setContent {
+            SoniqTheme {
+                NowPlayingScreen(
+                    playbackState = stateWithQueue,
+                    isFavorite = false,
+                    onNavigateBack = {},
+                    onTogglePlayPause = {},
+                    onSkipNext = {},
+                    onSkipPrevious = {},
+                    onSeekTo = {},
+                    onToggleShuffle = {},
+                    onCycleRepeatMode = {},
+                    onCycleSpeed = {},
+                    onToggleFavorite = { favoriteToggled = true },
+                    onSelectQueueItem = { selectedQueueIndex = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Add to favorites").performClick()
+        assertThat(favoriteToggled).isTrue()
+
+        composeRule.onNodeWithContentDescription("Up Next queue").performClick()
+        composeRule.onNodeWithText("Up Next").assertIsDisplayed()
+        composeRule.onNodeWithText("Looped").performClick()
+        assertThat(selectedQueueIndex).isEqualTo(1)
     }
 }

@@ -317,6 +317,7 @@ private fun VideoLibraryContent(
         if (showVideos) {
             VideoListSection(
                 videos = uiState.videos,
+                resumePositions = uiState.resumePositions,
                 hasSearchQuery = uiState.searchQuery.isNotBlank(),
                 onRefresh = onRefresh,
                 onVideoClick = onVideoClick,
@@ -335,6 +336,7 @@ private fun VideoLibraryContent(
 @Composable
 private fun VideoListSection(
     videos: List<VideoItem>,
+    resumePositions: Map<Long, com.soniq.player.core.model.media.MediaResumePosition>,
     hasSearchQuery: Boolean,
     onRefresh: () -> Unit,
     onVideoClick: (VideoItem) -> Unit,
@@ -353,7 +355,11 @@ private fun VideoListSection(
         verticalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         items(items = videos, key = { it.id }) { video ->
-            VideoItemRow(video = video, onClick = { onVideoClick(video) })
+            VideoItemRow(
+                video = video,
+                resumeProgress = resumePositions[video.id]?.progressFraction,
+                onClick = { onVideoClick(video) },
+            )
         }
     }
 }
@@ -433,6 +439,7 @@ private fun VideoFolderListSection(
 @Composable
 private fun VideoItemRow(
     video: VideoItem,
+    resumeProgress: Float?,
     onClick: () -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
@@ -485,6 +492,14 @@ private fun VideoItemRow(
                     .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = alpha.mediaBadgeScrim))
                     .padding(horizontal = spacing.xs, vertical = spacing.xxs),
             )
+            if (resumeProgress != null && resumeProgress > 0f) {
+                LinearProgressIndicator(
+                    progress = { resumeProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                )
+            }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
