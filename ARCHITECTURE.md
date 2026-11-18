@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-18 (Commit `c5fabc0`, Stages 1–5 Complete)  
+**Last Updated**: 2026-11-18 (Commit `3f1fd87`, Stages 1–6 Complete + Stage 7 Foundation)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -82,20 +82,22 @@ com.soniq.player
 │   │   ├── data/DefaultUserLibraryRepository.kt # Validation, atomic reorder, history pruning, <5s/>=95% resume auto-clear
 │   │   └── di/UserLibraryModule.kt
 │   ├── playback/
+│   │   ├── AudioEffects.kt                 # AudioEffectsState (capability detection + EQ/BassBoost/Gapless/Crossfade)
+│   │   ├── SoniqAudioEffectsManager.kt     # Hardware Equalizer/BassBoost lifecycle + DataStore persistence
 │   │   ├── MediaItemFactory.kt             # AudioTrack / VideoItem -> rich Media3 MediaItem + MediaKind resolver
 │   │   ├── SoniqOfflineBitmapLoader.kt     # Strictly offline Media3 BitmapLoader (rejects http/https, max 512px downsample)
 │   │   ├── SoniqSessionCommands.kt         # COMMAND_TOGGLE_SHUFFLE, COMMAND_CYCLE_REPEAT, SLOT_OVERFLOW button prefs
-│   │   ├── PlaybackRestorationManager.kt   # Saves & restores audio queue snapshots via PlaybackPreferencesDataSource + AudioTrackDao
-│   │   ├── PlaybackController.kt           # Domain PlaybackStatus, PlaybackRepeatMode, QueueItem, PlaybackState, PlaybackController contract
-│   │   ├── SoniqPlaybackService.kt         # MediaSessionService: ExoPlayer, dynamic AudioAttributes, DefaultMediaNotificationProvider, MediaSession.Callback, onTaskRemoved
-│   │   ├── Media3PlaybackController.kt     # Application-scoped MediaController: cold-start queue + paused restoration, 250ms active ticker, Up Next queue mutations
-│   │   └── di/PlaybackModule.kt            # ServiceScoped ExoPlayer + Singleton PlaybackController
+│   │   ├── PlaybackRestorationManager.kt   # Saves, clears & restores audio queue snapshots via PlaybackPreferencesDataSource + AudioTrackDao
+│   │   ├── PlaybackController.kt           # Domain PlaybackStatus, VideoResizeMode, MediaTrackOption, QueueItem, PlaybackState, contract
+│   │   ├── SoniqPlaybackService.kt         # MediaSessionService: ExoPlayer, AudioEffects attachment, Crossfade, dynamic AudioAttributes, MediaSession
+│   │   ├── Media3PlaybackController.kt     # Application-scoped MediaController: cold-start queue + paused restoration, track/subtitle/cue/error state
+│   │   └── di/PlaybackModule.kt            # ServiceScoped ExoPlayer + Singleton PlaybackController + AudioEffectsBackend
 │   └── permissions/                        # API 26-37 MediaPermissions (incl. Android 14+ partial access), NotificationPermissions (API 33+), AndroidPermissionChecker, DI
 └── feature/
     ├── music/                              # MusicViewModel, MusicRoute, MusicScreen (Songs/Albums/Artists/Folders/Playlists/Favorites, dialogs, track overflow actions)
     ├── video/                              # VideoViewModel, VideoRoute, VideoScreen (Videos/Folders, thumbnails, saved resume progress overlay, partial-access banner)
-    ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen (3 PlayerLayouts + Favorite + Up Next sheet), VideoPlayerScreen (PlayerSurface)
-    └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (theme customization, preset CRUD, Playback & Notification controls)
+    ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen, AudioEffectsSheet, VideoPlayerScreen (Fit/Fill/Zoom, subtitles, tracks, gestures, orientation)
+    └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (custom HSL accent picker, broken-URI recovery, preset rename/duplicate/delete, Playback card)
 ```
 
 ---

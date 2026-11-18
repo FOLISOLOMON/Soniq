@@ -88,3 +88,35 @@
   - **Stage 6**: Audio sleep timer & `AudioEffect` Equalizer/Bass Boost; Video aspect ratio/resize modes, brightness/volume/seek gestures, local subtitles/audio tracks, and Picture-in-Picture (PiP).
   - **Stage 7**: Interactive custom HSL/Hex accent picker, broken SAF background URI recovery, curated starter presets.
   - Enable Developer Options → "Install via USB" on `Infinix_X6528` (`112173741O045288`) to run physical-device & Bluetooth/headset QA.
+
+---
+
+## Autonomous Session 3 — Priority A Verification Hardening, Stage 6 (Advanced Audio & Video) & Stage 7 Foundation (2026-11-18)
+
+- **Duration**: `2026-11-18T09:54Z` – `2026-11-18T11:04Z` (~70 minutes of 2-hour maximum budget)
+- **Starting State**: Clean `main` at `ecc69ec` (Stages 1–5 complete, 49/49 unit & Robolectric tests, 0 Lint warnings, 3/3 emulator instrumented tests).
+- **Objectives Executed**:
+  1. **Priority A — Close Stage 4 & Stage 5 Verification Gaps (`13983a8`)**:
+     - Added `onTimelineChanged`, `onPositionDiscontinuity`, `PlaybackRestorationManager.clearAudioSession()`, `withContext(NonCancellable)`, and `onDestroy()` final snapshot capture in `SoniqPlaybackService` (`BUG-012`), ensuring queue mutations, paused seeks, and empty-queue clears survive process restarts without auto-starting playback.
+     - Added `onPlayerError` surfacing (`PlaybackState.playbackError`) for missing/corrupt local media files.
+     - Added `PlaybackViewModelTest` coverage for `POST_NOTIFICATIONS` granted vs denied (non-repeating prompt + functional playback when denied) and `PlaybackPreferencesAndRestorationTest` coverage for `clearAudioSession()`.
+     - Probed `adb devices -l`: physical `Infinix_X6528` (`112173741O045288`) was disconnected; documented Infinix XOS "Install via USB" steps in `BUGS.md` (`DEBT-005`).
+  2. **Priority B — Stage 6: Advanced Audio & Video (`13983a8`, `ae90175`)**:
+     - **Audio**: Implemented `AudioEffectsState`, `AudioEffectsBackend` / `AndroidAudioEffectsBackend` (`Equalizer` presets/bands + `BassBoost`), and `SoniqAudioEffectsManager` attached to ExoPlayer's `audioSessionId` in `SoniqPlaybackService` with real device capability detection and explicit unsupported-state reporting; added Gapless toggle + configurable volume-envelope Crossfade (`Off`, `2s`–`10s`); built `AudioEffectsSheet` wired from `NowPlayingScreen`.
+     - **Video**: Added `VideoResizeMode` (`FIT`, `FILL`, `ZOOM`), embedded & external local `.srt`/`.vtt` subtitle selection + `onCues` overlay rendering, audio track selection, speed selector (`0.5x`–`2.0x`), immersive system bars & landscape orientation toggle, and horizontal-seek / left-brightness / right-volume / double-tap gestures in `VideoPlayerScreen`.
+     - Added `SoniqAudioEffectsManagerTest` and expanded `PlayerScreensUiTest` (scrollable `AudioEffectsSheet` + `VideoPlayerScreen` subtitles/tracks).
+  3. **Priority C — Stage 7 Foundation (`3f1fd87`)**:
+     - Added `CustomAccentColorDialog` (HSL sliders, Hex readout, live WCAG contrast preview via `ColorMath`, resolving `DEBT-003`), unreadable background-image URI detection & recovery banner (`SettingsViewModel.clearBackgroundImage()`, resolving `DEBT-004`), and theme preset Rename & Duplicate actions (`ThemePresetDao.renameById`, `AppearanceRepository.renamePreset` / `duplicatePreset`).
+     - Expanded `DefaultAppearanceRepositoryTest` and `SettingsViewModelTest`.
+- **Verification Results**:
+  - `./gradlew assembleDebug assembleDebugAndroidTest assembleRelease`: **PASS** (`app-debug.apk` 18.06 MB, `app-debug-androidTest.apk` 2.36 MB, `app-release-unsigned.apk` 2.90 MB R8 minified + shrunk).
+  - `./gradlew testDebugUnitTest`: **54 / 54 PASSED** across 26 test suites (0 failures, 0 errors, 0 skipped).
+  - `./gradlew lintDebug`: **0 errors, 0 warnings** (`Lint results count: 0`).
+  - Merged release manifest verified free of `INTERNET` and `ACCESS_NETWORK_STATE`.
+  - Emulator regression (`Medium_Phone_API_37.0`, Android 17): `connectedDebugAndroidTest` **3 / 3 PASSED**; launch check clean (`PID 4321`, 0 SONIQ crashes).
+  - Physical device (`Infinix_X6528`, `112173741O045288`) & physical Bluetooth/headset hardware: **NOT VERIFIED** (device disconnected).
+- **Git Checkpoints Created in Session 3**:
+  - `13983a8` — `feat(player): harden queue persistence and complete Stage 6 advanced audio and video`
+  - `ae90175` — `fix(lint): resolve opt-in, resource, and AudioEffectsSheet test issues`
+  - `3f1fd87` — `feat(settings): add custom HSL accent picker, broken background URI recovery, and preset rename/duplicate`
+  - *(Final Session 3 documentation sync commit follows immediately.)*
