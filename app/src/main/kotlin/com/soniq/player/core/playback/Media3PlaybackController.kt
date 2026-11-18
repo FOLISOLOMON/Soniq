@@ -32,13 +32,14 @@ import javax.inject.Singleton
  * Application-scoped [PlaybackController] backed by a Media3 [MediaController] connected to
  * [SoniqPlaybackService].
  *
- * Handles cold-start command queuing (if playback is requested before async binding finishes),
+ * Handles cold-start command queuing, paused session restoration after process/service restarts,
  * active-only position polling, service-initiated disconnections, and explicit [disconnect]
  * release cleanly without leaking controllers or holding stale references.
  */
 @Singleton
 class Media3PlaybackController @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val restorationManager: PlaybackRestorationManager,
 ) : PlaybackController {
 
     private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -53,6 +54,8 @@ class Media3PlaybackController @Inject constructor(
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var pendingCommand: ((MediaController) -> Unit)? = null
     private var positionTickerJob: Job? = null
+    private var restoreJob: Job? = null
+    private var hasAttemptedColdRestore: Boolean = false
 
     private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
@@ -94,7 +97,11 @@ class Media3PlaybackController @Inject constructor(
                     connected.addListener(playerListener)
                     val queued = pendingCommand
                     pendingCommand = null
-                    queued?.invoke(connected)
+                    if (queued != null) {
+                        queued.invoke(connected)
+                    } else if (connected.mediaItemCount == 0 && !hasAttemptedColdRestore) {
+                        restorePausedSessionIfAvailable(connected)
+                    }
                     publishState(connected)
                     updatePositionTicker(connected)
                 } catch (error: ExecutionException) {
@@ -117,6 +124,8 @@ class Media3PlaybackController @Inject constructor(
 
     override fun playAudioQueue(tracks: List<AudioTrack>, startIndex: Int) {
         if (tracks.isEmpty()) return
+        restoreJob?.cancel()
+        hasAttemptedColdRestore = true
         val clampedIndex = startIndex.coerceIn(0, tracks.lastIndex)
         val mediaItems = tracks.map(MediaItemFactory::fromAudioTrack)
         executeWhenConnected { player ->
@@ -127,6 +136,8 @@ class Media3PlaybackController @Inject constructor(
     }
 
     override fun playVideo(video: VideoItem) {
+        restoreJob?.cancel()
+        hasAttemptedColdRestore = true
         val mediaItem = MediaItemFactory.fromVideoItem(video)
         executeWhenConnected { player ->
             player.setMediaItem(mediaItem, 0L)
@@ -212,6 +223,25 @@ class Media3PlaybackController @Inject constructor(
         clearConnection(releaseFuture = false)
     }
 
+    private fun restorePausedSessionIfAvailable(target: MediaController) {
+        hasAttemptedColdRestore = true
+        restoreJob?.cancel()
+        restoreJob = controllerScope.launch {
+            val restored = try {
+                restorationManager.restoreLastAudioSession()
+            } catch (_: Exception) {
+                null
+            } ?: return@launch
+            if (controller !== target || !target.isConnected || target.mediaItemCount > 0) return@launch
+            target.repeatMode = restored.repeatMode.toMedia3RepeatMode()
+            target.shuffleModeEnabled = restored.shuffleEnabled
+            target.playbackParameters = PlaybackParameters(restored.playbackSpeed)
+            target.setMediaItems(restored.mediaItems, restored.startIndex, restored.startPositionMs)
+            target.prepare()
+            publishState(target)
+        }
+    }
+
     private fun executeWhenConnected(action: (MediaController) -> Unit) {
         val active = controller
         if (active != null && active.isConnected) {
@@ -239,6 +269,8 @@ class Media3PlaybackController @Inject constructor(
     }
 
     private fun clearConnection(releaseFuture: Boolean) {
+        restoreJob?.cancel()
+        restoreJob = null
         positionTickerJob?.cancel()
         positionTickerJob = null
         pendingCommand = null
@@ -298,6 +330,12 @@ class Media3PlaybackController @Inject constructor(
             Player.REPEAT_MODE_ALL -> PlaybackRepeatMode.ALL
             Player.REPEAT_MODE_ONE -> PlaybackRepeatMode.ONE
             else -> PlaybackRepeatMode.OFF
+        }
+
+        fun PlaybackRepeatMode.toMedia3RepeatMode(): Int = when (this) {
+            PlaybackRepeatMode.OFF -> Player.REPEAT_MODE_OFF
+            PlaybackRepeatMode.ALL -> Player.REPEAT_MODE_ALL
+            PlaybackRepeatMode.ONE -> Player.REPEAT_MODE_ONE
         }
     }
 }

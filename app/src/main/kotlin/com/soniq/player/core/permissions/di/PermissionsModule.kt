@@ -1,6 +1,8 @@
 package com.soniq.player.core.permissions.di
 
+import com.soniq.player.core.permissions.AndroidNotificationPermissionChecker
 import com.soniq.player.core.permissions.AndroidPermissionChecker
+import com.soniq.player.core.permissions.NotificationPermissionChecker
 import com.soniq.player.core.permissions.PermissionChecker
 import dagger.Binds
 import dagger.Module
@@ -13,4 +15,9 @@ abstract class PermissionsModule {
 
     @Binds
     abstract fun bindPermissionChecker(impl: AndroidPermissionChecker): PermissionChecker
+
+    @Binds
+    abstract fun bindNotificationPermissionChecker(
+        impl: AndroidNotificationPermissionChecker,
+    ): NotificationPermissionChecker
 }

@@ -79,6 +79,22 @@
     <string name="player_speed_label">%1$sx</string>
     <string name="player_queue_position">%1$d / %2$d</string>
 
+    <!-- Background playback & notifications -->
+    <string name="notification_channel_playback">Media playback</string>
+    <string name="notification_action_shuffle_on">Shuffle on</string>
+    <string name="notification_action_shuffle_off">Shuffle off</string>
+    <string name="notification_action_repeat_off">Repeat off</string>
+    <string name="notification_action_repeat_all">Repeat all</string>
+    <string name="notification_action_repeat_one">Repeat one</string>
+
+    <!-- Playback settings -->
+    <string name="settings_section_playback">Playback</string>
+    <string name="settings_video_background">Continue video audio in background</string>
+    <string name="settings_video_background_summary">Keep playing video sound after leaving the video player</string>
+    <string name="settings_notifications_title">Playback notifications</string>
+    <string name="settings_notifications_summary">Allow media controls in the notification shade and lock screen</string>
+    <string name="settings_notifications_allow">Allow</string>
+
     <!-- Settings -->
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_accent">Accent color</string>

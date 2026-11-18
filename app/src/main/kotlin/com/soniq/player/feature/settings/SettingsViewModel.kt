@@ -3,6 +3,8 @@ package com.soniq.player.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.soniq.player.core.common.suspendRunCatching
+import com.soniq.player.core.datastore.PlaybackPreferences
+import com.soniq.player.core.datastore.PlaybackPreferencesDataSource
 import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.BackgroundStyle
 import com.soniq.player.core.model.appearance.FontFamilyOption
@@ -10,6 +12,8 @@ import com.soniq.player.core.model.appearance.PlayerLayout
 import com.soniq.player.core.model.appearance.TextScale
 import com.soniq.player.core.model.appearance.ThemeMode
 import com.soniq.player.core.model.appearance.ThemePreset
+import com.soniq.player.core.permissions.NotificationPermissionChecker
+import com.soniq.player.core.permissions.NotificationPermissions
 import com.soniq.player.core.theme.data.DefaultAppearanceRepository
 import com.soniq.player.core.theme.domain.AppearanceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,33 +40,62 @@ data class SettingsUiState(
     val presets: List<ThemePreset> = emptyList(),
     val presetNameDraft: String = "",
     val feedback: SettingsFeedback? = null,
+    val continueVideoInBackground: Boolean = false,
+    val showNotificationPermissionPrompt: Boolean = false,
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val appearanceRepository: AppearanceRepository,
+    private val playbackPreferences: PlaybackPreferencesDataSource,
+    private val notificationPermissionChecker: NotificationPermissionChecker,
 ) : ViewModel() {
 
     private val presetNameDraft = MutableStateFlow("")
     private val feedback = MutableStateFlow<SettingsFeedback?>(null)
+    private val notificationsGranted = MutableStateFlow(notificationPermissionChecker.canPostNotifications())
 
     val uiState: StateFlow<SettingsUiState> = combine(
         appearanceRepository.appearance,
         appearanceRepository.presets,
         presetNameDraft,
         feedback,
-    ) { appearance, presets, draft, message ->
+        playbackPreferences.preferences,
+        notificationsGranted,
+    ) { values ->
+        val appearance = values[0] as AppearanceConfig
+        @Suppress("UNCHECKED_CAST")
+        val presets = values[1] as List<ThemePreset>
+        val draft = values[2] as String
+        val message = values[3] as SettingsFeedback?
+        val playbackPrefs = values[4] as PlaybackPreferences
+        val canPostNotifications = values[5] as Boolean
+
         SettingsUiState(
             appearance = appearance,
             presets = presets,
             presetNameDraft = draft,
             feedback = message,
+            continueVideoInBackground = playbackPrefs.continueVideoInBackground,
+            showNotificationPermissionPrompt =
+                NotificationPermissions.isRuntimePermissionRequired() && !canPostNotifications,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
         initialValue = SettingsUiState(),
     )
+
+    fun refreshNotificationPermission() {
+        notificationsGranted.value = notificationPermissionChecker.canPostNotifications()
+    }
+
+    fun setContinueVideoInBackground(enabled: Boolean) {
+        viewModelScope.launch {
+            suspendRunCatching { playbackPreferences.setContinueVideoInBackground(enabled) }
+                .onFailure { feedback.value = SettingsFeedback.PRESET_ERROR }
+        }
+    }
 
     fun setThemeMode(mode: ThemeMode) = update { it.copy(themeMode = mode) }
 

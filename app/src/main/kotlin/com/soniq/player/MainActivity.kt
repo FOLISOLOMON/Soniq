@@ -4,8 +4,10 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.designsystem.theme.shouldUseDarkTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
+import com.soniq.player.core.permissions.NotificationPermissions
 import com.soniq.player.feature.player.PlaybackViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,8 +48,25 @@ class MainActivity : ComponentActivity() {
             val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
             val player by playbackViewModel.player.collectAsStateWithLifecycle()
 
+            val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+            ) {
+                playbackViewModel.markNotificationPromptShown()
+            }
+
             LaunchedEffect(Unit) {
                 playbackViewModel.ensureConnected()
+            }
+
+            // Request optional POST_NOTIFICATIONS once on API 33+ when playback first becomes active.
+            LaunchedEffect(playbackState.isPlaying) {
+                if (playbackState.isPlaying && playbackViewModel.shouldPromptForNotifications()) {
+                    val permission = NotificationPermissions.requiredPermission()
+                    if (permission != null) {
+                        playbackViewModel.markNotificationPromptShown()
+                        notificationPermissionLauncher.launch(permission)
+                    }
+                }
             }
 
             val appearance = when (val state = uiState) {

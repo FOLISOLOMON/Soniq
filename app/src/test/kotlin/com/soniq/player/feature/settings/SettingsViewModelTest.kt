@@ -1,11 +1,14 @@
 package com.soniq.player.feature.settings
 
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.soniq.player.core.datastore.PlaybackPreferencesDataSource
 import com.soniq.player.core.designsystem.token.SoniqAccents
 import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.ThemeMode
 import com.soniq.player.core.model.appearance.ThemePreset
+import com.soniq.player.core.permissions.NotificationPermissionChecker
 import com.soniq.player.core.theme.domain.AppearanceRepository
 import com.soniq.player.testutil.MainDispatcherRule
 import kotlinx.coroutines.flow.Flow
@@ -15,20 +18,42 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.io.File
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class SettingsViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    @get:Rule
+    val tempFolder = TemporaryFolder()
+
     @Test
-    fun updatesAppearanceAndManagesPresetsWithFeedback() = runTest {
+    fun updatesAppearancePlaybackPrefsAndManagesPresetsWithFeedback() = runTest {
+        val dataStore = PreferenceDataStoreFactory.create(
+            scope = backgroundScope,
+            produceFile = { File(tempFolder.newFolder(), "settings_playback.preferences_pb") },
+        )
         val repository = InMemoryAppearanceRepository()
-        val viewModel = SettingsViewModel(repository)
+        val playbackPrefs = PlaybackPreferencesDataSource(dataStore)
+        val notifChecker = object : NotificationPermissionChecker {
+            override fun canPostNotifications(): Boolean = true
+        }
+        val viewModel = SettingsViewModel(repository, playbackPrefs, notifChecker)
 
         viewModel.uiState.test {
             val initial = awaitItem()
             assertThat(initial.appearance).isEqualTo(AppearanceConfig())
+            assertThat(initial.continueVideoInBackground).isFalse()
+
+            viewModel.setContinueVideoInBackground(true)
+            assertThat(awaitItem().continueVideoInBackground).isTrue()
 
             viewModel.setDynamicColor(true)
             assertThat(awaitItem().appearance.useDynamicColor).isTrue()

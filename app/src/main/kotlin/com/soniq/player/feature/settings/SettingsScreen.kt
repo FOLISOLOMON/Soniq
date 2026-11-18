@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.R
 import com.soniq.player.core.designsystem.component.SoniqScaffold
@@ -66,6 +67,7 @@ import com.soniq.player.core.model.appearance.PlayerLayout
 import com.soniq.player.core.model.appearance.TextScale
 import com.soniq.player.core.model.appearance.ThemeMode
 import com.soniq.player.core.model.appearance.ThemePreset
+import com.soniq.player.core.permissions.NotificationPermissions
 
 @Composable
 fun SettingsRoute(
@@ -90,6 +92,17 @@ fun SettingsRoute(
         }
     }
 
+    val notificationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) {
+        viewModel.refreshNotificationPermission()
+    }
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshNotificationPermission()
+        onPauseOrDispose {}
+    }
+
     SettingsScreen(
         uiState = uiState,
         dynamicColorSupported = isDynamicColorSupported,
@@ -102,6 +115,10 @@ fun SettingsRoute(
         onBackgroundStyleSelected = viewModel::setBackgroundStyle,
         onChooseBackgroundImage = { imagePicker.launch(arrayOf("image/*")) },
         onPlayerLayoutSelected = viewModel::setPlayerLayout,
+        onContinueVideoInBackgroundToggled = viewModel::setContinueVideoInBackground,
+        onRequestNotificationPermission = {
+            NotificationPermissions.requiredPermission()?.let(notificationLauncher::launch)
+        },
         onPresetNameChanged = viewModel::onPresetNameChanged,
         onSavePreset = viewModel::savePreset,
         onApplyPreset = viewModel::applyPreset,
@@ -131,6 +148,8 @@ fun SettingsScreen(
     onDeletePreset: (Long) -> Unit,
     onFeedbackDismissed: () -> Unit,
     modifier: Modifier = Modifier,
+    onContinueVideoInBackgroundToggled: (Boolean) -> Unit = {},
+    onRequestNotificationPermission: () -> Unit = {},
 ) {
     val spacing = SoniqTheme.tokens.spacing
     val sizes = SoniqTheme.tokens.sizes
@@ -346,6 +365,41 @@ fun SettingsScreen(
                         },
                         onSelect = onPlayerLayoutSelected,
                     )
+                }
+            }
+
+            item(key = "playback_behavior") {
+                SoniqSectionHeader(title = stringResource(R.string.settings_section_playback))
+                SoniqSurfaceCard {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.settings_video_background),
+                        summary = stringResource(R.string.settings_video_background_summary),
+                        checked = uiState.continueVideoInBackground,
+                        onCheckedChange = onContinueVideoInBackgroundToggled,
+                    )
+                    if (uiState.showNotificationPermissionPrompt) {
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_notifications_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_notifications_summary),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            OutlinedButton(onClick = onRequestNotificationPermission) {
+                                Text(text = stringResource(R.string.settings_notifications_allow))
+                            }
+                        }
+                    }
                 }
             }
 

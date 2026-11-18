@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.soniq.player.core.datastore.AppearanceDataStore
+import com.soniq.player.core.datastore.PlaybackDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +23,9 @@ object DataStoreModule {
     /** File name is referenced by the backup rules in res/xml; keep them in sync. */
     private const val APPEARANCE_FILE = "appearance"
 
+    /** Transient playback preferences & queue snapshot (excluded from cloud backup). */
+    private const val PLAYBACK_FILE = "playback_state"
+
     @Provides
     @Singleton
     @AppearanceDataStore
@@ -30,5 +34,14 @@ object DataStoreModule {
             // A corrupted file resets appearance to defaults instead of crashing on every launch.
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             produceFile = { context.preferencesDataStoreFile(APPEARANCE_FILE) },
+        )
+
+    @Provides
+    @Singleton
+    @PlaybackDataStore
+    fun providePlaybackDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(
+            corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+            produceFile = { context.preferencesDataStoreFile(PLAYBACK_FILE) },
         )
 }

@@ -22,6 +22,9 @@ interface AudioTrackDao {
     @Query("SELECT * FROM audio_tracks WHERE folder_path = :folderPath ORDER BY title COLLATE NOCASE ASC")
     fun observeByFolder(folderPath: String): Flow<List<AudioTrackEntity>>
 
+    @Query("SELECT * FROM audio_tracks WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<AudioTrackEntity>
+
     @Query("SELECT id FROM audio_tracks")
     suspend fun getAllIds(): List<Long>
 
