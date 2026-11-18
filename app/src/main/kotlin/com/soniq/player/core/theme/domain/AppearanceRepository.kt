@@ -34,6 +34,12 @@ interface AppearanceRepository {
      */
     suspend fun applyPreset(id: Long): Boolean
 
+    /** Renames an existing preset; returns `false` if not found. */
+    suspend fun renamePreset(id: Long, newName: String): Boolean
+
+    /** Duplicates an existing preset; returns the new id or `null` if not found. */
+    suspend fun duplicatePreset(id: Long): Long?
+
     /** Deletes the preset identified by [id]; deleting a missing preset is a no-op. */
     suspend fun deletePreset(id: Long)
 }

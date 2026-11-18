@@ -202,4 +202,19 @@
     <string name="video_gesture_seek_back">-10s</string>
     <string name="video_gesture_seek_forward">+10s</string>
     <string name="playback_error_dismiss">Dismiss</string>
+
+    <!-- Stage 7: Custom Accent Picker, Broken Background Recovery, Preset Rename/Duplicate -->
+    <string name="settings_custom_accent_button">Custom</string>
+    <string name="settings_custom_accent_title">Custom Accent Color</string>
+    <string name="settings_custom_accent_hue">Hue (%1$d°)</string>
+    <string name="settings_custom_accent_saturation">Saturation (%1$d%%)</string>
+    <string name="settings_custom_accent_lightness">Lightness (%1$d%%)</string>
+    <string name="settings_custom_accent_preview">Preview</string>
+    <string name="settings_custom_accent_apply">Apply</string>
+    <string name="settings_background_broken">Selected background image is no longer accessible</string>
+    <string name="settings_background_clear">Clear</string>
+    <string name="settings_preset_actions">Preset actions for %1$s</string>
+    <string name="settings_preset_rename">Rename</string>
+    <string name="settings_preset_duplicate">Duplicate</string>
+    <string name="settings_preset_rename_title">Rename preset</string>
 </resources>

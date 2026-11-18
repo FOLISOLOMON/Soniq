@@ -20,7 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -28,14 +31,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.net.toUri
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,6 +124,7 @@ fun SettingsRoute(
         onTextScaleSelected = viewModel::setTextScale,
         onBackgroundStyleSelected = viewModel::setBackgroundStyle,
         onChooseBackgroundImage = { imagePicker.launch(arrayOf("image/*")) },
+        onClearBackgroundImage = viewModel::clearBackgroundImage,
         onPlayerLayoutSelected = viewModel::setPlayerLayout,
         onContinueVideoInBackgroundToggled = viewModel::setContinueVideoInBackground,
         onRequestNotificationPermission = {
@@ -122,6 +133,8 @@ fun SettingsRoute(
         onPresetNameChanged = viewModel::onPresetNameChanged,
         onSavePreset = viewModel::savePreset,
         onApplyPreset = viewModel::applyPreset,
+        onRenamePreset = viewModel::renamePreset,
+        onDuplicatePreset = viewModel::duplicatePreset,
         onDeletePreset = viewModel::deletePreset,
         onFeedbackDismissed = viewModel::onFeedbackDismissed,
         modifier = modifier,
@@ -148,14 +161,20 @@ fun SettingsScreen(
     onDeletePreset: (Long) -> Unit,
     onFeedbackDismissed: () -> Unit,
     modifier: Modifier = Modifier,
+    onClearBackgroundImage: () -> Unit = {},
+    onRenamePreset: (Long, String) -> Unit = { _, _ -> },
+    onDuplicatePreset: (Long) -> Unit = {},
     onContinueVideoInBackgroundToggled: (Boolean) -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     val spacing = SoniqTheme.tokens.spacing
     val sizes = SoniqTheme.tokens.sizes
     val border = SoniqTheme.tokens.border
     val snackbarHostState = remember { SnackbarHostState() }
     val feedbackText = uiState.feedback?.let { stringResource(it.messageRes()) }
+    var showCustomAccentDialog by remember { mutableStateOf(false) }
+    var renameTarget by remember { mutableStateOf<ThemePreset?>(null) }
 
     LaunchedEffect(uiState.feedback) {
         if (feedbackText != null) {
@@ -269,6 +288,9 @@ fun SettingsScreen(
                                 }
                             }
                         }
+                        OutlinedButton(onClick = { showCustomAccentDialog = true }) {
+                            Text(text = stringResource(R.string.settings_custom_accent_button))
+                        }
                     }
                 }
             }
@@ -329,12 +351,39 @@ fun SettingsScreen(
                         onSelect = onBackgroundStyleSelected,
                     )
                     if (appearance.backgroundStyle == BackgroundStyle.IMAGE) {
+                        val imageUri = appearance.backgroundImageUri
+                        val isImageReadable = remember(imageUri) {
+                            if (imageUri.isNullOrBlank()) {
+                                true
+                            } else {
+                                runCatching {
+                                    context.contentResolver.openAssetFileDescriptor(imageUri.toUri(), "r")?.use { true } ?: false
+                                }.getOrDefault(false)
+                            }
+                        }
+                        if (!imageUri.isNullOrBlank() && !isImageReadable) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_background_broken),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                TextButton(onClick = onClearBackgroundImage) {
+                                    Text(text = stringResource(R.string.settings_background_clear))
+                                }
+                            }
+                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            if (!appearance.backgroundImageUri.isNullOrBlank()) {
+                            if (!imageUri.isNullOrBlank() && isImageReadable) {
                                 Text(
                                     text = stringResource(R.string.settings_background_image_selected),
                                     style = MaterialTheme.typography.bodySmall,
@@ -433,10 +482,34 @@ fun SettingsScreen(
                 PresetRowCard(
                     preset = preset,
                     onApply = { onApplyPreset(preset.id) },
+                    onRename = { renameTarget = preset },
+                    onDuplicate = { onDuplicatePreset(preset.id) },
                     onDelete = { onDeletePreset(preset.id) },
                 )
             }
         }
+    }
+
+    if (showCustomAccentDialog) {
+        CustomAccentColorDialog(
+            initialArgb = uiState.appearance.accentColorArgb,
+            onDismiss = { showCustomAccentDialog = false },
+            onApply = { argb ->
+                showCustomAccentDialog = false
+                onAccentColorSelected(argb)
+            },
+        )
+    }
+
+    renameTarget?.let { target ->
+        RenamePresetDialog(
+            initialName = target.name,
+            onDismiss = { renameTarget = null },
+            onConfirm = { newName ->
+                renameTarget = null
+                onRenamePreset(target.id, newName)
+            },
+        )
     }
 }
 
@@ -482,10 +555,14 @@ private fun SettingSwitchRow(
 private fun PresetRowCard(
     preset: ThemePreset,
     onApply: () -> Unit,
+    onRename: () -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
     val sizes = SoniqTheme.tokens.sizes
+    var menuExpanded by remember { mutableStateOf(false) }
+
     SoniqSurfaceCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -508,14 +585,148 @@ private fun PresetRowCard(
             FilledTonalButton(onClick = onApply) {
                 Text(text = stringResource(R.string.settings_preset_apply))
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_delete),
-                    contentDescription = stringResource(R.string.settings_preset_delete, preset.name),
-                )
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_more_vert),
+                        contentDescription = stringResource(R.string.settings_preset_actions, preset.name),
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.settings_preset_rename)) },
+                        onClick = {
+                            menuExpanded = false
+                            onRename()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.settings_preset_duplicate)) },
+                        onClick = {
+                            menuExpanded = false
+                            onDuplicate()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.settings_preset_delete, preset.name)) },
+                        onClick = {
+                            menuExpanded = false
+                            onDelete()
+                        },
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun CustomAccentColorDialog(
+    initialArgb: Int,
+    onDismiss: () -> Unit,
+    onApply: (Int) -> Unit,
+) {
+    val initialHsl = remember(initialArgb) { ColorMath.toHsl(initialArgb) }
+    var hue by remember { mutableFloatStateOf(initialHsl.hue) }
+    var saturation by remember { mutableFloatStateOf(initialHsl.saturation.coerceIn(0.2f, 1f)) }
+    var lightness by remember { mutableFloatStateOf(initialHsl.lightness.coerceIn(0.25f, 0.75f)) }
+    val previewArgb = ColorMath.fromHsl(ColorMath.Hsl(hue, saturation, lightness))
+    val onPreviewArgb = ColorMath.readableOn(previewArgb)
+    val hexText = remember(previewArgb) { "#%06X".format(previewArgb and 0xFFFFFF) }
+    val spacing = SoniqTheme.tokens.spacing
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_custom_accent_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = Color(previewArgb),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(spacing.md),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_custom_accent_preview),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(onPreviewArgb),
+                        )
+                        Text(
+                            text = hexText,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(onPreviewArgb),
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.settings_custom_accent_hue, hue.toInt()),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Slider(value = hue, onValueChange = { hue = it }, valueRange = 0f..359f)
+                Text(
+                    text = stringResource(R.string.settings_custom_accent_saturation, (saturation * 100).toInt()),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Slider(value = saturation, onValueChange = { saturation = it }, valueRange = 0.1f..1f)
+                Text(
+                    text = stringResource(R.string.settings_custom_accent_lightness, (lightness * 100).toInt()),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Slider(value = lightness, onValueChange = { lightness = it }, valueRange = 0.2f..0.8f)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onApply(previewArgb) }) {
+                Text(stringResource(R.string.settings_custom_accent_apply))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.playlist_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun RenamePresetDialog(
+    initialName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_preset_rename_title)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name) },
+                enabled = name.trim().isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.settings_preset_rename))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.playlist_cancel))
+            }
+        },
+    )
 }
 
 private fun SettingsFeedback.messageRes(): Int = when (this) {

@@ -97,7 +97,16 @@ class DefaultAppearanceRepositoryTest {
         assertThat(restored.fontFamily).isEqualTo(FontFamilyOption.SERIF)
         assertThat(restored.playerLayout).isEqualTo(PlayerLayout.COMPACT)
 
+        assertThat(repository.renamePreset(presetId, "Midnight Studio")).isTrue()
+        assertThat(repository.presets.first().first().name).isEqualTo("Midnight Studio")
+
+        val copyId = repository.duplicatePreset(presetId)
+        assertThat(copyId).isNotNull()
+        assertThat(repository.presets.first().map { it.name })
+            .containsExactly("Midnight Studio Copy", "Midnight Studio")
+
         repository.deletePreset(presetId)
+        repository.deletePreset(copyId!!)
         assertThat(repository.presets.first()).isEmpty()
     }
 

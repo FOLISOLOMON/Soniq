@@ -33,11 +33,7 @@ class DefaultAppearanceRepository @Inject constructor(
     }
 
     override suspend fun saveCurrentAsPreset(name: String): Long {
-        val trimmed = name.trim()
-        require(trimmed.isNotEmpty()) { "Preset name must not be blank" }
-        require(trimmed.length <= MAX_PRESET_NAME_LENGTH) {
-            "Preset name must be at most $MAX_PRESET_NAME_LENGTH characters"
-        }
+        val trimmed = validatePresetName(name)
         val current = preferences.appearance.first()
         return presetDao.insert(current.toPresetEntity(trimmed, clock.millis()))
     }
@@ -48,8 +44,30 @@ class DefaultAppearanceRepository @Inject constructor(
         return true
     }
 
+    override suspend fun renamePreset(id: Long, newName: String): Boolean {
+        val trimmed = validatePresetName(newName)
+        return presetDao.renameById(id, trimmed) > 0
+    }
+
+    override suspend fun duplicatePreset(id: Long): Long? {
+        val existing = presetDao.getById(id) ?: return null
+        val suffix = " Copy"
+        val baseMax = (MAX_PRESET_NAME_LENGTH - suffix.length).coerceAtLeast(1)
+        val copyName = existing.name.take(baseMax).trimEnd() + suffix
+        return presetDao.insert(existing.toDomain().config.toPresetEntity(copyName, clock.millis()))
+    }
+
     override suspend fun deletePreset(id: Long) {
         presetDao.deleteById(id)
+    }
+
+    private fun validatePresetName(name: String): String {
+        val trimmed = name.trim()
+        require(trimmed.isNotEmpty()) { "Preset name must not be blank" }
+        require(trimmed.length <= MAX_PRESET_NAME_LENGTH) {
+            "Preset name must be at most $MAX_PRESET_NAME_LENGTH characters"
+        }
+        return trimmed
     }
 
     companion object {

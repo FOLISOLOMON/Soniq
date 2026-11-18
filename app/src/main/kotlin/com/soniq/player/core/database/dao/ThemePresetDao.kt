@@ -19,6 +19,10 @@ interface ThemePresetDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(preset: ThemePresetEntity): Long
 
+    /** @return the number of updated rows (0 or 1). */
+    @Query("UPDATE theme_presets SET name = :name WHERE id = :id")
+    suspend fun renameById(id: Long, name: String): Int
+
     /** @return the number of deleted rows (0 or 1). */
     @Query("DELETE FROM theme_presets WHERE id = :id")
     suspend fun deleteById(id: Long): Int

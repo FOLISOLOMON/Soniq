@@ -124,6 +124,13 @@ class SettingsViewModel @Inject constructor(
         feedback.value = SettingsFeedback.BACKGROUND_IMAGE_ERROR
     }
 
+    fun clearBackgroundImage() = update {
+        it.copy(
+            backgroundStyle = BackgroundStyle.SOLID,
+            backgroundImageUri = null,
+        )
+    }
+
     fun setPlayerLayout(layout: PlayerLayout) = update { it.copy(playerLayout = layout) }
 
     fun onPresetNameChanged(value: String) {
@@ -154,6 +161,39 @@ class SettingsViewModel @Inject constructor(
                 .onSuccess { applied ->
                     feedback.value = if (applied) {
                         SettingsFeedback.PRESET_APPLIED
+                    } else {
+                        SettingsFeedback.PRESET_ERROR
+                    }
+                }
+                .onFailure {
+                    feedback.value = SettingsFeedback.PRESET_ERROR
+                }
+        }
+    }
+
+    fun renamePreset(id: Long, newName: String) {
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty()) {
+            feedback.value = SettingsFeedback.PRESET_NAME_INVALID
+            return
+        }
+        viewModelScope.launch {
+            suspendRunCatching { appearanceRepository.renamePreset(id, trimmed) }
+                .onSuccess { renamed ->
+                    if (!renamed) feedback.value = SettingsFeedback.PRESET_ERROR
+                }
+                .onFailure {
+                    feedback.value = SettingsFeedback.PRESET_ERROR
+                }
+        }
+    }
+
+    fun duplicatePreset(id: Long) {
+        viewModelScope.launch {
+            suspendRunCatching { appearanceRepository.duplicatePreset(id) }
+                .onSuccess { newId ->
+                    feedback.value = if (newId != null) {
+                        SettingsFeedback.PRESET_SAVED
                     } else {
                         SettingsFeedback.PRESET_ERROR
                     }

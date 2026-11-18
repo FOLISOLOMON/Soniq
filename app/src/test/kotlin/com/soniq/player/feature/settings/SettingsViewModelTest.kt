@@ -84,6 +84,19 @@ class SettingsViewModelTest {
             assertThat(savedState.presetNameDraft).isEmpty()
             assertThat(savedState.feedback).isEqualTo(SettingsFeedback.PRESET_SAVED)
 
+            val presetId = savedState.presets.first().id
+            viewModel.renamePreset(presetId, "Emerald Pro")
+            assertThat(awaitItem().presets.first().name).isEqualTo("Emerald Pro")
+
+            viewModel.duplicatePreset(presetId)
+            val duplicated = expectMostRecentItem()
+            assertThat(duplicated.presets).hasSize(2)
+
+            viewModel.setBackgroundImage("content://broken/img")
+            assertThat(awaitItem().appearance.backgroundImageUri).isEqualTo("content://broken/img")
+            viewModel.clearBackgroundImage()
+            assertThat(awaitItem().appearance.backgroundImageUri).isNull()
+
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -116,6 +129,28 @@ class SettingsViewModelTest {
             val match = _presets.value.firstOrNull { it.id == id } ?: return false
             _appearance.value = match.config
             return true
+        }
+
+        override suspend fun renamePreset(id: Long, newName: String): Boolean {
+            var found = false
+            _presets.update { list ->
+                list.map {
+                    if (it.id == id) {
+                        found = true
+                        it.copy(name = newName.trim())
+                    } else {
+                        it
+                    }
+                }
+            }
+            return found
+        }
+
+        override suspend fun duplicatePreset(id: Long): Long? {
+            val match = _presets.value.firstOrNull { it.id == id } ?: return null
+            val copyId = nextId++
+            _presets.update { listOf(match.copy(id = copyId, name = "${match.name} Copy")) + it }
+            return copyId
         }
 
         override suspend fun deletePreset(id: Long) {

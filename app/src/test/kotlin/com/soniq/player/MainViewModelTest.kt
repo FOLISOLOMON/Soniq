@@ -27,6 +27,8 @@ class MainViewModelTest {
             override suspend fun updateAppearance(transform: (AppearanceConfig) -> AppearanceConfig) = Unit
             override suspend fun saveCurrentAsPreset(name: String): Long = 0L
             override suspend fun applyPreset(id: Long): Boolean = false
+            override suspend fun renamePreset(id: Long, newName: String): Boolean = false
+            override suspend fun duplicatePreset(id: Long): Long? = null
             override suspend fun deletePreset(id: Long) = Unit
         }
 
