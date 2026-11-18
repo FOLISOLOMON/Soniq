@@ -1,0 +1,96 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "b9ca8fb22da92641890d2518f522216e",
+    "entities": [
+      {
+        "tableName": "theme_presets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `theme_mode` TEXT NOT NULL, `amoled_black` INTEGER NOT NULL, `dynamic_color` INTEGER NOT NULL, `accent_argb` INTEGER NOT NULL, `font_family` TEXT NOT NULL, `text_scale` TEXT NOT NULL, `background_style` TEXT NOT NULL, `background_image_uri` TEXT, `player_layout` TEXT NOT NULL, `created_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "themeMode",
+            "columnName": "theme_mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amoledBlack",
+            "columnName": "amoled_black",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dynamicColor",
+            "columnName": "dynamic_color",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accentArgb",
+            "columnName": "accent_argb",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fontFamily",
+            "columnName": "font_family",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textScale",
+            "columnName": "text_scale",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backgroundStyle",
+            "columnName": "background_style",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backgroundImageUri",
+            "columnName": "background_image_uri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "playerLayout",
+            "columnName": "player_layout",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtEpochMillis",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b9ca8fb22da92641890d2518f522216e')"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+ backup rules. Appearance preferences and theme presets are small,
+    user-authored and safe to restore. The media index (added in later stages) is
+    rebuilt from MediaStore and must not be backed up.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="datastore/appearance.preferences_pb" />
+        <include domain="database" path="soniq.db" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="datastore/appearance.preferences_pb" />
+        <include domain="database" path="soniq.db" />
+    </device-transfer>
+</data-extraction-rules>

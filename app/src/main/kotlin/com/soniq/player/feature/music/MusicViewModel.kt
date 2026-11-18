@@ -1,0 +1,59 @@
+package com.soniq.player.feature.music
+
+import androidx.lifecycle.ViewModel
+import com.soniq.player.core.model.media.MediaKind
+import com.soniq.player.core.permissions.MediaAccessState
+import com.soniq.player.core.permissions.PermissionChecker
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import javax.inject.Inject
+
+/** Unidirectional UI state for the Music destination. */
+data class MusicUiState(
+    val accessState: MediaAccessState = MediaAccessState.NOT_GRANTED,
+)
+
+@HiltViewModel
+class MusicViewModel @Inject constructor(
+    private val permissionChecker: PermissionChecker,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(MusicUiState(accessState = initialAccessState()))
+    val uiState: StateFlow<MusicUiState> = _uiState.asStateFlow()
+
+    /** Re-checks permission state, e.g., when returning from system app settings. */
+    fun refreshPermission() {
+        val granted = permissionChecker.hasMediaAccess(MediaKind.AUDIO)
+        _uiState.update { current ->
+            current.copy(
+                accessState = when {
+                    granted -> MediaAccessState.GRANTED
+                    current.accessState == MediaAccessState.DENIED_PERMANENTLY -> MediaAccessState.DENIED_PERMANENTLY
+                    else -> MediaAccessState.NOT_GRANTED
+                },
+            )
+        }
+    }
+
+    fun onPermissionResult(granted: Boolean, permanentlyDenied: Boolean) {
+        _uiState.update {
+            it.copy(
+                accessState = when {
+                    granted -> MediaAccessState.GRANTED
+                    permanentlyDenied -> MediaAccessState.DENIED_PERMANENTLY
+                    else -> MediaAccessState.NOT_GRANTED
+                },
+            )
+        }
+    }
+
+    private fun initialAccessState(): MediaAccessState =
+        if (permissionChecker.hasMediaAccess(MediaKind.AUDIO)) {
+            MediaAccessState.GRANTED
+        } else {
+            MediaAccessState.NOT_GRANTED
+        }
+}

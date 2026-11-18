@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors design tokens Neutral.Light.Background / Accent.Default for pre-Compose surfaces. -->
+    <color name="soniq_window_background">#FFFBF8FF</color>
+    <color name="soniq_launcher_background">#FF1B1530</color>
+    <color name="soniq_launcher_foreground">#FFB9A6FF</color>
+</resources>

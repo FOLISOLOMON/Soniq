@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and lower backup rules. Mirrors data_extraction_rules.xml. -->
+<full-backup-content>
+    <include domain="file" path="datastore/appearance.preferences_pb" />
+    <include domain="database" path="soniq.db" />
+</full-backup-content>

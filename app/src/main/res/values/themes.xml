@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The window theme only matters until Compose draws its first frame.
+        All in-app styling lives in the Compose design system (core.designsystem).
+    -->
+    <style name="Theme.Soniq" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/soniq_window_background</item>
+    </style>
+
+    <!-- Splash theme (androidx.core:core-splashscreen); swapped to Theme.Soniq at startup. -->
+    <style name="Theme.Soniq.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/soniq_window_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Soniq</item>
+    </style>
+</resources>

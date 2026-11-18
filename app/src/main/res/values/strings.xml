@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">SONIQ</string>
+
+    <!-- Top-level destinations -->
+    <string name="destination_music">Music</string>
+    <string name="destination_video">Video</string>
+    <string name="destination_settings">Settings</string>
+
+    <!-- Media permission states -->
+    <string name="permission_music_title">Access your music</string>
+    <string name="permission_music_message">SONIQ needs permission to read audio files stored on this device. Your files never leave your device.</string>
+    <string name="permission_video_title">Access your videos</string>
+    <string name="permission_video_message">SONIQ needs permission to read video files stored on this device. Your files never leave your device.</string>
+    <string name="permission_grant">Grant access</string>
+    <string name="permission_open_settings">Open app settings</string>
+    <string name="permission_denied_permanently">Access was denied. You can enable it in the system app settings.</string>
+    <string name="library_music_ready_title">Music access granted</string>
+    <string name="library_video_ready_title">Video access granted</string>
+    <string name="library_indexing_pending">Library indexing will be available in the next development stage.</string>
+
+    <!-- Settings -->
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_accent">Accent color</string>
+    <string name="settings_section_typography">Typography</string>
+    <string name="settings_section_background">Background</string>
+    <string name="settings_section_player">Player layout</string>
+    <string name="settings_section_presets">Theme presets</string>
+    <string name="settings_theme_mode">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_amoled">Pure black (AMOLED)</string>
+    <string name="settings_amoled_summary">Use true black surfaces whenever the dark theme is active</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_dynamic_color_summary">Derive colors from your wallpaper (Android 12+)</string>
+    <string name="settings_dynamic_color_unavailable">Requires Android 12 or newer</string>
+    <string name="settings_font_family">Font</string>
+    <string name="settings_font_system">System</string>
+    <string name="settings_font_sans">Sans</string>
+    <string name="settings_font_serif">Serif</string>
+    <string name="settings_font_mono">Mono</string>
+    <string name="settings_text_size">Text size</string>
+    <string name="settings_text_small">Small</string>
+    <string name="settings_text_default">Default</string>
+    <string name="settings_text_large">Large</string>
+    <string name="settings_background_solid">Solid</string>
+    <string name="settings_background_gradient">Gradient</string>
+    <string name="settings_background_image">Image</string>
+    <string name="settings_background_choose_image">Choose image</string>
+    <string name="settings_background_image_selected">Custom image selected</string>
+    <string name="settings_background_image_error">The selected image could not be accessed.</string>
+    <string name="settings_player_classic">Classic</string>
+    <string name="settings_player_artwork">Artwork</string>
+    <string name="settings_player_compact">Compact</string>
+    <string name="settings_presets_empty">No saved presets yet.</string>
+    <string name="settings_preset_name_hint">Preset name</string>
+    <string name="settings_preset_save">Save current theme</string>
+    <string name="settings_preset_apply">Apply</string>
+    <string name="settings_preset_delete">Delete preset %1$s</string>
+    <string name="settings_preset_saved">Preset saved</string>
+    <string name="settings_preset_applied">Preset applied</string>
+    <string name="settings_preset_error">Could not update presets. Please try again.</string>
+    <string name="settings_preset_name_invalid">Enter a name for the preset.</string>
+    <string name="settings_accent_swatch">Accent %1$s</string>
+
+    <string name="cd_selected">Selected</string>
+</resources>
