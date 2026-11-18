@@ -26,23 +26,31 @@ class SoniqPlaybackServiceInstrumentedTest {
         val controller = future.get(15, TimeUnit.SECONDS)
 
         try {
-            assertThat(controller.isConnected).isTrue()
-            assertThat(controller.isSessionCommandAvailable(SoniqSessionCommands.COMMAND_TOGGLE_SHUFFLE))
-                .isTrue()
-            assertThat(controller.isSessionCommandAvailable(SoniqSessionCommands.COMMAND_CYCLE_REPEAT))
-                .isTrue()
+            assertThat(runOnMainSync { controller.isConnected }).isTrue()
+            assertThat(
+                runOnMainSync {
+                    controller.isSessionCommandAvailable(SoniqSessionCommands.COMMAND_TOGGLE_SHUFFLE)
+                },
+            ).isTrue()
+            assertThat(
+                runOnMainSync {
+                    controller.isSessionCommandAvailable(SoniqSessionCommands.COMMAND_CYCLE_REPEAT)
+                },
+            ).isTrue()
 
             val initialShuffle = runOnMainSync { controller.shuffleModeEnabled }
             val shuffleResult = runOnMainSync {
                 controller.sendCustomCommand(SoniqSessionCommands.COMMAND_TOGGLE_SHUFFLE, Bundle.EMPTY)
             }.get(10, TimeUnit.SECONDS)
             assertThat(shuffleResult.resultCode).isEqualTo(SessionResult.RESULT_SUCCESS)
+            awaitCondition { runOnMainSync { controller.shuffleModeEnabled } == !initialShuffle }
             assertThat(runOnMainSync { controller.shuffleModeEnabled }).isEqualTo(!initialShuffle)
 
             val repeatResult = runOnMainSync {
                 controller.sendCustomCommand(SoniqSessionCommands.COMMAND_CYCLE_REPEAT, Bundle.EMPTY)
             }.get(10, TimeUnit.SECONDS)
             assertThat(repeatResult.resultCode).isEqualTo(SessionResult.RESULT_SUCCESS)
+            awaitCondition { runOnMainSync { controller.repeatMode } == Player.REPEAT_MODE_ALL }
             assertThat(runOnMainSync { controller.repeatMode }).isEqualTo(Player.REPEAT_MODE_ALL)
 
             // Reset modes cleanly.
@@ -52,6 +60,14 @@ class SoniqPlaybackServiceInstrumentedTest {
             }
         } finally {
             runOnMainSync { MediaController.releaseFuture(future) }
+        }
+    }
+
+    private fun awaitCondition(timeoutMs: Long = 3_000L, predicate: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            if (predicate()) return
+            Thread.sleep(50L)
         }
     }
 
