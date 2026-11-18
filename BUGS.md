@@ -1,0 +1,32 @@
+# SONIQ — Defect & Technical Debt Register
+
+**Last Updated**: 2026-11-18  
+**Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
+
+---
+
+## Active / Open Issues & Technical Debt
+
+| ID | Severity | Area | Description | Status | Proposed Fix | Verification |
+|---|---|---|---|---|---|---|
+| **DEBT-001** | Medium | Database / Backup | `data_extraction_rules.xml` and `backup_rules.xml` back up `soniq.db`. Adding MediaStore index tables into `soniq.db` would erroneously back up device-specific media caches. | **OPEN** (Targeted Stage 2) | Place MediaStore index entities (`AudioTrackEntity`, `VideoItemEntity`) in a separate `soniq_media.db` excluded from backup rules; keep `soniq.db` strictly for user-authored presets & playlists. | Inspect merged backup XML & Room schemas in Stage 2. |
+| **DEBT-002** | Medium | Playback | `PlaybackServiceModule` hardcodes `C.AUDIO_CONTENT_TYPE_MUSIC` for all playback; video playback needs dynamic `AUDIO_CONTENT_TYPE_MOVIE` vs `AUDIO_CONTENT_TYPE_MUSIC`. | **OPEN** (Targeted Stage 3) | Update `ExoPlayer.setAudioAttributes(...)` when switching between `MediaKind.AUDIO` and `MediaKind.VIDEO` items. | Unit/service verification in Stage 3. |
+| **DEBT-003** | Low | Design System / Settings | `AppearanceConfig.accentColorArgb` supports arbitrary ARGB values, but `SettingsScreen` currently exposes only 8 curated `SoniqAccents` swatches (no interactive custom color picker). | **OPEN** (Targeted Stage 7) | Add an interactive HSL/Hex accent picker dialog in Settings backed by `ColorMath` contrast preview. | Compose UI & contrast unit tests in Stage 7. |
+| **DEBT-004** | Low | Design System / Background | If a user deletes or revokes SAF permission for a selected `BackgroundStyle.IMAGE` URI, `SoniqBackground` degrades safely to solid color via Coil without notifying the user or offering to clear the broken URI. | **OPEN** (Targeted Stage 7) | Wire Coil `onError` callback or `ContentResolver` check to surface a non-intrusive reset prompt in Settings. | Unit/UI test with unreadable URI in Stage 7. |
+| **DEBT-005** | Low | Testing / Device | Physical device `112173741O045288` appeared in ADB as `authorizing` (USB debugging RSA prompt pending on device screen), preventing physical-device instrumented execution so far. | **OPEN** (External) | User approves USB debugging RSA prompt on phone, then run `./gradlew connectedDebugAndroidTest`. | Run on authorized physical device and log in `TEST_REPORT.md`. |
+| **DEBT-006** | Info | Manifest Merger | `tools:node="remove"` on `INTERNET` / `ACCESS_NETWORK_STATE` emits informational manifest merger warnings confirming no dependency declared them. | **ACCEPTED** | Keep as intentional defense-in-depth privacy safeguard. | Verify merged manifest remains free of network permissions. |
+
+---
+
+## Resolved Issues (Historical Audit Trail)
+
+| ID | Severity | Area | Description | Status | Resolution & Verification |
+|---|---|---|---|---|---|
+| **BUG-001** | High | Permissions | Missing Android 14+ Selected Photos/Videos Access (`READ_MEDIA_VISUAL_USER_SELECTED`); partial video access was reported as `NOT_GRANTED` (`SelectedPhotoAccess` Lint warning). | **RESOLVED** (Stage 1.1b / `46be15f`) | Declared `READ_MEDIA_VISUAL_USER_SELECTED`, switched to `RequestMultiplePermissions`, introduced `MediaAccessGrant` (`FULL`/`PARTIAL`/`NONE`) and `MediaAccessState.PARTIAL` UI handling. Verified by `MediaPermissionsTest` (4 tests), `MediaViewModelsTest`, and `lintDebug` (0 warnings). |
+| **BUG-002** | High | Playback | `Media3PlaybackController` had no `disconnect()` / `MediaController.releaseFuture` path and no `MediaController.Listener.onDisconnected` handler, leaving stale references if `SoniqPlaybackService` was stopped by the OS. | **RESOLVED** (Stage 1.1b / `46be15f`) | Added `disconnect()`, tracked `controllerFuture`, handled `onDisconnected`, guarded against in-flight completion races, and reset `PlaybackState`. Verified by `Media3PlaybackControllerTest`. |
+| **BUG-003** | Medium | Startup / Lifecycle | `MainViewModel.uiState` used `SharingStarted.WhileSubscribed(5_000L)` while `MainActivity` polled `.value` in `SplashScreen.setKeepOnScreenCondition`, creating subscription-timing coupling. | **RESOLVED** (Stage 1.1b / `46be15f`) | Switched `MainViewModel.uiState` to `SharingStarted.Eagerly`. Verified by `MainViewModelTest` (proving `Loading -> Ready` without an active UI collector) and emulator launch check. |
+| **BUG-004** | Medium | Design System | Hardcoded visual literals outside design tokens: `0.92f` alpha in `SoniqComponents.kt` and `3.dp`/`1.dp` borders in `SettingsScreen.kt`. | **RESOLVED** (Stage 1.1b / `46be15f`) | Added `SoniqBorder` (`thin`, `selected`) and `SoniqAlpha.topBarScrolled` to `SoniqTokens.kt`; replaced both occurrences. Verified zero remaining literals outside `core/designsystem/token`. |
+| **BUG-005** | Medium | Build / JDK 21 | Kotlin JVM target relied implicitly on AGP 9 alignment with `compileOptions` instead of declaring `jvmTarget = JVM_17` explicitly. | **RESOLVED** (Stage 1.1b / `46be15f`) | Added `kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }` in `app/build.gradle.kts`. Verified clean compilation under JDK `21.0.13`. |
+| **BUG-006** | Low | Lint & Build Hygiene | 4 `InlinedApi` Lint warnings (`MediaPermissions.kt`, `MediaStoreCollections.kt`), unused `androidx-lifecycle-service`, redundant `androidx-hilt-navigation-compose`, and unnecessary `vectorDrawables { useSupportLibrary = true }`. | **RESOLVED** (Stage 1.1b / `46be15f`) | Added documented `@SuppressLint("InlinedApi")` on SDK-guarded helpers; removed unused/redundant build entries. Verified `lintDebug` = 0 errors, 0 warnings. |
+| **BUG-007** | Medium | Design System | `ColorMath.readableOn` used `#101014` instead of pure `#000000`, lowering crossover WCAG contrast to `4.37:1` (< `4.5:1`) on mid-luminance accents. | **RESOLVED** (Stage 1.1 / `2b8937f`) | Switched dark candidate to `#000000`, mathematically guaranteeing ≥ `4.58:1` contrast for all RGB colors. Verified by `ColorMathAndSchemesTest`. |
+| **BUG-008** | Medium | Test Infra | Robolectric 4.18 failed on Windows profiles containing spaces (`Foli%20Solomon`) when loading native SQLite/ICU runtime. | **RESOLVED** (Stage 1.1 / `2b8937f`) | Configured `maven.repo.local` to `.gradle/robolectric-m2` in `app/build.gradle.kts` `testOptions.unitTests.all`. Verified all Robolectric tests pass on Windows. |
