@@ -1,11 +1,13 @@
 package com.soniq.player.feature.player
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -194,13 +196,17 @@ class PlayerScreensUiTest {
         }
 
         composeRule.onNodeWithContentDescription("Audio Effects").performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithText("EQ unsupported on test output.").assertIsDisplayed()
         composeRule.onNodeWithText("Bass Boost unsupported on test output.")
             .performScrollTo()
             .assertIsDisplayed()
+        composeRule.onNodeWithText("Crossfade duration")
+            .performScrollTo()
+            .assertIsDisplayed()
         composeRule.onNodeWithText("4s")
             .performScrollTo()
-            .performClick()
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertThat(selectedCrossfade).isEqualTo(4)
     }
 
