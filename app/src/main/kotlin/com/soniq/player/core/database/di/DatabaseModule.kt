@@ -27,7 +27,10 @@ object DatabaseModule {
         Room.databaseBuilder(context, SoniqDatabase::class.java, SoniqDatabase.NAME)
             // No destructive fallback: user data (presets, playlists, favorites, history) must
             // survive upgrades. Every schema bump ships with an explicit, tested Migration.
-            .addMigrations(SoniqDatabaseMigrations.MIGRATION_1_2)
+            .addMigrations(
+                SoniqDatabaseMigrations.MIGRATION_1_2,
+                SoniqDatabaseMigrations.MIGRATION_2_3,
+            )
             .build()
 
     @Provides

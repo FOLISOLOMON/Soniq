@@ -217,4 +217,8 @@
     <string name="settings_preset_rename">Rename</string>
     <string name="settings_preset_duplicate">Duplicate</string>
     <string name="settings_preset_rename_title">Rename preset</string>
+    <string name="settings_background_scrim">Background scrim (%1$d%%)</string>
+    <string name="settings_background_blur">Background blur (%1$d dp)</string>
+    <string name="settings_background_blur_api31">Background blur requires Android 12 or newer</string>
+    <string name="settings_load_starter_presets">Load starter presets</string>
 </resources>

@@ -25,6 +25,11 @@ internal fun ThemePresetEntity.toDomain(): ThemePreset = ThemePreset(
         textScale = enumValueOrDefault<TextScale>(textScale, DEFAULTS.textScale),
         backgroundStyle = enumValueOrDefault<BackgroundStyle>(backgroundStyle, DEFAULTS.backgroundStyle),
         backgroundImageUri = backgroundImageUri?.takeIf { it.isNotBlank() },
+        backgroundScrimAlpha = backgroundScrimAlpha.coerceIn(
+            AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA,
+            AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
+        ),
+        backgroundBlurDp = backgroundBlurDp.coerceIn(0, AppearanceConfig.MAX_BACKGROUND_BLUR_DP),
         playerLayout = enumValueOrDefault<PlayerLayout>(playerLayout, DEFAULTS.playerLayout),
     ),
 )
@@ -40,6 +45,11 @@ internal fun AppearanceConfig.toPresetEntity(name: String, createdAtEpochMillis:
         textScale = textScale.name,
         backgroundStyle = backgroundStyle.name,
         backgroundImageUri = backgroundImageUri,
+        backgroundScrimAlpha = backgroundScrimAlpha.coerceIn(
+            AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA,
+            AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
+        ),
+        backgroundBlurDp = backgroundBlurDp.coerceIn(0, AppearanceConfig.MAX_BACKGROUND_BLUR_DP),
         playerLayout = playerLayout.name,
         createdAtEpochMillis = createdAtEpochMillis,
     )

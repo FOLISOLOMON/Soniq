@@ -1,6 +1,7 @@
 package com.soniq.player.feature.settings
 
 import android.content.Intent
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -71,6 +72,7 @@ import com.soniq.player.core.designsystem.theme.ColorMath
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.designsystem.theme.isDynamicColorSupported
 import com.soniq.player.core.designsystem.token.SoniqAccents
+import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.BackgroundStyle
 import com.soniq.player.core.model.appearance.FontFamilyOption
 import com.soniq.player.core.model.appearance.PlayerLayout
@@ -125,6 +127,8 @@ fun SettingsRoute(
         onBackgroundStyleSelected = viewModel::setBackgroundStyle,
         onChooseBackgroundImage = { imagePicker.launch(arrayOf("image/*")) },
         onClearBackgroundImage = viewModel::clearBackgroundImage,
+        onBackgroundScrimChanged = viewModel::setBackgroundScrimAlpha,
+        onBackgroundBlurChanged = viewModel::setBackgroundBlurDp,
         onPlayerLayoutSelected = viewModel::setPlayerLayout,
         onContinueVideoInBackgroundToggled = viewModel::setContinueVideoInBackground,
         onRequestNotificationPermission = {
@@ -132,6 +136,7 @@ fun SettingsRoute(
         },
         onPresetNameChanged = viewModel::onPresetNameChanged,
         onSavePreset = viewModel::savePreset,
+        onLoadStarterPresets = viewModel::installStarterPresets,
         onApplyPreset = viewModel::applyPreset,
         onRenamePreset = viewModel::renamePreset,
         onDuplicatePreset = viewModel::duplicatePreset,
@@ -162,6 +167,9 @@ fun SettingsScreen(
     onFeedbackDismissed: () -> Unit,
     modifier: Modifier = Modifier,
     onClearBackgroundImage: () -> Unit = {},
+    onBackgroundScrimChanged: (Float) -> Unit = {},
+    onBackgroundBlurChanged: (Int) -> Unit = {},
+    onLoadStarterPresets: () -> Unit = {},
     onRenamePreset: (Long, String) -> Unit = { _, _ -> },
     onDuplicatePreset: (Long) -> Unit = {},
     onContinueVideoInBackgroundToggled: (Boolean) -> Unit = {},
@@ -395,6 +403,38 @@ fun SettingsScreen(
                                 Text(text = stringResource(R.string.settings_background_choose_image))
                             }
                         }
+                        if (!imageUri.isNullOrBlank() && isImageReadable) {
+                            HorizontalDivider()
+                            Text(
+                                text = stringResource(
+                                    R.string.settings_background_scrim,
+                                    (appearance.backgroundScrimAlpha * 100).toInt(),
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Slider(
+                                value = appearance.backgroundScrimAlpha,
+                                onValueChange = onBackgroundScrimChanged,
+                                valueRange = AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA..AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_background_blur, appearance.backgroundBlurDp),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                Slider(
+                                    value = appearance.backgroundBlurDp.toFloat(),
+                                    onValueChange = { onBackgroundBlurChanged(it.toInt()) },
+                                    valueRange = 0f..AppearanceConfig.MAX_BACKGROUND_BLUR_DP.toFloat(),
+                                )
+                            } else {
+                                Text(
+                                    text = stringResource(R.string.settings_background_blur_api31),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -462,11 +502,17 @@ fun SettingsScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(
-                        onClick = onSavePreset,
-                        modifier = Modifier.align(Alignment.End),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(spacing.sm, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = stringResource(R.string.settings_preset_save))
+                        OutlinedButton(onClick = onLoadStarterPresets) {
+                            Text(text = stringResource(R.string.settings_load_starter_presets))
+                        }
+                        Button(onClick = onSavePreset) {
+                            Text(text = stringResource(R.string.settings_preset_save))
+                        }
                     }
                     if (uiState.presets.isEmpty()) {
                         Text(

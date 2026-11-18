@@ -31,6 +31,10 @@ data class ThemePresetEntity(
     val backgroundStyle: String,
     @ColumnInfo(name = "background_image_uri")
     val backgroundImageUri: String?,
+    @ColumnInfo(name = "background_scrim_alpha", defaultValue = "0.72")
+    val backgroundScrimAlpha: Float = 0.72f,
+    @ColumnInfo(name = "background_blur_dp", defaultValue = "0")
+    val backgroundBlurDp: Int = 0,
     @ColumnInfo(name = "player_layout")
     val playerLayout: String,
     @ColumnInfo(name = "created_at")

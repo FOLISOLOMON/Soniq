@@ -131,6 +131,19 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+    fun setBackgroundScrimAlpha(alpha: Float) = update {
+        it.copy(
+            backgroundScrimAlpha = alpha.coerceIn(
+                AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA,
+                AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
+            ),
+        )
+    }
+
+    fun setBackgroundBlurDp(blurDp: Int) = update {
+        it.copy(backgroundBlurDp = blurDp.coerceIn(0, AppearanceConfig.MAX_BACKGROUND_BLUR_DP))
+    }
+
     fun setPlayerLayout(layout: PlayerLayout) = update { it.copy(playerLayout = layout) }
 
     fun onPresetNameChanged(value: String) {
@@ -197,6 +210,18 @@ class SettingsViewModel @Inject constructor(
                     } else {
                         SettingsFeedback.PRESET_ERROR
                     }
+                }
+                .onFailure {
+                    feedback.value = SettingsFeedback.PRESET_ERROR
+                }
+        }
+    }
+
+    fun installStarterPresets() {
+        viewModelScope.launch {
+            suspendRunCatching { appearanceRepository.installStarterPresets() }
+                .onSuccess { added ->
+                    if (added > 0) feedback.value = SettingsFeedback.PRESET_SAVED
                 }
                 .onFailure {
                     feedback.value = SettingsFeedback.PRESET_ERROR

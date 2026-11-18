@@ -23,6 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.soniq.player.R
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.playback.AudioEffectsState
@@ -63,6 +65,7 @@ fun AudioEffectsSheet(
             Text(
                 text = stringResource(R.string.audio_effects_title),
                 style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics { heading() },
             )
 
             // Equalizer section

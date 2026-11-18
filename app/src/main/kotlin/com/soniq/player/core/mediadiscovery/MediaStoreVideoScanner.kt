@@ -11,7 +11,9 @@ import com.soniq.player.core.common.di.IoDispatcher
 import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.model.media.VideoItem
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,7 +36,9 @@ class MediaStoreVideoScanner @Inject constructor(
         val sortOrder = "${MediaStore.Video.Media.DATE_ADDED} DESC"
 
         contentResolver.query(collectionUri, projection, selection, null, sortOrder)?.use { cursor ->
-            mapCursor(cursor, collectionUri, sdkInt)
+            mapCursor(cursor, collectionUri, sdkInt) {
+                coroutineContext.ensureActive()
+            }
         }.orEmpty()
     }
 
@@ -66,6 +70,7 @@ class MediaStoreVideoScanner @Inject constructor(
         cursor: Cursor,
         collectionUri: Uri,
         sdkInt: Int = Build.VERSION.SDK_INT,
+        onBatchCheck: () -> Unit = {},
     ): List<VideoItem> {
         val idCol = cursor.getColumnIndex(MediaStore.Video.Media._ID)
         if (idCol < 0) return emptyList()
@@ -87,7 +92,9 @@ class MediaStoreVideoScanner @Inject constructor(
         }
 
         val videos = ArrayList<VideoItem>(cursor.count.coerceAtLeast(0))
+        var rowIndex = 0
         while (cursor.moveToNext()) {
+            if (rowIndex++ % 250 == 0) onBatchCheck()
             val id = cursor.getLong(idCol)
             val durationMs = cursor.longOrZero(durationCol)
             if (durationMs <= 0L) continue

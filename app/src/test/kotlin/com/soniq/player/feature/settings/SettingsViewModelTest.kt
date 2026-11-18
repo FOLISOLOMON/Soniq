@@ -94,8 +94,15 @@ class SettingsViewModelTest {
 
             viewModel.setBackgroundImage("content://broken/img")
             assertThat(awaitItem().appearance.backgroundImageUri).isEqualTo("content://broken/img")
+            viewModel.setBackgroundScrimAlpha(0.5f)
+            assertThat(awaitItem().appearance.backgroundScrimAlpha).isWithin(0.01f).of(0.5f)
+            viewModel.setBackgroundBlurDp(16)
+            assertThat(awaitItem().appearance.backgroundBlurDp).isEqualTo(16)
             viewModel.clearBackgroundImage()
             assertThat(awaitItem().appearance.backgroundImageUri).isNull()
+
+            viewModel.installStarterPresets()
+            assertThat(expectMostRecentItem().presets.size).isGreaterThan(2)
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -151,6 +158,12 @@ class SettingsViewModelTest {
             val copyId = nextId++
             _presets.update { listOf(match.copy(id = copyId, name = "${match.name} Copy")) + it }
             return copyId
+        }
+
+        override suspend fun installStarterPresets(): Int {
+            val id = nextId++
+            _presets.update { listOf(ThemePreset(id, "SONIQ Violet", AppearanceConfig(), id * 1_000L)) + it }
+            return 1
         }
 
         override suspend fun deletePreset(id: Long) {

@@ -15,13 +15,16 @@ import com.soniq.player.core.model.media.LibrarySyncState
 import com.soniq.player.core.model.media.MediaFolderSummary
 import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.model.media.VideoItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,6 +41,7 @@ class DefaultMusicLibraryRepository @Inject constructor(
 
     override val tracks: Flow<List<AudioTrack>> = audioTrackDao.observeAll()
         .map { rows -> rows.map { it.toDomain() } }
+        .flowOn(Dispatchers.Default)
 
     override val albums: Flow<List<AlbumSummary>> = tracks.map { list ->
         list.groupBy { it.albumId to it.album }
@@ -53,7 +57,7 @@ class DefaultMusicLibraryRepository @Inject constructor(
                 )
             }
             .sortedBy { it.title.lowercase() }
-    }
+    }.flowOn(Dispatchers.Default)
 
     override val artists: Flow<List<ArtistSummary>> = tracks.map { list ->
         list.groupBy { it.artist }
@@ -65,7 +69,7 @@ class DefaultMusicLibraryRepository @Inject constructor(
                 )
             }
             .sortedBy { it.name.lowercase() }
-    }
+    }.flowOn(Dispatchers.Default)
 
     override val folders: Flow<List<MediaFolderSummary>> = tracks.map { list ->
         list.groupBy { it.folderPath }
@@ -78,14 +82,16 @@ class DefaultMusicLibraryRepository @Inject constructor(
                 )
             }
             .sortedBy { it.folderName.lowercase() }
-    }
+    }.flowOn(Dispatchers.Default)
 
     override suspend fun sync(): Result<Int> = syncMutex.withLock {
         _syncState.value = LibrarySyncState.Scanning
         suspendRunCatching {
-            val scanned = scanner.scan()
-            audioTrackDao.syncWith(scanned.map { it.toEntity() })
-            scanned.size
+            withContext(Dispatchers.IO) {
+                val scanned = scanner.scan()
+                audioTrackDao.syncWith(scanned.map { it.toEntity() })
+                scanned.size
+            }
         }.onSuccess {
             _syncState.value = LibrarySyncState.Idle
         }.onFailure { error ->
@@ -109,6 +115,7 @@ class DefaultVideoLibraryRepository @Inject constructor(
 
     override val videos: Flow<List<VideoItem>> = videoItemDao.observeAll()
         .map { rows -> rows.map { it.toDomain() } }
+        .flowOn(Dispatchers.Default)
 
     override val folders: Flow<List<MediaFolderSummary>> = videos.map { list ->
         list.groupBy { it.folderPath }
@@ -121,14 +128,16 @@ class DefaultVideoLibraryRepository @Inject constructor(
                 )
             }
             .sortedBy { it.folderName.lowercase() }
-    }
+    }.flowOn(Dispatchers.Default)
 
     override suspend fun sync(): Result<Int> = syncMutex.withLock {
         _syncState.value = LibrarySyncState.Scanning
         suspendRunCatching {
-            val scanned = scanner.scan()
-            videoItemDao.syncWith(scanned.map { it.toEntity() })
-            scanned.size
+            withContext(Dispatchers.IO) {
+                val scanned = scanner.scan()
+                videoItemDao.syncWith(scanned.map { it.toEntity() })
+                scanned.size
+            }
         }.onSuccess {
             _syncState.value = LibrarySyncState.Idle
         }.onFailure { error ->

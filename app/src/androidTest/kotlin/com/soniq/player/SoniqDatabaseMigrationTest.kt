@@ -42,16 +42,21 @@ class SoniqDatabaseMigrationTest {
 
         val migratedDb = helper.runMigrationsAndValidate(
             dbName,
-            2,
+            3,
             true,
             SoniqDatabaseMigrations.MIGRATION_1_2,
+            SoniqDatabaseMigrations.MIGRATION_2_3,
         )
 
-        migratedDb.query("SELECT name, amoled_black, theme_mode FROM theme_presets").use { cursor ->
+        migratedDb.query(
+            "SELECT name, amoled_black, theme_mode, background_scrim_alpha, background_blur_dp FROM theme_presets",
+        ).use { cursor ->
             assertThat(cursor.moveToFirst()).isTrue()
             assertThat(cursor.getString(0)).isEqualTo("Midnight OLED")
             assertThat(cursor.getInt(1)).isEqualTo(1)
             assertThat(cursor.getString(2)).isEqualTo("DARK")
+            assertThat(cursor.getFloat(3)).isWithin(0.01f).of(0.72f)
+            assertThat(cursor.getInt(4)).isEqualTo(0)
         }
 
         // Verify new v2 tables accept writes cleanly.

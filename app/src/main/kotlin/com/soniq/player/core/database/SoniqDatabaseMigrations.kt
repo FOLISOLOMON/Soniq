@@ -92,4 +92,16 @@ object SoniqDatabaseMigrations {
             )
         }
     }
+
+    /** Adds persisted background scrim opacity and blur radius to saved theme presets. */
+    val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE `theme_presets` ADD COLUMN `background_scrim_alpha` REAL NOT NULL DEFAULT 0.72",
+            )
+            db.execSQL(
+                "ALTER TABLE `theme_presets` ADD COLUMN `background_blur_dp` INTEGER NOT NULL DEFAULT 0",
+            )
+        }
+    }
 }

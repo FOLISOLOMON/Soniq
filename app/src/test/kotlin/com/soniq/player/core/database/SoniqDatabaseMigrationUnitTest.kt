@@ -66,9 +66,12 @@ class SoniqDatabaseMigrationUnitTest {
             v1Db.version = 1
         }
 
-        // Opening with Room v2 runs MIGRATION_1_2 and validates the entire v2 schema strictly.
+        // Opening with Room v3 runs MIGRATION_1_2 + MIGRATION_2_3 and validates the v3 schema strictly.
         val migrated = Room.databaseBuilder(context, SoniqDatabase::class.java, dbName)
-            .addMigrations(SoniqDatabaseMigrations.MIGRATION_1_2)
+            .addMigrations(
+                SoniqDatabaseMigrations.MIGRATION_1_2,
+                SoniqDatabaseMigrations.MIGRATION_2_3,
+            )
             .allowMainThreadQueries()
             .build()
 
@@ -78,6 +81,8 @@ class SoniqDatabaseMigrationUnitTest {
             assertThat(presets.single().name).isEqualTo("Warm Analog")
             assertThat(presets.single().amoledBlack).isTrue()
             assertThat(presets.single().playerLayout).isEqualTo("ARTWORK_FOCUS")
+            assertThat(presets.single().backgroundScrimAlpha).isWithin(0.01f).of(0.72f)
+            assertThat(presets.single().backgroundBlurDp).isEqualTo(0)
 
             val playlistId = migrated.playlistDao().insertPlaylist(
                 PlaylistEntity(name = "Late Night", createdAtEpochMillis = 10L, updatedAtEpochMillis = 10L),

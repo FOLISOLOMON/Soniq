@@ -39,6 +39,10 @@ data class AppearanceConfig(
     val backgroundStyle: BackgroundStyle = BackgroundStyle.SOLID,
     /** Persisted content:// URI of a user-picked background image. */
     val backgroundImageUri: String? = null,
+    /** Legibility scrim opacity applied over background images (clamped 0.35f..0.95f). */
+    val backgroundScrimAlpha: Float = DEFAULT_BACKGROUND_SCRIM_ALPHA,
+    /** Optional background image blur radius in dp (0..24; rendered on Android 12+ API 31+). */
+    val backgroundBlurDp: Int = 0,
     val playerLayout: PlayerLayout = PlayerLayout.CLASSIC,
 ) {
     /**
@@ -55,6 +59,10 @@ data class AppearanceConfig(
     companion object {
         /** SONIQ violet. Must stay in sync with the design token `SoniqAccents.Violet`. */
         const val DEFAULT_ACCENT_ARGB: Int = 0xFF7C5CFF.toInt()
+        const val MIN_BACKGROUND_SCRIM_ALPHA: Float = 0.35f
+        const val MAX_BACKGROUND_SCRIM_ALPHA: Float = 0.95f
+        const val DEFAULT_BACKGROUND_SCRIM_ALPHA: Float = 0.72f
+        const val MAX_BACKGROUND_BLUR_DP: Int = 24
     }
 }
 

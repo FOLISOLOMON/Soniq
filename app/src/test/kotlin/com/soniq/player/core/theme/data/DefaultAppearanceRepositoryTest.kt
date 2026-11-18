@@ -68,6 +68,8 @@ class DefaultAppearanceRepositoryTest {
                 useAmoledBlack = true,
                 fontFamily = FontFamilyOption.SERIF,
                 backgroundStyle = BackgroundStyle.GRADIENT,
+                backgroundScrimAlpha = 0.55f,
+                backgroundBlurDp = 12,
                 playerLayout = PlayerLayout.COMPACT,
             )
         }
@@ -95,6 +97,8 @@ class DefaultAppearanceRepositoryTest {
         assertThat(restored.themeMode).isEqualTo(ThemeMode.DARK)
         assertThat(restored.useAmoledBlack).isTrue()
         assertThat(restored.fontFamily).isEqualTo(FontFamilyOption.SERIF)
+        assertThat(restored.backgroundScrimAlpha).isWithin(0.01f).of(0.55f)
+        assertThat(restored.backgroundBlurDp).isEqualTo(12)
         assertThat(restored.playerLayout).isEqualTo(PlayerLayout.COMPACT)
 
         assertThat(repository.renamePreset(presetId, "Midnight Studio")).isTrue()
@@ -108,6 +112,11 @@ class DefaultAppearanceRepositoryTest {
         repository.deletePreset(presetId)
         repository.deletePreset(copyId!!)
         assertThat(repository.presets.first()).isEmpty()
+
+        // Starter presets install cleanly and skip duplicates on repeat calls.
+        assertThat(repository.installStarterPresets()).isEqualTo(SoniqStarterPresets.all.size)
+        assertThat(repository.installStarterPresets()).isEqualTo(0)
+        assertThat(repository.presets.first()).hasSize(SoniqStarterPresets.all.size)
     }
 
     @Test

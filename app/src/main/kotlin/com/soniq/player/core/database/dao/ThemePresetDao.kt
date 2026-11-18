@@ -16,6 +16,9 @@ interface ThemePresetDao {
     @Query("SELECT * FROM theme_presets WHERE id = :id")
     suspend fun getById(id: Long): ThemePresetEntity?
 
+    @Query("SELECT name FROM theme_presets")
+    suspend fun getAllNames(): List<String>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(preset: ThemePresetEntity): Long
 

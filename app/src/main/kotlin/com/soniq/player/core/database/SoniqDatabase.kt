@@ -27,7 +27,7 @@ import com.soniq.player.core.database.entity.ThemePresetEntity
         PlaybackHistoryEntity::class,
         PlaybackResumeEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class SoniqDatabase : RoomDatabase() {

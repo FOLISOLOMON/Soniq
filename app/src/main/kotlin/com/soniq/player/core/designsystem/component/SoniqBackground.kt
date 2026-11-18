@@ -1,6 +1,7 @@
 package com.soniq.player.core.designsystem.component
 
 import android.net.Uri
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -52,17 +55,29 @@ fun SoniqBackground(
             BackgroundStyle.IMAGE -> {
                 val uri = appearance.backgroundImageUri?.let(Uri::parse)
                 if (uri != null) {
+                    val blurModifier = if (
+                        appearance.backgroundBlurDp > 0 &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    ) {
+                        Modifier.fillMaxSize().blur(appearance.backgroundBlurDp.dp)
+                    } else {
+                        Modifier.fillMaxSize()
+                    }
                     AsyncImage(
                         model = uri,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = blurModifier,
+                    )
+                    val scrimAlpha = appearance.backgroundScrimAlpha.coerceIn(
+                        AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA,
+                        AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
                     )
                     // Scrim guarantees WCAG legibility regardless of image brightness.
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(colorScheme.background.copy(alpha = alphaTokens.backgroundImageScrim)),
+                            .background(colorScheme.background.copy(alpha = scrimAlpha)),
                     )
                 }
             }

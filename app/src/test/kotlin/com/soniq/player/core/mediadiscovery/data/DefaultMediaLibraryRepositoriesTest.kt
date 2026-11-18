@@ -107,6 +107,31 @@ class DefaultMediaLibraryRepositoriesTest {
         assertThat(repo.folders.first().single().folderName).isEqualTo("Live")
     }
 
+    @Test
+    fun syncsAndAggregatesLarge10kTrackLibraryWithoutSqlBindOverflow() = runTest {
+        val largeCatalog = List(10_000) { idx ->
+            val id = idx + 1L
+            sampleTrack(
+                id = id,
+                title = "Track $id",
+                artist = "Artist ${idx % 100}",
+                album = "Album ${idx % 250}",
+                albumId = (idx % 250) + 1L,
+                folder = "Music/Genre${idx % 20}",
+            )
+        }
+        val scanner = object : LocalAudioScanner {
+            override suspend fun scan(): List<AudioTrack> = largeCatalog
+        }
+        val repo = DefaultMusicLibraryRepository(scanner, database.audioTrackDao(), noOpObserver)
+
+        assertThat(repo.sync().getOrNull()).isEqualTo(10_000)
+        assertThat(repo.tracks.first()).hasSize(10_000)
+        assertThat(repo.albums.first()).hasSize(250)
+        assertThat(repo.artists.first()).hasSize(100)
+        assertThat(repo.folders.first()).hasSize(20)
+    }
+
     private fun sampleTrack(
         id: Long,
         title: String,

@@ -115,7 +115,7 @@ data class SoniqSizes(
     val iconMedium: Dp = 32.dp,
     val iconLarge: Dp = 48.dp,
     val emptyStateIcon: Dp = 72.dp,
-    val accentSwatch: Dp = 44.dp,
+    val accentSwatch: Dp = 48.dp,
     val minTouchTarget: Dp = 48.dp,
     val primaryTransportButton: Dp = 64.dp,
     val trackArtwork: Dp = 52.dp,

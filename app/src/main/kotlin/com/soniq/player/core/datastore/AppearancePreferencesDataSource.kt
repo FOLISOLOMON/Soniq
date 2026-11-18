@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.soniq.player.core.common.enumValueOrDefault
@@ -64,6 +65,8 @@ class AppearancePreferencesDataSource @Inject constructor(
         val TEXT_SCALE = stringPreferencesKey("text_scale")
         val BACKGROUND_STYLE = stringPreferencesKey("background_style")
         val BACKGROUND_IMAGE_URI = stringPreferencesKey("background_image_uri")
+        val BACKGROUND_SCRIM_ALPHA = floatPreferencesKey("background_scrim_alpha")
+        val BACKGROUND_BLUR_DP = intPreferencesKey("background_blur_dp")
         val PLAYER_LAYOUT = stringPreferencesKey("player_layout")
     }
 
@@ -82,6 +85,10 @@ class AppearancePreferencesDataSource @Inject constructor(
                 DEFAULTS.backgroundStyle,
             ),
             backgroundImageUri = this[Keys.BACKGROUND_IMAGE_URI]?.takeIf { it.isNotBlank() },
+            backgroundScrimAlpha = (this[Keys.BACKGROUND_SCRIM_ALPHA] ?: DEFAULTS.backgroundScrimAlpha)
+                .coerceIn(AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA, AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA),
+            backgroundBlurDp = (this[Keys.BACKGROUND_BLUR_DP] ?: DEFAULTS.backgroundBlurDp)
+                .coerceIn(0, AppearanceConfig.MAX_BACKGROUND_BLUR_DP),
             playerLayout = enumValueOrDefault<PlayerLayout>(this[Keys.PLAYER_LAYOUT], DEFAULTS.playerLayout),
         )
 
@@ -95,6 +102,14 @@ class AppearancePreferencesDataSource @Inject constructor(
             this[Keys.BACKGROUND_STYLE] = config.backgroundStyle.name
             val uri = config.backgroundImageUri
             if (uri.isNullOrBlank()) remove(Keys.BACKGROUND_IMAGE_URI) else this[Keys.BACKGROUND_IMAGE_URI] = uri
+            this[Keys.BACKGROUND_SCRIM_ALPHA] = config.backgroundScrimAlpha.coerceIn(
+                AppearanceConfig.MIN_BACKGROUND_SCRIM_ALPHA,
+                AppearanceConfig.MAX_BACKGROUND_SCRIM_ALPHA,
+            )
+            this[Keys.BACKGROUND_BLUR_DP] = config.backgroundBlurDp.coerceIn(
+                0,
+                AppearanceConfig.MAX_BACKGROUND_BLUR_DP,
+            )
             this[Keys.PLAYER_LAYOUT] = config.playerLayout.name
         }
     }

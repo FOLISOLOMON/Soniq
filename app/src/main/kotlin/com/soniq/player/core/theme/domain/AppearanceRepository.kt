@@ -40,6 +40,9 @@ interface AppearanceRepository {
     /** Duplicates an existing preset; returns the new id or `null` if not found. */
     suspend fun duplicatePreset(id: Long): Long?
 
+    /** Installs missing curated starter presets without overwriting user presets; returns count added. */
+    suspend fun installStarterPresets(): Int
+
     /** Deletes the preset identified by [id]; deleting a missing preset is a no-op. */
     suspend fun deletePreset(id: Long)
 }

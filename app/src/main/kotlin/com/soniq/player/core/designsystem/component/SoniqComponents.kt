@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.soniq.player.core.designsystem.theme.SoniqTheme
@@ -98,10 +100,12 @@ fun SoniqSectionHeader(
         text = title,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(
-            top = spacing.lg,
-            bottom = spacing.sm,
-        ),
+        modifier = modifier
+            .semantics { heading() }
+            .padding(
+                top = spacing.lg,
+                bottom = spacing.sm,
+            ),
     )
 }
 

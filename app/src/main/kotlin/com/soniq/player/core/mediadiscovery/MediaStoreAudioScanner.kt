@@ -12,7 +12,9 @@ import com.soniq.player.core.common.di.IoDispatcher
 import com.soniq.player.core.model.media.AudioTrack
 import com.soniq.player.core.model.media.MediaKind
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,7 +37,9 @@ class MediaStoreAudioScanner @Inject constructor(
         val sortOrder = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
 
         contentResolver.query(collectionUri, projection, selection, null, sortOrder)?.use { cursor ->
-            mapCursor(cursor, collectionUri, sdkInt)
+            mapCursor(cursor, collectionUri, sdkInt) {
+                coroutineContext.ensureActive()
+            }
         }.orEmpty()
     }
 
@@ -70,6 +74,7 @@ class MediaStoreAudioScanner @Inject constructor(
         cursor: Cursor,
         collectionUri: Uri,
         sdkInt: Int = Build.VERSION.SDK_INT,
+        onBatchCheck: () -> Unit = {},
     ): List<AudioTrack> {
         val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
         if (idCol < 0) return emptyList()
@@ -94,7 +99,9 @@ class MediaStoreAudioScanner @Inject constructor(
         }
 
         val tracks = ArrayList<AudioTrack>(cursor.count.coerceAtLeast(0))
+        var rowIndex = 0
         while (cursor.moveToNext()) {
+            if (rowIndex++ % 250 == 0) onBatchCheck()
             val id = cursor.getLong(idCol)
             val durationMs = cursor.longOrZero(durationCol)
             if (durationMs <= 0L) continue

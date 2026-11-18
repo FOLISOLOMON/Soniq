@@ -57,6 +57,19 @@ class DefaultAppearanceRepository @Inject constructor(
         return presetDao.insert(existing.toDomain().config.toPresetEntity(copyName, clock.millis()))
     }
 
+    override suspend fun installStarterPresets(): Int {
+        val existingNames = presetDao.getAllNames().mapTo(HashSet()) { it.lowercase() }
+        var added = 0
+        val now = clock.millis()
+        SoniqStarterPresets.all.forEachIndexed { idx, spec ->
+            if (spec.name.lowercase() !in existingNames) {
+                presetDao.insert(spec.config.toPresetEntity(spec.name, now + idx))
+                added++
+            }
+        }
+        return added
+    }
+
     override suspend fun deletePreset(id: Long) {
         presetDao.deleteById(id)
     }
