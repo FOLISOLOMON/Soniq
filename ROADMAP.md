@@ -1,7 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 1)  
-**Active Stage**: Stages 1, 2, and 3 **COMPLETED** → Next: **Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth**
+**Last Updated**: 2026-11-18 (End of Autonomous Session 2)  
+**Active Stage**: Stages 1, 2, 3, 4, and 5 **COMPLETED** → Next: **Stage 6 — Advanced Audio and Video Features**
 
 ---
 
@@ -27,36 +27,37 @@
   2. Dynamic `AudioAttributes` switching (`C.AUDIO_CONTENT_TYPE_MUSIC` vs `C.AUDIO_CONTENT_TYPE_MOVIE`) inside `SoniqPlaybackService` (resolving `DEBT-002`).
   3. Upgraded `Media3PlaybackController` with cold-start command queuing, active-only 250ms position ticker, queue/transport/seek/repeat/shuffle/speed controls, and `player: StateFlow<Player?>` surface handle.
   4. `PlaybackViewModel`, docked audio `MiniPlayerBar`, full-screen `NowPlayingScreen` rendering all three persisted `PlayerLayout` variants (`CLASSIC`, `ARTWORK_FOCUS`, `COMPACT`), and dedicated full-screen `VideoPlayerScreen` using Media3 Compose `PlayerSurface` (`media3-ui-compose:1.11.1`).
-  5. Full navigation wiring (`SoniqRoute.AudioPlayer`, `SoniqRoute.VideoPlayer`, auto-hiding bottom nav chrome on full-screen player screens, tapping any song or video starts playback immediately).
+  5. Full navigation wiring (`SoniqRoute.AudioPlayer`, `SoniqRoute.VideoPlayer`, auto-hiding bottom nav chrome on full-screen player screens).
 - **Verified**: 39/39 unit & Robolectric tests, 0 Lint warnings, R8 release build PASS (2.72 MB unsigned), 1/1 emulator instrumented test + launch check PASS on `Medium_Phone_API_37.0`.
 
 ---
 
-## Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth — **NEXT**
-- **Objectives**:
-  1. Configure `DefaultMediaNotificationProvider` / custom `MediaSession.Callback` in `SoniqPlaybackService` for clean notification channel branding, compact-view transport buttons, and artwork rendering.
-  2. Add graceful optional `POST_NOTIFICATIONS` permission flow on Android 13+ (without blocking playback if declined).
-  3. Verify Bluetooth/headset media button commands, audio focus ducking/pause, noisy audio pause, and continuous screen-off background audio playback.
-  4. Add optional user setting for background video audio continuation vs auto-pause on exit.
-- **Dependencies**: Stage 3 complete.
-- **Verification**: Service & MediaSession callback tests, notification/permission tests, emulator & physical-device background playback verification.
+## Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth — **COMPLETED** (`057fb56`, `c5fabc0`)
+- **Delivered**:
+  1. Custom `DefaultMediaNotificationProvider` (`soniq_playback_channel`, `ic_music_note`), strictly offline `SoniqOfflineBitmapLoader` (rejecting `http`/`https`, downsampling local/embedded art to `512px`), and custom `MediaSession.Callback` (`COMMAND_TOGGLE_SHUFFLE`, `COMMAND_CYCLE_REPEAT` in `SLOT_OVERFLOW`, preserving compact Prev/Play-Pause/Next slots; resolving `DEBT-007`).
+  2. Declared `POST_NOTIFICATIONS` + exported `androidx.media3.session.MediaButtonReceiver` (`MEDIA_BUTTON`) in `AndroidManifest.xml`, configured audio focus (`handleAudioFocus = true`), headphone disconnection pause (`handleAudioBecomingNoisy = true`), and `WAKE_MODE_LOCAL`.
+  3. Implemented `@PlaybackDataStore` (`playback_state.preferences_pb`, excluded from backup) + `PlaybackPreferencesDataSource` + `PlaybackRestorationManager` for `MediaSession.Callback.onPlaybackResumption` and cold-start paused session restoration in `Media3PlaybackController`.
+  4. Hardened `SoniqPlaybackService.onTaskRemoved` (keeps active audio alive, stops idle/paused sessions) and leak-free `onDestroy`.
+  5. Added non-blocking one-time Android 13+ `POST_NOTIFICATIONS` prompt on playback start plus Settings "Playback" card (background video audio continuation toggle + notification permission Allow button).
+- **Verified**: 45/45 unit & Robolectric tests at `057fb56` (49/49 after Stage 5), 0 Lint warnings, `SoniqPlaybackServiceInstrumentedTest` PASS on `Medium_Phone_API_37.0` emulator. *(Physical device & physical Bluetooth hardware testing remain pending external XOS USB-install approval.)*
 
 ---
 
-## Stage 5 — Playlists, Favorites, Search, History & Queue Management — **PLANNED**
-- **Objectives**:
-  1. Extend persistent user database `soniq.db` (tested Room migration `v1 → v2` verified with `MigrationTestHelper`) with `PlaylistEntity`, `PlaylistTrackCrossRef`, `FavoriteMediaEntity`, `PlaybackHistoryEntity`, and `PlaybackResumeEntity`.
-  2. Implement custom playlist CRUD, track ordering, Favorites view, and automatic video/long-audio resume position tracking.
-  3. Implement editable Up Next queue sheet (reorder, remove, play next, add to queue).
-- **Dependencies**: Stages 2 & 3 complete.
+## Stage 5 — Playlists, Favorites, Search, History & Queue Management — **COMPLETED** (`f265823`)
+- **Delivered**:
+  1. Extended persistent user database `soniq.db` from `v1` to `v2` via explicit non-destructive `SoniqDatabaseMigrations.MIGRATION_1_2` (exported schema `app/schemas/com.soniq.player.core.database.SoniqDatabase/2.json`), adding `playlists`, `playlist_tracks` (FK cascade), `favorite_media`, `playback_history`, and `playback_resume` while preserving existing user `theme_presets`.
+  2. Implemented `UserLibraryRepository` / `DefaultUserLibraryRepository` (playlist CRUD & validation, ordered track membership, favorites toggle, auto-pruned playback history, resume position persistence with `<5s` / `>=95%` auto-clear).
+  3. Extended `PlaybackController` / `Media3PlaybackController` / `PlaybackViewModel` with `QueueItem`, `playNext`, `addToQueue`, `skipToQueueIndex`, `removeQueueItem`, `moveQueueItem`, `playVideo(video, startPositionMs)`, automatic playback history logging, and automatic resume save/restore.
+  4. Added `PLAYLISTS` and `FAVORITES` tabs, playlist create/rename/delete/drill-down, add-to-playlist dialog, and track overflow actions in `MusicScreen`; Favorite toggle & Up Next `ModalBottomSheet` queue editor in `NowPlayingScreen`; and saved resume progress bars on `VideoScreen` thumbnails.
+- **Verified**: 49/49 unit & Robolectric tests (including `SoniqDatabaseMigrationUnitTest` & `DefaultUserLibraryRepositoryTest`), 0 Lint warnings, R8 release build PASS (2.85 MB unsigned), and 3/3 emulator instrumented tests PASS on `Medium_Phone_API_37.0` (including official Room `MigrationTestHelper` in `SoniqDatabaseMigrationTest`).
 
 ---
 
-## Stage 6 — Advanced Audio and Video Features — **PLANNED**
+## Stage 6 — Advanced Audio and Video Features — **NEXT**
 - **Objectives**:
   1. Audio: Sleep timer, 5-band Equalizer & Bass Boost backed by Android `AudioEffect` attached to ExoPlayer's `audioSessionId`, gapless/crossfade options.
   2. Video: Aspect ratio / resize modes (Fit, Fill, Zoom), swipe gestures for brightness/volume/seek, local subtitle track selection (`.srt`/`.vtt`/embedded), audio track selection, Picture-in-Picture (PiP) support.
-- **Dependencies**: Stages 3 & 4 complete.
+- **Dependencies**: Stages 3, 4 & 5 complete.
 
 ---
 

@@ -44,8 +44,47 @@
   - `bf4a001` — `docs(control): initialize permanent project-control documentation`
   - `53cbae1` — `feat(library): complete Stage 2 local media discovery and library management`
   - `41c8fbc` — `feat(playback): complete Stage 3 audio and video playback engine`
-  - *(Final Session 1 documentation sync commit follows immediately.)*
+  - `c5ae306` — `docs(control): update project memory after Session 1 (Stages 2 and 3)`
 - **Remaining Work & Recommended Next Objectives**:
   - **Stage 4**: Background playback notifications (`DefaultMediaNotificationProvider`), optional `POST_NOTIFICATIONS` flow on API 33+, Bluetooth/lock-screen media command testing, background-video toggle.
   - **Stage 5**: Persistent playlists, favorites, history, video resume positions (`soniq.db` Room migration `v1 → v2`), and Up Next queue sheet.
   - Authorize USB debugging on phone `112173741O045288` for physical-device media & playback QA.
+
+---
+
+## Autonomous Session 2 — Stage 4 (Background Playback, MediaSession & Notifications) & Stage 5 (Playlists, Favorites, History, Resume, Queue & Room v1→v2 Migration) (2026-11-18)
+
+- **Starting State**: Clean `main` at `c5ae306` (Stages 1–3 complete, 39/39 unit & Robolectric tests, 0 Lint warnings, 1/1 emulator instrumented test).
+- **Objectives Executed**:
+  1. **Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Restoration (`057fb56`)**:
+     - Declared `POST_NOTIFICATIONS` and exported `androidx.media3.session.MediaButtonReceiver` (`MEDIA_BUTTON`) in `AndroidManifest.xml`; added API 33+ `NotificationPermissions` helper.
+     - Added `@PlaybackDataStore` (`playback_state.preferences_pb`, excluded from backup), `PlaybackPreferencesDataSource`, and `PlaybackRestorationManager` persisting `PlaybackPreferences` (`continueVideoInBackground`, `notificationPromptShown`) and `PlaybackSessionSnapshot` (queue IDs, index, position, repeat, shuffle, speed).
+     - Implemented strictly offline `SoniqOfflineBitmapLoader` (rejects `http`/`https` with `SecurityException`, caps local/embedded art decode at `512px`) and `SoniqSessionCommands` (`COMMAND_TOGGLE_SHUFFLE`, `COMMAND_CYCLE_REPEAT` in `SLOT_OVERFLOW`, preserving compact Prev/Play-Pause/Next notification slots).
+     - Upgraded `SoniqPlaybackService` with `DefaultMediaNotificationProvider` (`soniq_playback_channel`, `ic_music_note`), `SoniqOfflineBitmapLoader`, `MediaSession.Callback` (`onConnect` with `AcceptedResultBuilder(session, controller)`, `onCustomCommand`, `onPlaybackResumption`), `onTaskRemoved` keeping active audio alive while stopping idle/paused sessions, and leak-free `onDestroy`.
+     - Wired cold-start paused audio restoration in `Media3PlaybackController`, non-blocking one-time `POST_NOTIFICATIONS` prompt on playback start (fixing synchronous dispatch race `BUG-010`), and Settings "Playback" card (background video toggle + notification Allow button).
+     - Resolved `DEBT-007`; verified 45/45 unit & Robolectric tests and 0 Lint warnings.
+  2. **Stage 5 — Playlists, Favorites, History, Resume Positions, Queue & Room `v1 → v2` Migration (`f265823`)**:
+     - Added `UserMedia.kt` domain models, `UserMediaEntities.kt` (`playlists`, `playlist_tracks` with FK cascade, `favorite_media`, `playback_history`, `playback_resume`), `PlaylistDao` & `UserMediaDao`, explicit non-destructive `SoniqDatabaseMigrations.MIGRATION_1_2`, bumped `SoniqDatabase` to `v2`, and exported `app/schemas/com.soniq.player.core.database.SoniqDatabase/2.json`.
+     - Implemented `UserLibraryRepository` / `DefaultUserLibraryRepository` (playlist CRUD & validation, ordered track membership, favorites toggle, auto-pruned history, resume save with `<5s` / `>=95%` auto-clear).
+     - Extended `PlaybackController` / `Media3PlaybackController` / `PlaybackViewModel` with `QueueItem`, `playNext`, `addToQueue`, `skipToQueueIndex`, `removeQueueItem`, `moveQueueItem`, `playVideo(video, startPositionMs)`, automatic playback history logging, and automatic video resume save/restore.
+     - Added `PLAYLISTS` & `FAVORITES` tabs, playlist CRUD dialogs & drill-down, add-to-playlist dialog, and track overflow actions in `MusicScreen`; Favorite toggle & Up Next `ModalBottomSheet` queue editor in `NowPlayingScreen`; and saved resume progress bars on `VideoScreen` thumbnails.
+     - Added `SoniqDatabaseMigrationUnitTest`, `DefaultUserLibraryRepositoryTest`, expanded `PlayerScreensUiTest`, and added `SoniqDatabaseMigrationTest` using official Room `MigrationTestHelper` (`room-testing:2.8.5`).
+  3. **Emulator Instrumented Verification & Main-Thread MediaController Fix (`c5fabc0`)**:
+     - Probed physical device `Infinix_X6528` (`112173741O045288`, Android 13): authorized in ADB, but `adb install -r` timed out (>25s) waiting for Infinix XOS interactive USB-install confirmation (`DEBT-005`).
+     - Ran connected instrumented suite on `Medium_Phone_API_37.0` (Android 17, `emulator-5554`): `SoniqDatabaseMigrationTest` and `SoniqInstrumentedSmokeTest` passed immediately; caught off-main-thread `MediaController` check in `SoniqPlaybackServiceInstrumentedTest` (`BUG-011`), fixed via `runOnMainSync` + bounded sync polling (`c5fabc0`), and re-verified **3 / 3 PASS**.
+- **Verification Results**:
+  - `./gradlew assembleDebug assembleDebugAndroidTest assembleRelease`: **PASS** (`app-debug.apk` 18.04 MB, `app-debug-androidTest.apk` 2.36 MB, `app-release-unsigned.apk` 2.85 MB R8 minified + shrunk).
+  - `./gradlew testDebugUnitTest`: **49 / 49 PASSED** across 25 test suites (0 failures, 0 errors, 0 skipped).
+  - `./gradlew lintDebug`: **0 errors, 0 warnings** (`Lint results count: 0`).
+  - Merged release manifest verified with `POST_NOTIFICATIONS` and zero `INTERNET` / `ACCESS_NETWORK_STATE`.
+  - Emulator regression (`Medium_Phone_API_37.0`, Android 17): `connectedDebugAndroidTest` **3 / 3 PASSED** (`SoniqDatabaseMigrationTest`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); launch check clean (`PID 4611`, 0 SONIQ crashes).
+  - Physical device (`Infinix_X6528`, `112173741O045288`) & physical Bluetooth/headset hardware: **NOT VERIFIED** (blocked by XOS USB-install approval prompt).
+- **Git Checkpoints Created in Session 2**:
+  - `057fb56` — `feat(playback): complete Stage 4 background playback, MediaSession, notifications, and restoration`
+  - `f265823` — `feat(userlibrary): complete Stage 5 playlists, favorites, history, resume, queue, and Room v1->v2 migration`
+  - `c5fabc0` — `test(playback): run MediaController assertions on main thread with bounded sync`
+  - *(Final Session 2 documentation sync commit follows immediately.)*
+- **Remaining Work & Recommended Next Objectives**:
+  - **Stage 6**: Audio sleep timer & `AudioEffect` Equalizer/Bass Boost; Video aspect ratio/resize modes, brightness/volume/seek gestures, local subtitles/audio tracks, and Picture-in-Picture (PiP).
+  - **Stage 7**: Interactive custom HSL/Hex accent picker, broken SAF background URI recovery, curated starter presets.
+  - Enable Developer Options → "Install via USB" on `Infinix_X6528` (`112173741O045288`) to run physical-device & Bluetooth/headset QA.
