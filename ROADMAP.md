@@ -1,93 +1,78 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-18  
-**Active Stage**: Transitioning from **Stage 1 (Complete)** → **Stage 2 (Next)**
+**Last Updated**: 2026-11-18 (End of Autonomous Session 1)  
+**Active Stage**: Stages 1, 2, and 3 **COMPLETED** → Next: **Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth**
 
 ---
 
-## Stage 1 — Foundation and Project Hardening — **COMPLETED**
-- **Sub-stages**:
-  - **1.1 Project Initialization & Architecture** (`2b8937f`): Gradle 9.9.1 / AGP 9.5.1 / Kotlin 2.4.21 / KSP / Compose BOM / Media3 / Room / DataStore / Hilt / Coil, single `:app` module with strict package boundaries, adaptive navigation shell, centralized tokenized design system, theme presets, offline privacy enforcement.
-  - **1.1b Hardening Pass** (`46be15f`): Android 14+ `READ_MEDIA_VISUAL_USER_SELECTED` partial video access, `Media3PlaybackController` disconnect/release/reconnect lifecycle, eager `MainViewModel` splash loading, removal of all hardcoded visual constants, explicit Kotlin JVM 17 target, 0 Lint warnings, emulator instrumented verification.
-- **Verification**: 21/21 unit & Robolectric tests, 1/1 emulator instrumented test, 0 Lint errors/warnings.
+## Stage 1 — Foundation and Project Hardening — **COMPLETED** (`2b8937f`, `46be15f`)
+- **1.1 Project Initialization & Architecture**: Gradle 9.9.1, AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, Compose BOM `2026.09.00`, Media3 1.11.1, Room 2.8.5, DataStore 1.3.0, Hilt 2.60.1, Coil 3.6.3, adaptive navigation shell, tokenized design system, theme presets, offline privacy enforcement.
+- **1.1b Hardening Pass**: Android 14+ `READ_MEDIA_VISUAL_USER_SELECTED`, `Media3PlaybackController` disconnect/reconnect lifecycle, eager `MainViewModel` splash gate, zero hardcoded visual constants, explicit Kotlin JVM 17 target, 0 Lint warnings.
 
 ---
 
-## Stage 2 — Local Media Discovery and Library Management — **NEXT (IN PROGRESS IN SESSION 1)**
+## Stage 2 — Local Media Discovery and Library Management — **COMPLETED** (`53cbae1`)
+- **Delivered**:
+  1. Dedicated non-backed-up Room cache database `SoniqMediaDatabase` (`soniq_media.db`, exported schema v1) with indexed `AudioTrackEntity` and `VideoItemEntity` plus atomic chunked `syncWith` DAOs (resolving `DEBT-001`).
+  2. Pure domain models (`AudioTrack`, `VideoItem`, `AlbumSummary`, `ArtistSummary`, `MediaFolderSummary`, sort enums, `LibrarySyncState`), `MediaFormatters`, and injectable `@IoDispatcher`.
+  3. Production `MediaStoreAudioScanner` and `MediaStoreVideoScanner` (API 26–37 `RELATIVE_PATH`/`DATA` handling, album art URIs, `<unknown>` normalization, zero-duration filtering) + `DefaultMusicLibraryRepository` & `DefaultVideoLibraryRepository` with `Mutex`-guarded sync and debounced `MediaStoreChangeObserver` auto-resync.
+  4. Full `MusicScreen` (Songs/Albums/Artists/Folders tabs, drill-down filters, sorting, offline search, refresh, error retry) and `VideoScreen` (Videos/Folders tabs, offline `coil-video` thumbnails, duration/resolution/size metadata, Android 14+ partial-access banner).
+- **Verified**: 33/33 unit & Robolectric tests, 0 Lint warnings, clean debug build.
+
+---
+
+## Stage 3 — Audio and Video Playback Engine — **COMPLETED** (`41c8fbc`)
+- **Delivered**:
+  1. `MediaItemFactory` converting domain `AudioTrack` / `VideoItem` to rich Media3 `MediaItem` with full `MediaMetadata` and explicit media kind extras.
+  2. Dynamic `AudioAttributes` switching (`C.AUDIO_CONTENT_TYPE_MUSIC` vs `C.AUDIO_CONTENT_TYPE_MOVIE`) inside `SoniqPlaybackService` (resolving `DEBT-002`).
+  3. Upgraded `Media3PlaybackController` with cold-start command queuing, active-only 250ms position ticker, queue/transport/seek/repeat/shuffle/speed controls, and `player: StateFlow<Player?>` surface handle.
+  4. `PlaybackViewModel`, docked audio `MiniPlayerBar`, full-screen `NowPlayingScreen` rendering all three persisted `PlayerLayout` variants (`CLASSIC`, `ARTWORK_FOCUS`, `COMPACT`), and dedicated full-screen `VideoPlayerScreen` using Media3 Compose `PlayerSurface` (`media3-ui-compose:1.11.1`).
+  5. Full navigation wiring (`SoniqRoute.AudioPlayer`, `SoniqRoute.VideoPlayer`, auto-hiding bottom nav chrome on full-screen player screens, tapping any song or video starts playback immediately).
+- **Verified**: 39/39 unit & Robolectric tests, 0 Lint warnings, R8 release build PASS (2.72 MB unsigned), 1/1 emulator instrumented test + launch check PASS on `Medium_Phone_API_37.0`.
+
+---
+
+## Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth — **NEXT**
 - **Objectives**:
-  1. Introduce a dedicated rebuildable Room cache database (`soniq_media.db`, excluded from cloud backup rules) with exported schema v1 for `AudioTrackEntity` and `VideoItemEntity`.
-  2. Define clean domain models (`AudioTrack`, `AlbumSummary`, `ArtistSummary`, `MediaFolder`, `VideoItem`) and repositories (`MusicLibraryRepository`, `VideoLibraryRepository`) keeping Music and Video logically separate.
-  3. Implement production `MediaStoreAudioScanner` and `MediaStoreVideoScanner` querying `ContentResolver` on `Dispatchers.IO` with defensive null/zero-duration/missing-column handling, album-art content URIs (`content://media/external/audio/albumart/<albumId>`), and folder path extraction.
-  4. Implement incremental/on-demand library sync coordinated with `MediaStoreChangeObserver` and exposed sync state (`Idle`, `Scanning`, `Error`).
-  5. Upgrade `MusicScreen` (Songs, Albums, Artists, Folders tabs + pull/manual refresh + empty/error/loading states + sorting) and `VideoScreen` (Videos, Folders tabs + duration/resolution/size badges + Coil thumbnails + partial-access management banner).
-- **Dependencies**: Stage 1 complete.
-- **Acceptance Criteria**:
-  - Real MediaStore queries (no fake data) populate Room cache and flow reactively to Compose UI.
-  - Zero `INTERNET` permissions; artwork & video thumbnails load purely offline.
-  - Music and Video remain independently permission-gated and logically decoupled.
-- **Verification**: Room DAO tests, MediaStore cursor-mapping tests, Repository sync tests, ViewModel tests, Compose UI tests, `lintDebug` 0 warnings, `assembleDebug`, and emulator/device verification.
-
----
-
-## Stage 3 — Audio and Video Playback Engine — **PLANNED**
-- **Objectives**:
-  1. Expand `PlaybackController` / `Media3PlaybackController` with queue loading (`playTracks`, `playVideo`), transport (`skipToNext`, `skipToPrevious`, `togglePlayPause`, `seekTo`), repeat/shuffle modes, real-time playback position updates, and dynamic `AudioAttributes` (`AUDIO_CONTENT_TYPE_MUSIC` vs `AUDIO_CONTENT_TYPE_MOVIE`).
-  2. Implement `MiniPlayer` docked cleanly above the bottom navigation bar/rail when audio is active.
-  3. Implement full-screen Audio `NowPlayingScreen` honoring all three persisted `PlayerLayout` options (`CLASSIC`, `ARTWORK_FOCUS`, `COMPACT`).
-  4. Implement dedicated `VideoPlayerScreen` (Media3 `Player` surface integration in Compose, play/pause/seek/scrub controls, fullscreen immersive system bars, orientation support, resume position tracking).
-- **Dependencies**: Stage 2 complete.
-- **Acceptance Criteria**: Selecting any local track or video plays cleanly via `SoniqPlaybackService` with lifecycle independence across rotation and navigation.
-- **Verification**: Controller/state unit tests, Compose UI tests for all `PlayerLayout` modes, emulator/device playback smoke verification.
-
----
-
-## Stage 4 — Background Playback, MediaSession, Notification, Lock-Screen & Bluetooth — **PLANNED**
-- **Objectives**:
-  1. Populate rich `MediaMetadata` (title, artist, album, local artwork URI) on every queued `MediaItem`.
-  2. Configure `SoniqPlaybackService` custom notification actions, foreground service transitions, `POST_NOTIFICATIONS` graceful handling on API 33+, Bluetooth/headset media button commands, and audio focus ducking/pause behavior.
-  3. Verify continuous background audio playback when navigating away or locking the screen, and automatic pause/stop behavior for video backgrounding per user preference.
+  1. Configure `DefaultMediaNotificationProvider` / custom `MediaSession.Callback` in `SoniqPlaybackService` for clean notification channel branding, compact-view transport buttons, and artwork rendering.
+  2. Add graceful optional `POST_NOTIFICATIONS` permission flow on Android 13+ (without blocking playback if declined).
+  3. Verify Bluetooth/headset media button commands, audio focus ducking/pause, noisy audio pause, and continuous screen-off background audio playback.
+  4. Add optional user setting for background video audio continuation vs auto-pause on exit.
 - **Dependencies**: Stage 3 complete.
-- **Verification**: Service lifecycle tests, MediaSession command tests, on-device/emulator notification & background verification.
+- **Verification**: Service & MediaSession callback tests, notification/permission tests, emulator & physical-device background playback verification.
 
 ---
 
 ## Stage 5 — Playlists, Favorites, Search, History & Queue Management — **PLANNED**
 - **Objectives**:
   1. Extend persistent user database `soniq.db` (tested Room migration `v1 → v2` verified with `MigrationTestHelper`) with `PlaylistEntity`, `PlaylistTrackCrossRef`, `FavoriteMediaEntity`, `PlaybackHistoryEntity`, and `PlaybackResumeEntity`.
-  2. Implement custom playlist creation, renaming, deletion, track addition/removal, and drag-to-reorder.
-  3. Implement instant local offline search across songs, albums, artists, and videos.
-  4. Implement editable Up Next queue sheet (reorder, remove, play next, add to queue).
+  2. Implement custom playlist CRUD, track ordering, Favorites view, and automatic video/long-audio resume position tracking.
+  3. Implement editable Up Next queue sheet (reorder, remove, play next, add to queue).
 - **Dependencies**: Stages 2 & 3 complete.
-- **Verification**: Room `MigrationTestHelper` tests (`1 → 2`), DAO/Repository/ViewModel tests, UI tests.
 
 ---
 
 ## Stage 6 — Advanced Audio and Video Features — **PLANNED**
 - **Objectives**:
-  1. Audio: Playback speed & pitch controls, sleep timer, 5-band Equalizer & Bass Boost backed by Android `AudioEffect` attached to ExoPlayer's `audioSessionId`, gapless/crossfade options.
+  1. Audio: Sleep timer, 5-band Equalizer & Bass Boost backed by Android `AudioEffect` attached to ExoPlayer's `audioSessionId`, gapless/crossfade options.
   2. Video: Aspect ratio / resize modes (Fit, Fill, Zoom), swipe gestures for brightness/volume/seek, local subtitle track selection (`.srt`/`.vtt`/embedded), audio track selection, Picture-in-Picture (PiP) support.
 - **Dependencies**: Stages 3 & 4 complete.
-- **Verification**: Unit tests for equalizer presets/sleep timer/subtitle selection, UI tests, device verification.
 
 ---
 
 ## Stage 7 — Complete Theme Customization and Personalization — **PLANNED**
 - **Objectives**:
   1. Interactive custom ARGB/HSL accent color picker dialog in Settings (beyond the 8 curated swatches).
-  2. Custom background image blur/scrim opacity tuning and graceful stale/deleted URI detection & recovery banner.
-  3. Built-in curated starter presets alongside user presets, plus preset rename/overwrite support.
-- **Dependencies**: Stage 1 complete (can be scheduled after Stage 5/6).
-- **Verification**: Color contrast tests, preset CRUD tests, Compose UI tests.
+  2. Custom background image scrim/blur controls and stale/revoked URI detection & recovery banner.
+  3. Curated built-in starter theme presets plus preset rename/overwrite support.
 
 ---
 
 ## Stage 8 — Performance, Reliability, Privacy, Accessibility & Compatibility — **PLANNED**
 - **Objectives**:
-  1. Large-library profiling (10k+ tracks) with paging/indexed SQLite queries and Compose stability/recomposition audit.
-  2. StrictMode verification, memory-leak checks, battery/wake-lock audit.
-  3. Full TalkBack / contentDescription / touch-target (≥ 48dp) / large-font accessibility pass.
-  4. Multi-API compatibility verification across API 26–37, foldable/tablet adaptive layouts, and R8 release build verification.
-- **Dependencies**: Stages 2–7 complete.
+  1. Large-library profiling (10k+ tracks), Compose stability/recomposition audit, StrictMode & memory leak checks.
+  2. Full TalkBack / contentDescription / touch-target (≥ 48dp) / large-font accessibility pass.
+  3. Multi-API compatibility verification across API 26–37, foldable/tablet adaptive layouts, and R8 release audit.
 
 ---
 
@@ -96,4 +81,3 @@
   1. Externalized release signing template (`keystore.properties`, gitignored) without committing secrets.
   2. Final R8-minified release APK & AAB build, merged-manifest privacy audit, full regression suite, physical-device end-to-end QA checklist.
   3. Update `RELEASE_REPORT.md` and wait for **explicit user release approval**.
-- **Dependencies**: Stage 8 complete.
