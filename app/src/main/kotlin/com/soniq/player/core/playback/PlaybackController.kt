@@ -21,6 +21,22 @@ enum class PlaybackRepeatMode {
     ONE,
 }
 
+/** Aspect-ratio resize mode for video playback. */
+enum class VideoResizeMode {
+    FIT,
+    FILL,
+    ZOOM,
+}
+
+/** Selectable embedded or external audio/subtitle track inside the active media item. */
+data class MediaTrackOption(
+    val groupIndex: Int,
+    val trackIndex: Int,
+    val label: String,
+    val language: String?,
+    val isSelected: Boolean,
+)
+
 /** Lightweight projection of an item currently in the active playback queue. */
 data class QueueItem(
     val index: Int,
@@ -50,6 +66,12 @@ data class PlaybackState(
     val queueCount: Int = 0,
     val currentQueueIndex: Int = 0,
     val queue: List<QueueItem> = emptyList(),
+    val playbackError: String? = null,
+    val videoWidth: Int = 0,
+    val videoHeight: Int = 0,
+    val availableAudioTracks: List<MediaTrackOption> = emptyList(),
+    val availableSubtitleTracks: List<MediaTrackOption> = emptyList(),
+    val activeSubtitleCues: List<String> = emptyList(),
 ) {
     val hasActiveItem: Boolean get() = activeMediaId != null
 }
@@ -89,4 +111,8 @@ interface PlaybackController {
     fun cycleRepeatMode()
     fun toggleShuffle()
     fun setPlaybackSpeed(speed: Float)
+    fun selectAudioTrack(groupIndex: Int, trackIndex: Int)
+    fun selectSubtitleTrack(groupIndex: Int?, trackIndex: Int?)
+    fun addExternalSubtitle(uri: String, mimeType: String, label: String)
+    fun clearPlaybackError()
 }

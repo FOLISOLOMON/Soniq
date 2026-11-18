@@ -5,11 +5,14 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
 import com.soniq.player.core.model.appearance.PlayerLayout
 import com.soniq.player.core.model.media.MediaKind
+import com.soniq.player.core.playback.AudioEffectsState
+import com.soniq.player.core.playback.MediaTrackOption
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.core.playback.QueueItem
 import org.junit.Rule
@@ -160,5 +163,91 @@ class PlayerScreensUiTest {
         composeRule.onNodeWithText("Up Next").assertIsDisplayed()
         composeRule.onNodeWithText("Looped").performClick()
         assertThat(selectedQueueIndex).isEqualTo(1)
+    }
+
+    @Test
+    fun nowPlayingAudioEffectsSheetShowsUnsupportedReasonAndCrossfadeOptions() {
+        var selectedCrossfade = -1
+
+        composeRule.setContent {
+            SoniqTheme {
+                NowPlayingScreen(
+                    playbackState = activeAudioState,
+                    audioEffectsState = AudioEffectsState(
+                        isEqualizerSupported = false,
+                        eqUnsupportedReason = "EQ unsupported on test output.",
+                        isBassBoostSupported = false,
+                        bassBoostUnsupportedReason = "Bass Boost unsupported on test output.",
+                        crossfadeDurationSec = 0,
+                    ),
+                    onNavigateBack = {},
+                    onTogglePlayPause = {},
+                    onSkipNext = {},
+                    onSkipPrevious = {},
+                    onSeekTo = {},
+                    onToggleShuffle = {},
+                    onCycleRepeatMode = {},
+                    onCycleSpeed = {},
+                    onSetCrossfadeDurationSec = { selectedCrossfade = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Audio Effects").performClick()
+        composeRule.onNodeWithText("EQ unsupported on test output.").assertIsDisplayed()
+        composeRule.onNodeWithText("Bass Boost unsupported on test output.")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("4s")
+            .performScrollTo()
+            .performClick()
+        assertThat(selectedCrossfade).isEqualTo(4)
+    }
+
+    @Test
+    fun videoPlayerDisplaysSubtitlesAndSelectsAudioSubtitleTracks() {
+        var selectedSubtitle: Pair<Int?, Int?>? = null
+        var selectedAudio: Pair<Int, Int>? = null
+
+        composeRule.setContent {
+            SoniqTheme {
+                VideoPlayerScreen(
+                    player = null,
+                    playbackState = PlaybackState(
+                        isPlaying = false,
+                        activeMediaId = "video:9",
+                        activeMediaKind = MediaKind.VIDEO,
+                        title = "Nature Doc",
+                        positionMs = 5_000L,
+                        durationMs = 90_000L,
+                        activeSubtitleCues = listOf("Hello world"),
+                        availableSubtitleTracks = listOf(
+                            MediaTrackOption(0, 0, "English (SRT)", "en", isSelected = false),
+                        ),
+                        availableAudioTracks = listOf(
+                            MediaTrackOption(0, 0, "Japanese 5.1", "ja", isSelected = true),
+                            MediaTrackOption(1, 0, "English Stereo", "en", isSelected = false),
+                        ),
+                    ),
+                    onNavigateBack = {},
+                    onTogglePlayPause = {},
+                    onSeekTo = {},
+                    onSeekBy = {},
+                    onCycleSpeed = {},
+                    onLeaveScreen = {},
+                    onSelectAudioTrack = { g, t -> selectedAudio = g to t },
+                    onSelectSubtitleTrack = { g, t -> selectedSubtitle = g to t },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Hello world").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Audio & Subtitles").performClick()
+        composeRule.onNodeWithText("English (SRT)").performClick()
+        assertThat(selectedSubtitle).isEqualTo(0 to 0)
+
+        composeRule.onNodeWithContentDescription("Audio & Subtitles").performClick()
+        composeRule.onNodeWithText("English Stereo").performClick()
+        assertThat(selectedAudio).isEqualTo(1 to 0)
     }
 }

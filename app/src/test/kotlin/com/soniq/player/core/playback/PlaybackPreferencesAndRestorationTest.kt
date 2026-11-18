@@ -86,9 +86,25 @@ class PlaybackPreferencesAndRestorationTest {
         // Preferences toggle persists cleanly alongside snapshot.
         prefs.setContinueVideoInBackground(true)
         prefs.markNotificationPromptShown()
+        prefs.setEqualizerEnabled(true)
+        prefs.setEqualizerPreset(2, listOf(100, 0, -200, 300, 400))
+        prefs.setBassBoost(true, 650)
+        prefs.setGaplessEnabled(false)
+        prefs.setCrossfadeDurationSec(6)
         val storedPrefs = prefs.preferences.first()
         assertThat(storedPrefs.continueVideoInBackground).isTrue()
         assertThat(storedPrefs.notificationPromptShown).isTrue()
+        assertThat(storedPrefs.equalizerEnabled).isTrue()
+        assertThat(storedPrefs.equalizerPresetIndex).isEqualTo(2)
+        assertThat(storedPrefs.equalizerBandLevelsMb).containsExactly(100, 0, -200, 300, 400).inOrder()
+        assertThat(storedPrefs.bassBoostEnabled).isTrue()
+        assertThat(storedPrefs.bassBoostStrength).isEqualTo(650)
+        assertThat(storedPrefs.gaplessEnabled).isFalse()
+        assertThat(storedPrefs.crossfadeDurationSec).isEqualTo(6)
+
+        // Clearing the queue removes any previously saved session snapshot.
+        manager.clearAudioSession()
+        assertThat(manager.restoreLastAudioSession()).isNull()
     }
 
     private fun sampleAudio(id: Long, title: String, durationMs: Long) = AudioTrackEntity(

@@ -168,4 +168,38 @@
     <string name="settings_accent_swatch">Accent %1$s</string>
 
     <string name="cd_selected">Selected</string>
+
+    <!-- Stage 6: Advanced Audio Effects & Video Controls -->
+    <string name="audio_effects_title">Audio Effects</string>
+    <string name="audio_effects_equalizer">Equalizer</string>
+    <string name="audio_effects_presets">Presets</string>
+    <string name="audio_effects_custom_preset">Custom</string>
+    <string name="audio_effects_bass_boost">Bass Boost</string>
+    <string name="audio_effects_bass_strength">Strength: %1$d%%</string>
+    <string name="audio_effects_gapless">Gapless playback</string>
+    <string name="audio_effects_gapless_desc">Play consecutive album tracks without added gaps</string>
+    <string name="audio_effects_crossfade">Crossfade duration</string>
+    <string name="audio_effects_crossfade_desc">Smoothly fades out the ending track and fades in the next track</string>
+    <string name="audio_effects_crossfade_off">Off</string>
+    <string name="audio_effects_crossfade_sec">%1$ds</string>
+    <string name="audio_effects_band_db">%1$+d dB</string>
+    <string name="audio_effects_band_hz">%1$d Hz</string>
+    <string name="audio_effects_band_khz">%1$.1f kHz</string>
+
+    <string name="video_tracks_title">Audio &amp; Subtitles</string>
+    <string name="video_subtitles_section">Subtitles</string>
+    <string name="video_subtitles_off">Off</string>
+    <string name="video_subtitles_load_external">Load local subtitle (.srt / .vtt)</string>
+    <string name="video_audio_tracks_section">Audio Track</string>
+    <string name="video_audio_tracks_none">Default audio track</string>
+    <string name="video_aspect_mode_label">Aspect ratio</string>
+    <string name="video_aspect_fit">Fit</string>
+    <string name="video_aspect_fill">Fill</string>
+    <string name="video_aspect_zoom">Zoom</string>
+    <string name="video_orientation_toggle">Toggle landscape</string>
+    <string name="video_gesture_brightness">Brightness %1$d%%</string>
+    <string name="video_gesture_volume">Volume %1$d%%</string>
+    <string name="video_gesture_seek_back">-10s</string>
+    <string name="video_gesture_seek_forward">+10s</string>
+    <string name="playback_error_dismiss">Dismiss</string>
 </resources>

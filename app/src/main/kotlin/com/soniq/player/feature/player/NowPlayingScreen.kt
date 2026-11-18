@@ -50,6 +50,7 @@ import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.component.SoniqTopAppBar
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.PlayerLayout
+import com.soniq.player.core.playback.AudioEffectsState
 import com.soniq.player.core.playback.PlaybackRepeatMode
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.core.playback.QueueItem
@@ -77,9 +78,18 @@ fun NowPlayingScreen(
     onSelectQueueItem: (Int) -> Unit = {},
     onMoveQueueItem: (Int, Int) -> Unit = { _, _ -> },
     onRemoveQueueItem: (Int) -> Unit = {},
+    audioEffectsState: AudioEffectsState = AudioEffectsState(),
+    onSetEqualizerEnabled: (Boolean) -> Unit = {},
+    onSelectEqualizerPreset: (Int) -> Unit = {},
+    onSetEqualizerBandLevel: (Int, Int) -> Unit = { _, _ -> },
+    onSetBassBoostEnabled: (Boolean) -> Unit = {},
+    onSetBassBoostStrength: (Int) -> Unit = {},
+    onSetGaplessEnabled: (Boolean) -> Unit = {},
+    onSetCrossfadeDurationSec: (Int) -> Unit = {},
     playerLayout: PlayerLayout = SoniqTheme.appearance.playerLayout,
 ) {
     var showQueueSheet by remember { mutableStateOf(false) }
+    var showEffectsSheet by remember { mutableStateOf(false) }
 
     SoniqScaffold(
         modifier = modifier,
@@ -118,6 +128,12 @@ fun NowPlayingScreen(
                                     contentDescription = stringResource(R.string.player_action_queue),
                                 )
                             }
+                        }
+                        IconButton(onClick = { showEffectsSheet = true }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_equalizer),
+                                contentDescription = stringResource(R.string.audio_effects_title),
+                            )
                         }
                         FilledTonalButton(onClick = onCycleSpeed) {
                             Text(
@@ -195,6 +211,20 @@ fun NowPlayingScreen(
                 onRemove = onRemoveQueueItem,
             )
         }
+    }
+
+    if (showEffectsSheet) {
+        AudioEffectsSheet(
+            effects = audioEffectsState,
+            onDismiss = { showEffectsSheet = false },
+            onSetEqualizerEnabled = onSetEqualizerEnabled,
+            onSelectPreset = onSelectEqualizerPreset,
+            onSetBandLevel = onSetEqualizerBandLevel,
+            onSetBassBoostEnabled = onSetBassBoostEnabled,
+            onSetBassBoostStrength = onSetBassBoostStrength,
+            onSetGaplessEnabled = onSetGaplessEnabled,
+            onSetCrossfadeDurationSec = onSetCrossfadeDurationSec,
+        )
     }
 }
 

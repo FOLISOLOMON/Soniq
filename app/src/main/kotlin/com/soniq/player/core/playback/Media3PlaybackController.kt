@@ -4,9 +4,16 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
+import androidx.media3.common.text.CueGroup
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -21,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
@@ -56,11 +64,38 @@ class Media3PlaybackController @Inject constructor(
     private var positionTickerJob: Job? = null
     private var restoreJob: Job? = null
     private var hasAttemptedColdRestore: Boolean = false
+    private var lastPlaybackError: String? = null
+    private var lastSubtitleCues: List<String> = emptyList()
 
     private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
+            if (player.playbackState == Player.STATE_READY || player.isPlaying) {
+                lastPlaybackError = null
+            }
             publishState(player)
             updatePositionTicker(player)
+        }
+
+        override fun onCues(cueGroup: CueGroup) {
+            lastSubtitleCues = cueGroup.cues.mapNotNull { cue ->
+                cue.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+            }
+            _state.update { it.copy(activeSubtitleCues = lastSubtitleCues) }
+        }
+
+        override fun onVideoSizeChanged(videoSize: VideoSize) {
+            _state.update {
+                it.copy(
+                    videoWidth = videoSize.width,
+                    videoHeight = videoSize.height,
+                )
+            }
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            lastPlaybackError = error.localizedMessage?.takeIf { it.isNotBlank() }
+                ?: "Unable to play this media file."
+            _state.update { it.copy(playbackError = lastPlaybackError, isPlaying = false) }
         }
     }
 
@@ -273,6 +308,65 @@ class Media3PlaybackController @Inject constructor(
         active.playbackParameters = PlaybackParameters(clamped)
     }
 
+    override fun selectAudioTrack(groupIndex: Int, trackIndex: Int) {
+        val active = controller ?: return
+        val audioGroups = active.currentTracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+        val group = audioGroups.getOrNull(groupIndex) ?: return
+        if (trackIndex !in 0 until group.length) return
+        active.trackSelectionParameters = active.trackSelectionParameters
+            .buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+            .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+            .build()
+    }
+
+    override fun selectSubtitleTrack(groupIndex: Int?, trackIndex: Int?) {
+        val active = controller ?: return
+        val builder = active.trackSelectionParameters.buildUpon()
+        if (groupIndex == null || trackIndex == null) {
+            builder
+                .clearOverridesOfType(C.TRACK_TYPE_TEXT)
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+            lastSubtitleCues = emptyList()
+            _state.update { it.copy(activeSubtitleCues = emptyList()) }
+        } else {
+            val textGroups = active.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
+            val group = textGroups.getOrNull(groupIndex) ?: return
+            if (trackIndex !in 0 until group.length) return
+            builder
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+        }
+        active.trackSelectionParameters = builder.build()
+    }
+
+    override fun addExternalSubtitle(uri: String, mimeType: String, label: String) {
+        val active = controller ?: return
+        val current = active.currentMediaItem ?: return
+        val currentPos = active.currentPosition.coerceAtLeast(0L)
+        val shouldPlay = active.playWhenReady
+        val subtitleConfig = MediaItem.SubtitleConfiguration.Builder(uri.toUri())
+            .setMimeType(mimeType)
+            .setLabel(label)
+            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+            .build()
+        val updatedItem = current.buildUpon()
+            .setSubtitleConfigurations(current.localConfiguration?.subtitleConfigurations.orEmpty() + subtitleConfig)
+            .build()
+        active.trackSelectionParameters = active.trackSelectionParameters
+            .buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+            .build()
+        active.setMediaItem(updatedItem, currentPos)
+        active.prepare()
+        active.playWhenReady = shouldPlay
+    }
+
+    override fun clearPlaybackError() {
+        lastPlaybackError = null
+        _state.update { it.copy(playbackError = null) }
+    }
+
     internal fun handleServiceDisconnectedForTest() {
         clearConnection(releaseFuture = false)
     }
@@ -365,6 +459,10 @@ class Media3PlaybackController @Inject constructor(
             }
         }
 
+        val audioTracks = extractTrackOptions(player.currentTracks, C.TRACK_TYPE_AUDIO, "Audio")
+        val subtitleTracks = extractTrackOptions(player.currentTracks, C.TRACK_TYPE_TEXT, "Subtitle")
+        val videoSize = player.videoSize
+
         _state.value = PlaybackState(
             status = player.playbackState.toPlaybackStatus(),
             isPlaying = player.isPlaying,
@@ -383,7 +481,42 @@ class Media3PlaybackController @Inject constructor(
             queueCount = count,
             currentQueueIndex = currentIndex,
             queue = queueItems,
+            playbackError = lastPlaybackError,
+            videoWidth = videoSize.width,
+            videoHeight = videoSize.height,
+            availableAudioTracks = audioTracks,
+            availableSubtitleTracks = subtitleTracks,
+            activeSubtitleCues = lastSubtitleCues,
         )
+    }
+
+    private fun extractTrackOptions(
+        tracks: Tracks,
+        trackType: @C.TrackType Int,
+        fallbackPrefix: String,
+    ): List<MediaTrackOption> {
+        val groups = tracks.groups.filter { it.type == trackType }
+        return buildList {
+            groups.forEachIndexed { groupIdx, group ->
+                for (trackIdx in 0 until group.length) {
+                    if (!group.isTrackSupported(trackIdx)) continue
+                    val format = group.getTrackFormat(trackIdx)
+                    val language = format.language?.takeIf { it.isNotBlank() && it != C.LANGUAGE_UNDETERMINED }
+                    val label = format.label?.takeIf { it.isNotBlank() }
+                        ?: language?.uppercase()
+                        ?: "$fallbackPrefix ${size + 1}"
+                    add(
+                        MediaTrackOption(
+                            groupIndex = groupIdx,
+                            trackIndex = trackIdx,
+                            label = label,
+                            language = language,
+                            isSelected = group.isTrackSelected(trackIdx),
+                        ),
+                    )
+                }
+            }
+        }
     }
 
     private companion object {

@@ -12,10 +12,14 @@ import com.soniq.player.core.model.media.PlaylistSummary
 import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.model.media.mediaKey
 import com.soniq.player.core.permissions.NotificationPermissionChecker
+import com.soniq.player.core.playback.AttachedEffectsCapabilities
+import com.soniq.player.core.playback.AudioEffectsBackend
 import com.soniq.player.core.playback.PlaybackController
 import com.soniq.player.core.playback.PlaybackState
+import com.soniq.player.core.playback.SoniqAudioEffectsManager
 import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import com.soniq.player.testutil.MainDispatcherRule
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +58,18 @@ class PlaybackViewModelTest {
         val fakeUserLibrary = FakeUserLibraryRepository(
             savedVideoResumeMs = 42_000L,
         )
-        val viewModel = PlaybackViewModel(fakeController, prefs, notifChecker, fakeUserLibrary)
+        val effectsManager = SoniqAudioEffectsManager(
+            preferences = prefs,
+            backend = NoOpEffectsBackend,
+            ioDispatcher = Dispatchers.Unconfined,
+        )
+        val viewModel = PlaybackViewModel(
+            playbackController = fakeController,
+            playbackPreferences = prefs,
+            notificationPermissionChecker = notifChecker,
+            userLibraryRepository = fakeUserLibrary,
+            audioEffectsManager = effectsManager,
+        )
 
         assertThat(PlaybackViewModel.formatSpeed(1.0f)).isEqualTo("1")
         assertThat(PlaybackViewModel.formatSpeed(1.25f)).isEqualTo("1.25")
@@ -119,6 +134,58 @@ class PlaybackViewModelTest {
         viewModel.preferences.first { it.continueVideoInBackground }
         viewModel.pauseIfVideo()
         assertThat(fakeController.pauseCount).isEqualTo(1)
+
+        // Track selection & external subtitle delegation
+        viewModel.selectAudioTrack(0, 1)
+        viewModel.selectSubtitleTrack(1, 0)
+        viewModel.addExternalSubtitle("content://subs/1.srt", "application/x-subrip", "English")
+        viewModel.clearPlaybackError()
+        assertThat(fakeController.selectedAudioTrack).isEqualTo(0 to 1)
+        assertThat(fakeController.selectedSubtitleTrack).isEqualTo(1 to 0)
+        assertThat(fakeController.lastExternalSubtitleUri).isEqualTo("content://subs/1.srt")
+        assertThat(fakeController.clearErrorCount).isEqualTo(1)
+    }
+
+    @Test
+    fun grantedNotificationPermissionNeverPromptsAndPlaybackRemainsFunctionalWhenDenied() = runTest {
+        val dataStore = PreferenceDataStoreFactory.create(
+            scope = backgroundScope,
+            produceFile = { File(tempFolder.newFolder(), "vm_notif.preferences_pb") },
+        )
+        val prefs = PlaybackPreferencesDataSource(dataStore)
+        val grantedChecker = object : NotificationPermissionChecker {
+            override fun canPostNotifications(): Boolean = true
+        }
+        val fakeController = FakePlaybackController()
+        val effectsManager = SoniqAudioEffectsManager(
+            preferences = prefs,
+            backend = NoOpEffectsBackend,
+            ioDispatcher = Dispatchers.Unconfined,
+        )
+        val grantedVm = PlaybackViewModel(
+            playbackController = fakeController,
+            playbackPreferences = prefs,
+            notificationPermissionChecker = grantedChecker,
+            userLibraryRepository = FakeUserLibraryRepository(0L),
+            audioEffectsManager = effectsManager,
+        )
+        assertThat(grantedVm.shouldPromptForNotifications()).isFalse()
+
+        // Even when permission is denied and prompt was already shown, playback works normally.
+        val deniedChecker = object : NotificationPermissionChecker {
+            override fun canPostNotifications(): Boolean = false
+        }
+        val deniedVm = PlaybackViewModel(
+            playbackController = fakeController,
+            playbackPreferences = prefs,
+            notificationPermissionChecker = deniedChecker,
+            userLibraryRepository = FakeUserLibraryRepository(0L),
+            audioEffectsManager = effectsManager,
+        )
+        deniedVm.markNotificationPromptShown()
+        assertThat(deniedVm.shouldPromptForNotifications()).isFalse()
+        deniedVm.setPlaybackSpeed(1.5f)
+        assertThat(fakeController.state.value.playbackSpeed).isEqualTo(1.5f)
     }
 
     private class FakeUserLibraryRepository(
@@ -164,6 +231,10 @@ class PlaybackViewModelTest {
         override val player: StateFlow<Player?> = MutableStateFlow(null)
         var pauseCount = 0
         var lastVideoStartPositionMs = -1L
+        var selectedAudioTrack: Pair<Int, Int>? = null
+        var selectedSubtitleTrack: Pair<Int?, Int?>? = null
+        var lastExternalSubtitleUri: String? = null
+        var clearErrorCount = 0
 
         override fun connect() = Unit
         override fun disconnect() = Unit
@@ -193,5 +264,33 @@ class PlaybackViewModelTest {
         override fun setPlaybackSpeed(speed: Float) {
             mutableState.value = mutableState.value.copy(playbackSpeed = speed)
         }
+
+        override fun selectAudioTrack(groupIndex: Int, trackIndex: Int) {
+            selectedAudioTrack = groupIndex to trackIndex
+        }
+
+        override fun selectSubtitleTrack(groupIndex: Int?, trackIndex: Int?) {
+            selectedSubtitleTrack = groupIndex to trackIndex
+        }
+
+        override fun addExternalSubtitle(uri: String, mimeType: String, label: String) {
+            lastExternalSubtitleUri = uri
+        }
+
+        override fun clearPlaybackError() {
+            clearErrorCount++
+        }
+    }
+
+    private object NoOpEffectsBackend : AudioEffectsBackend {
+        override fun attach(audioSessionId: Int) = AttachedEffectsCapabilities(
+            equalizerSupported = false,
+            bassBoostSupported = false,
+        )
+        override fun setEqualizerEnabled(enabled: Boolean) = Unit
+        override fun setBandLevel(bandIndex: Int, levelMb: Int) = Unit
+        override fun usePreset(presetIndex: Int): List<Int>? = null
+        override fun setBassBoost(enabled: Boolean, strength: Int) = Unit
+        override fun release() = Unit
     }
 }

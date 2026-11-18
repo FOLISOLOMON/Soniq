@@ -23,6 +23,7 @@ import com.soniq.player.core.designsystem.component.SoniqBackground
 import com.soniq.player.core.model.media.AudioTrack
 import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.model.media.VideoItem
+import com.soniq.player.core.playback.AudioEffectsState
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.feature.music.MusicRoute
 import com.soniq.player.feature.player.MiniPlayerBar
@@ -47,6 +48,7 @@ fun SoniqApp(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     playbackState: PlaybackState = PlaybackState(),
+    audioEffectsState: AudioEffectsState = AudioEffectsState(),
     isCurrentFavorite: Boolean = false,
     player: Player? = null,
     onPlayAudioQueue: (List<AudioTrack>, Int) -> Unit = { _, _ -> },
@@ -61,11 +63,23 @@ fun SoniqApp(
     onToggleShuffle: () -> Unit = {},
     onCycleRepeatMode: () -> Unit = {},
     onCycleSpeed: () -> Unit = {},
+    onSetSpeed: (Float) -> Unit = {},
     onPauseIfVideo: () -> Unit = {},
     onToggleCurrentFavorite: () -> Unit = {},
     onSelectQueueItem: (Int) -> Unit = {},
     onMoveQueueItem: (Int, Int) -> Unit = { _, _ -> },
     onRemoveQueueItem: (Int) -> Unit = {},
+    onSetEqualizerEnabled: (Boolean) -> Unit = {},
+    onSelectEqualizerPreset: (Int) -> Unit = {},
+    onSetEqualizerBandLevel: (Int, Int) -> Unit = { _, _ -> },
+    onSetBassBoostEnabled: (Boolean) -> Unit = {},
+    onSetBassBoostStrength: (Int) -> Unit = {},
+    onSetGaplessEnabled: (Boolean) -> Unit = {},
+    onSetCrossfadeDurationSec: (Int) -> Unit = {},
+    onSelectAudioTrack: (Int, Int) -> Unit = { _, _ -> },
+    onSelectSubtitleTrack: (Int?, Int?) -> Unit = { _, _ -> },
+    onAddExternalSubtitle: (String, String, String) -> Unit = { _, _, _ -> },
+    onClearPlaybackError: () -> Unit = {},
     musicContent: @Composable () -> Unit = {
         MusicRoute(
             onPlayTrack = { tracks, index ->
@@ -142,6 +156,14 @@ fun SoniqApp(
                             onSelectQueueItem = onSelectQueueItem,
                             onMoveQueueItem = onMoveQueueItem,
                             onRemoveQueueItem = onRemoveQueueItem,
+                            audioEffectsState = audioEffectsState,
+                            onSetEqualizerEnabled = onSetEqualizerEnabled,
+                            onSelectEqualizerPreset = onSelectEqualizerPreset,
+                            onSetEqualizerBandLevel = onSetEqualizerBandLevel,
+                            onSetBassBoostEnabled = onSetBassBoostEnabled,
+                            onSetBassBoostStrength = onSetBassBoostStrength,
+                            onSetGaplessEnabled = onSetGaplessEnabled,
+                            onSetCrossfadeDurationSec = onSetCrossfadeDurationSec,
                         )
                     },
                     videoPlayerContent = {
@@ -154,6 +176,11 @@ fun SoniqApp(
                             onSeekBy = onSeekBy,
                             onCycleSpeed = onCycleSpeed,
                             onLeaveScreen = onPauseIfVideo,
+                            onSetSpeed = onSetSpeed,
+                            onSelectAudioTrack = onSelectAudioTrack,
+                            onSelectSubtitleTrack = onSelectSubtitleTrack,
+                            onAddExternalSubtitle = onAddExternalSubtitle,
+                            onClearError = onClearPlaybackError,
                         )
                     },
                 )

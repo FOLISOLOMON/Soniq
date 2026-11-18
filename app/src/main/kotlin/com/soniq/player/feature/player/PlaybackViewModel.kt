@@ -10,8 +10,10 @@ import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.permissions.NotificationPermissionChecker
 import com.soniq.player.core.permissions.NotificationPermissions
+import com.soniq.player.core.playback.AudioEffectsState
 import com.soniq.player.core.playback.PlaybackController
 import com.soniq.player.core.playback.PlaybackState
+import com.soniq.player.core.playback.SoniqAudioEffectsManager
 import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,10 +36,12 @@ class PlaybackViewModel @Inject constructor(
     private val playbackPreferences: PlaybackPreferencesDataSource,
     private val notificationPermissionChecker: NotificationPermissionChecker,
     private val userLibraryRepository: UserLibraryRepository,
+    private val audioEffectsManager: SoniqAudioEffectsManager,
 ) : ViewModel() {
 
     val playbackState: StateFlow<PlaybackState> = playbackController.state
     val player: StateFlow<Player?> = playbackController.player
+    val audioEffectsState: StateFlow<AudioEffectsState> = audioEffectsManager.state
 
     val preferences: StateFlow<PlaybackPreferences> = playbackPreferences.preferences
         .stateIn(
@@ -167,6 +171,54 @@ class PlaybackViewModel @Inject constructor(
         val nextIndex = SPEED_STEPS.indexOfFirst { it > current + SPEED_EPSILON }
             .let { idx -> if (idx >= 0) idx else 0 }
         playbackController.setPlaybackSpeed(SPEED_STEPS[nextIndex])
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        playbackController.setPlaybackSpeed(speed)
+    }
+
+    fun setEqualizerEnabled(enabled: Boolean) {
+        audioEffectsManager.setEqualizerEnabled(enabled)
+    }
+
+    fun selectEqualizerPreset(presetIndex: Int) {
+        audioEffectsManager.selectEqualizerPreset(presetIndex)
+    }
+
+    fun setEqualizerBandLevel(bandIndex: Int, levelMb: Int) {
+        audioEffectsManager.setBandLevel(bandIndex, levelMb)
+    }
+
+    fun setBassBoostEnabled(enabled: Boolean) {
+        audioEffectsManager.setBassBoostEnabled(enabled)
+    }
+
+    fun setBassBoostStrength(strength: Int) {
+        audioEffectsManager.setBassBoostStrength(strength)
+    }
+
+    fun setGaplessEnabled(enabled: Boolean) {
+        audioEffectsManager.setGaplessEnabled(enabled)
+    }
+
+    fun setCrossfadeDurationSec(seconds: Int) {
+        audioEffectsManager.setCrossfadeDurationSec(seconds)
+    }
+
+    fun selectAudioTrack(groupIndex: Int, trackIndex: Int) {
+        playbackController.selectAudioTrack(groupIndex, trackIndex)
+    }
+
+    fun selectSubtitleTrack(groupIndex: Int?, trackIndex: Int?) {
+        playbackController.selectSubtitleTrack(groupIndex, trackIndex)
+    }
+
+    fun addExternalSubtitle(uri: String, mimeType: String, label: String) {
+        playbackController.addExternalSubtitle(uri, mimeType, label)
+    }
+
+    fun clearPlaybackError() {
+        playbackController.clearPlaybackError()
     }
 
     private fun observePlaybackForHistoryAndResume() {

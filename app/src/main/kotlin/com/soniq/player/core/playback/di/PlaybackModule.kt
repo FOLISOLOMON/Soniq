@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
+import com.soniq.player.core.playback.AndroidAudioEffectsBackend
+import com.soniq.player.core.playback.AudioEffectsBackend
 import com.soniq.player.core.playback.Media3PlaybackController
 import com.soniq.player.core.playback.PlaybackController
 import dagger.Binds
@@ -45,4 +47,7 @@ abstract class PlaybackControllerModule {
 
     @Binds
     abstract fun bindPlaybackController(impl: Media3PlaybackController): PlaybackController
+
+    @Binds
+    abstract fun bindAudioEffectsBackend(impl: AndroidAudioEffectsBackend): AudioEffectsBackend
 }

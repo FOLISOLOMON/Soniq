@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
             val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
+            val audioEffectsState by playbackViewModel.audioEffectsState.collectAsStateWithLifecycle()
             val isCurrentFavorite by playbackViewModel.isCurrentFavorite.collectAsStateWithLifecycle()
             val player by playbackViewModel.player.collectAsStateWithLifecycle()
 
@@ -96,6 +97,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 SoniqApp(
                     playbackState = playbackState,
+                    audioEffectsState = audioEffectsState,
                     isCurrentFavorite = isCurrentFavorite,
                     player = player,
                     onPlayAudioQueue = playbackViewModel::playAudioQueue,
@@ -110,11 +112,23 @@ class MainActivity : ComponentActivity() {
                     onToggleShuffle = playbackViewModel::toggleShuffle,
                     onCycleRepeatMode = playbackViewModel::cycleRepeatMode,
                     onCycleSpeed = playbackViewModel::cyclePlaybackSpeed,
+                    onSetSpeed = playbackViewModel::setPlaybackSpeed,
                     onPauseIfVideo = playbackViewModel::pauseIfVideo,
                     onToggleCurrentFavorite = playbackViewModel::toggleCurrentFavorite,
                     onSelectQueueItem = playbackViewModel::skipToQueueIndex,
                     onMoveQueueItem = playbackViewModel::moveQueueItem,
                     onRemoveQueueItem = playbackViewModel::removeQueueItem,
+                    onSetEqualizerEnabled = playbackViewModel::setEqualizerEnabled,
+                    onSelectEqualizerPreset = playbackViewModel::selectEqualizerPreset,
+                    onSetEqualizerBandLevel = playbackViewModel::setEqualizerBandLevel,
+                    onSetBassBoostEnabled = playbackViewModel::setBassBoostEnabled,
+                    onSetBassBoostStrength = playbackViewModel::setBassBoostStrength,
+                    onSetGaplessEnabled = playbackViewModel::setGaplessEnabled,
+                    onSetCrossfadeDurationSec = playbackViewModel::setCrossfadeDurationSec,
+                    onSelectAudioTrack = playbackViewModel::selectAudioTrack,
+                    onSelectSubtitleTrack = playbackViewModel::selectSubtitleTrack,
+                    onAddExternalSubtitle = playbackViewModel::addExternalSubtitle,
+                    onClearPlaybackError = playbackViewModel::clearPlaybackError,
                 )
             }
         }

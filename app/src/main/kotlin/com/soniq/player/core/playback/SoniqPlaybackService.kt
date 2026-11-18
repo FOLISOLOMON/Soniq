@@ -9,6 +9,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
@@ -27,9 +28,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -55,21 +61,38 @@ class SoniqPlaybackService : MediaSessionService() {
     lateinit var restorationManager: PlaybackRestorationManager
 
     @Inject
+    lateinit var audioEffectsManager: SoniqAudioEffectsManager
+
+    @Inject
     @IoDispatcher
     lateinit var ioDispatcher: CoroutineDispatcher
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var mediaSession: MediaSession? = null
     private var currentAudioContentType: Int = C.AUDIO_CONTENT_TYPE_MUSIC
+    private var crossfadeJob: Job? = null
+    private var isCrossfading: Boolean = false
 
     private val servicePlayerListener = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             updateAudioAttributesFor(mediaItem)
+            if (MediaItemFactory.resolveMediaKind(mediaItem) != MediaKind.AUDIO && !isCrossfading) {
+                player.volume = 1.0f
+            }
+            updateCrossfadeMonitor()
             persistAudioSnapshot()
         }
 
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            audioEffectsManager.attachToAudioSession(audioSessionId)
+        }
+
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updateCrossfadeMonitor()
             if (!isPlaying) {
+                if (!isCrossfading) {
+                    player.volume = 1.0f
+                }
                 persistAudioSnapshot()
             }
         }
@@ -82,6 +105,22 @@ class SoniqPlaybackService : MediaSessionService() {
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
             refreshNotificationButtons()
             persistAudioSnapshot()
+        }
+
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
+                persistAudioSnapshot()
+            }
+        }
+
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int,
+        ) {
+            if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_REMOVE) {
+                persistAudioSnapshot()
+            }
         }
 
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
@@ -175,6 +214,15 @@ class SoniqPlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationProvider)
 
         player.addListener(servicePlayerListener)
+        if (player.audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
+            audioEffectsManager.attachToAudioSession(player.audioSessionId)
+        }
+        serviceScope.launch {
+            audioEffectsManager.state.collect { effects ->
+                player.pauseAtEndOfMediaItems = !effects.gaplessEnabled
+                updateCrossfadeMonitor()
+            }
+        }
 
         val sessionActivityIntent = PendingIntent.getActivity(
             this,
@@ -219,6 +267,11 @@ class SoniqPlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        crossfadeJob?.cancel()
+        crossfadeJob = null
+        player.volume = 1.0f
+        audioEffectsManager.detachFromAudioSession()
+        persistAudioSnapshot()
         player.removeListener(servicePlayerListener)
         mediaSession?.run {
             player.release()
@@ -256,10 +309,17 @@ class SoniqPlaybackService : MediaSessionService() {
 
     private fun persistAudioSnapshot() {
         val currentPlayer = mediaSession?.player ?: return
+        val count = currentPlayer.mediaItemCount
+        if (count == 0) {
+            serviceScope.launch(ioDispatcher) {
+                withContext(NonCancellable) {
+                    restorationManager.clearAudioSession()
+                }
+            }
+            return
+        }
         if (MediaItemFactory.resolveMediaKind(currentPlayer.currentMediaItem) != MediaKind.AUDIO) return
         // Capture Player fields on the Main/Application looper before hopping to IO.
-        val count = currentPlayer.mediaItemCount
-        if (count == 0) return
         val ids = buildList(count) {
             for (i in 0 until count) {
                 SoniqSessionCommands.extractAudioTrackId(currentPlayer.getMediaItemAt(i).mediaId)
@@ -274,19 +334,97 @@ class SoniqPlaybackService : MediaSessionService() {
         val speed = currentPlayer.playbackParameters.speed
 
         serviceScope.launch(ioDispatcher) {
-            restorationManager.saveSnapshotDirectly(
-                queueTrackIds = ids,
-                currentIndex = index,
-                positionMs = position,
-                repeatMode = repeat,
-                shuffleEnabled = shuffle,
-                playbackSpeed = speed,
-            )
+            withContext(NonCancellable) {
+                restorationManager.saveSnapshotDirectly(
+                    queueTrackIds = ids,
+                    currentIndex = index,
+                    positionMs = position,
+                    repeatMode = repeat,
+                    shuffleEnabled = shuffle,
+                    playbackSpeed = speed,
+                )
+            }
+        }
+    }
+
+    private fun updateCrossfadeMonitor() {
+        val effects = audioEffectsManager.state.value
+        val activeKind = MediaItemFactory.resolveMediaKind(player.currentMediaItem)
+        val shouldMonitor = effects.crossfadeDurationSec > 0 &&
+            activeKind == MediaKind.AUDIO &&
+            player.isPlaying &&
+            player.repeatMode != Player.REPEAT_MODE_ONE &&
+            player.hasNextMediaItem()
+
+        if (!shouldMonitor) {
+            crossfadeJob?.cancel()
+            crossfadeJob = null
+            if (!isCrossfading) {
+                player.volume = 1.0f
+            }
+            return
+        }
+        if (crossfadeJob?.isActive == true) return
+
+        crossfadeJob = serviceScope.launch {
+            while (isActive) {
+                val crossfadeMs = audioEffectsManager.state.value.crossfadeDurationSec * 1_000L
+                val duration = player.duration
+                if (
+                    crossfadeMs > 0L &&
+                    player.isPlaying &&
+                    player.hasNextMediaItem() &&
+                    player.repeatMode != Player.REPEAT_MODE_ONE &&
+                    duration != C.TIME_UNSET &&
+                    duration > crossfadeMs * 2L
+                ) {
+                    val remaining = duration - player.currentPosition
+                    if (remaining in 1L..crossfadeMs && !isCrossfading) {
+                        performVolumeCrossfade(crossfadeMs)
+                    }
+                }
+                delay(CROSSFADE_POLL_MS)
+            }
+        }
+    }
+
+    private suspend fun performVolumeCrossfade(totalFadeMs: Long) {
+        isCrossfading = true
+        try {
+            val steps = 10
+            val halfMs = (totalFadeMs / 2L).coerceAtLeast(250L)
+            val stepDelay = (halfMs / steps).coerceAtLeast(25L)
+
+            for (step in 1..steps) {
+                if (!player.isPlaying || !player.hasNextMediaItem()) {
+                    player.volume = 1.0f
+                    return
+                }
+                player.volume = (1.0f - (step.toFloat() / steps) * 0.92f).coerceIn(0.08f, 1.0f)
+                delay(stepDelay)
+            }
+
+            if (player.hasNextMediaItem()) {
+                player.seekToNextMediaItem()
+            }
+
+            for (step in 1..steps) {
+                if (!player.isPlaying) {
+                    player.volume = 1.0f
+                    return
+                }
+                player.volume = (0.08f + (step.toFloat() / steps) * 0.92f).coerceIn(0.08f, 1.0f)
+                delay(stepDelay)
+            }
+        } finally {
+            player.volume = 1.0f
+            isCrossfading = false
         }
     }
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "soniq_playback_channel"
+        private const val CROSSFADE_POLL_MS = 150L
 
         private fun PlaybackRepeatMode.toMedia3RepeatMode(): Int = when (this) {
             PlaybackRepeatMode.OFF -> Player.REPEAT_MODE_OFF

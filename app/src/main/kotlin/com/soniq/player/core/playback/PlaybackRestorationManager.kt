@@ -57,6 +57,11 @@ class PlaybackRestorationManager @Inject constructor(
         preferences.saveSessionSnapshot(snapshot)
     }
 
+    /** Clears any persisted audio queue snapshot (e.g. when the user empties the queue). */
+    suspend fun clearAudioSession() {
+        preferences.saveSessionSnapshot(PlaybackSessionSnapshot())
+    }
+
     /** Persists a snapshot whose fields were already captured on the Player's looper thread. */
     suspend fun saveSnapshotDirectly(
         queueTrackIds: List<Long>,
