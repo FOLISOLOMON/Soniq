@@ -62,6 +62,17 @@ fun VideoScreen(
                 )
             }
 
+            MediaAccessState.PARTIAL -> {
+                SoniqEmptyState(
+                    icon = painterResource(R.drawable.ic_movie),
+                    title = stringResource(R.string.library_video_partial_title),
+                    message = stringResource(R.string.library_video_partial_message),
+                    actionLabel = stringResource(R.string.permission_manage_video_access),
+                    onActionClick = onRequestPermission,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
             MediaAccessState.NOT_GRANTED -> {
                 SoniqEmptyState(
                     icon = painterResource(R.drawable.ic_lock),

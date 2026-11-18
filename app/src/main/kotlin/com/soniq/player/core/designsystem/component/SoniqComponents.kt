@@ -77,7 +77,9 @@ fun SoniqTopAppBar(
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
-            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                alpha = SoniqTheme.tokens.alpha.topBarScrolled,
+            ),
             titleContentColor = MaterialTheme.colorScheme.onBackground,
             navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
             actionIconContentColor = MaterialTheme.colorScheme.onBackground,

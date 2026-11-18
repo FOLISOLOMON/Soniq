@@ -1,5 +1,6 @@
 package com.soniq.player.core.mediadiscovery
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -11,6 +12,11 @@ import com.soniq.player.core.model.media.MediaKind
  */
 object MediaStoreCollections {
 
+    /**
+     * [MediaStore.VOLUME_EXTERNAL] is a compile-time inlined string constant guarded by [sdkInt],
+     * which is parameterized so all API branches can be unit-tested on the JVM.
+     */
+    @SuppressLint("InlinedApi")
     fun collectionUri(
         kind: MediaKind,
         sdkInt: Int = Build.VERSION.SDK_INT,

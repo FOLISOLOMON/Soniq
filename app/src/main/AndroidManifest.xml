@@ -7,9 +7,10 @@
         No INTERNET permission is declared; network access is not part of the product.
     -->
 
-    <!-- Local media discovery (Android 13+ granular media permissions). -->
+    <!-- Local media discovery (Android 13+ granular media permissions; Android 14+ partial visual access). -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- Local media discovery on Android 8.0 - 12L. -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"

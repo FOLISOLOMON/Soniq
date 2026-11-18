@@ -43,22 +43,26 @@ com.soniq.player
 - **Decision**: Keep a single `:app` module in Milestone 1 with strict `core/*` and `feature/*` packages instead of premature multi-module proliferation.
 - **Rationale**: Faster Gradle configuration, simpler Hilt/Room/Compose setup, and clean refactorability into `:core:*` / `:feature:*` modules later if the codebase grows large enough to benefit from module-level build caching.
 
-### ADR-002: AGP 9 Built-in Kotlin + KSP
-- **Decision**: Use AGP 9.5.1 with built-in Kotlin support (no external `kotlin-android` plugin) and KSP (`2.3.14`) for Room and Hilt code generation.
-- **Rationale**: Eliminates legacy `kapt` overhead and follows the current stable Android build toolchain.
+### ADR-002: AGP 9 Built-in Kotlin + Explicit JVM 17 Target + KSP
+- **Decision**: Use AGP 9.5.1 with built-in Kotlin support (no external `kotlin-android` plugin), explicit `compileOptions` and `kotlin.compilerOptions.jvmTarget` pinned to JVM 17 (compatible with host JDK 21), and KSP (`2.3.14`) for Room and Hilt code generation.
+- **Rationale**: Eliminates legacy `kapt` overhead, prevents implicit JVM bytecode drift across host JDK versions, and follows the current stable Android build toolchain.
 
 ### ADR-003: Dual persistence for Appearance (DataStore) and Presets (Room)
-- **Decision**: Store the active `AppearanceConfig` in Preferences DataStore (`appearance.preferences_pb`) with a `ReplaceFileCorruptionHandler`, and store saved `ThemePreset` rows in Room (`soniq.db`) with `exportSchema = true` and no destructive migrations.
-- **Rationale**: Active settings are lightweight key-value state read before the first frame (preventing startup theme flicker via `core-splashscreen`), whereas presets are an unbounded ordered collection queried alongside future playlists and library tables.
+- **Decision**: Store the active `AppearanceConfig` in Preferences DataStore (`appearance.preferences_pb`) with a `ReplaceFileCorruptionHandler`, eagerly loaded by `MainViewModel` (`SharingStarted.Eagerly`) so `core-splashscreen` never depends on Compose subscription timing, and store saved `ThemePreset` rows in Room (`soniq.db`) with `exportSchema = true` and no destructive migrations.
+- **Rationale**: Active settings are lightweight key-value state read before the first frame (preventing startup theme flicker), whereas presets are an unbounded ordered collection queried alongside future playlists. Stage 1.2's rebuildable MediaStore index cache will live in a separate non-backed-up database so cloud backup rules only cover user-authored data.
 
 ### ADR-004: Custom HSL Color Scheme Engine with WCAG Contrast Enforcement
-- **Decision**: Generate Light, Dark, and AMOLED color schemes from any ARGB seed color in `SoniqColorSchemes` (backed by pure-Kotlin `ColorMath`), alongside optional API 31+ Material You dynamic colors.
-- **Rationale**: Guarantees at least 4.5:1 WCAG contrast on accent surfaces across arbitrary user-selected accents, preserves pure `#000000` AMOLED surfaces, and remains 100% JVM unit-testable without Android dependencies.
+- **Decision**: Generate Light, Dark, and AMOLED color schemes from any ARGB seed color in `SoniqColorSchemes` (backed by pure-Kotlin `ColorMath`), alongside optional API 31+ Material You dynamic colors. All visual constants (including border strokes and scrolled top-bar alpha) live exclusively in `SoniqTokens`.
+- **Rationale**: Guarantees at least 4.58:1 WCAG contrast on accent surfaces across arbitrary user-selected accents, preserves pure `#000000` AMOLED surfaces, keeps styling strictly tokenized, and remains 100% JVM unit-testable without Android dependencies.
 
 ### ADR-005: Configurable Application ID
 - **Decision**: Keep the Kotlin `namespace` fixed at `com.soniq.player` while allowing `applicationId` to be overridden at build time via `-Psoniq.applicationId=...` (with `.debug` suffix on debug builds).
 - **Rationale**: Allows side-by-side debug/release installation and future release ID changes without touching Kotlin package names or generated R classes.
 
 ### ADR-006: Media3 `MediaSessionService` + Application-Scoped `PlaybackController`
-- **Decision**: Host `ExoPlayer` and `MediaSession` exclusively inside `SoniqPlaybackService` (`WAKE_MODE_LOCAL`, audio focus, noisy audio handling) and connect from `Media3PlaybackController` using the application `Context`.
-- **Rationale**: Guarantees background audio continuity, system notification/lock-screen/Bluetooth integration, and complete decoupling from Activity/Compose lifecycles.
+- **Decision**: Host `ExoPlayer` and `MediaSession` exclusively inside `SoniqPlaybackService` (`WAKE_MODE_LOCAL`, audio focus, noisy audio handling) and connect from `Media3PlaybackController` using the application `Context`, with explicit `disconnect()` / `MediaController.releaseFuture` cleanup and `MediaController.Listener.onDisconnected` recovery.
+- **Rationale**: Guarantees background audio continuity, system notification/lock-screen/Bluetooth integration, clean recovery if the OS recycles the service, and complete decoupling from Activity/Compose lifecycles.
+
+### ADR-007: Android 14+ Partial Visual Media Access
+- **Decision**: Declare `READ_MEDIA_VISUAL_USER_SELECTED` alongside `READ_MEDIA_VIDEO`, request both on API 34+ via `RequestMultiplePermissions`, and distinguish `MediaAccessGrant.FULL`, `PARTIAL`, and `NONE` cleanly from `READ_MEDIA_AUDIO`.
+- **Rationale**: Respects user privacy choices on Android 14+ ("Select photos and videos") instead of treating partial access as denied, while letting users expand their selection anytime.

@@ -22,15 +22,16 @@ class MainViewModel @Inject constructor(
     appearanceRepository: AppearanceRepository,
 ) : ViewModel() {
 
+    /**
+     * Started eagerly so [MainActivity]'s `SplashScreen.setKeepOnScreenCondition` observes
+     * [MainUiState.Ready] immediately once DataStore emits, without waiting for Compose's first
+     * subscription pass.
+     */
     val uiState: StateFlow<MainUiState> = appearanceRepository.appearance
         .map<AppearanceConfig, MainUiState> { MainUiState.Ready(it) }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            started = SharingStarted.Eagerly,
             initialValue = MainUiState.Loading,
         )
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
-    }
 }

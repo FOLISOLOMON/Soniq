@@ -13,8 +13,11 @@ class AndroidPermissionChecker @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) : PermissionChecker {
 
-    override fun hasMediaAccess(kind: MediaKind): Boolean {
-        val permission = MediaPermissions.requiredPermission(kind)
-        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    override fun checkMediaAccess(kind: MediaKind): MediaAccessGrant {
+        val granted = MediaPermissions.requiredPermissions(kind)
+            .filterTo(mutableSetOf()) { permission ->
+                ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+            }
+        return MediaPermissions.resolveAccessGrant(kind, granted)
     }
 }

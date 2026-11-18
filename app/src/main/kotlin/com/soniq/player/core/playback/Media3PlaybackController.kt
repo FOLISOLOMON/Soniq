@@ -9,11 +9,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
 import com.soniq.player.core.model.media.MediaKind
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,6 +23,10 @@ import javax.inject.Singleton
 /**
  * Application-scoped [PlaybackController] backed by a Media3 [MediaController] connected to
  * [SoniqPlaybackService].
+ *
+ * Handles service-initiated disconnections and explicit [disconnect] calls cleanly so subsequent
+ * [connect] invocations establish a fresh session without leaking controllers or holding stale
+ * references.
  */
 @Singleton
 class Media3PlaybackController @Inject constructor(
@@ -31,35 +37,61 @@ class Media3PlaybackController @Inject constructor(
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
     private var controller: MediaController? = null
-    private var isConnecting: Boolean = false
+    private var controllerFuture: ListenableFuture<MediaController>? = null
 
-    private val listener = object : Player.Listener {
+    private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             publishState(player)
         }
     }
 
+    private val controllerListener = object : MediaController.Listener {
+        override fun onDisconnected(disconnectedController: MediaController) {
+            if (controller === disconnectedController) {
+                clearConnection(releaseFuture = false)
+            }
+        }
+    }
+
     override fun connect() {
-        if (controller != null || isConnecting) return
-        isConnecting = true
+        if (controller != null || controllerFuture != null) return
         val token = SessionToken(context, ComponentName(context, SoniqPlaybackService::class.java))
-        val future = MediaController.Builder(context, token).buildAsync()
+        val future = MediaController.Builder(context, token)
+            .setListener(controllerListener)
+            .buildAsync()
+        controllerFuture = future
         future.addListener(
             {
-                isConnecting = false
+                if (controllerFuture !== future) {
+                    // disconnect() ran while the async connection was still in flight.
+                    MediaController.releaseFuture(future)
+                    return@addListener
+                }
                 try {
                     val connected = future.get()
+                    if (!connected.isConnected) {
+                        clearConnection(releaseFuture = true)
+                        return@addListener
+                    }
                     controller = connected
-                    connected.addListener(listener)
+                    connected.addListener(playerListener)
                     publishState(connected)
                 } catch (error: ExecutionException) {
                     Log.w(TAG, "Failed to connect to SoniqPlaybackService", error)
+                    clearConnection(releaseFuture = false)
+                } catch (_: CancellationException) {
+                    clearConnection(releaseFuture = false)
                 } catch (_: InterruptedException) {
                     Thread.currentThread().interrupt()
+                    clearConnection(releaseFuture = false)
                 }
             },
             ContextCompat.getMainExecutor(context),
         )
+    }
+
+    override fun disconnect() {
+        clearConnection(releaseFuture = true)
     }
 
     override fun play() {
@@ -76,6 +108,21 @@ class Media3PlaybackController @Inject constructor(
 
     override fun seekTo(positionMs: Long) {
         controller?.seekTo(positionMs.coerceAtLeast(0L))
+    }
+
+    internal fun handleServiceDisconnectedForTest() {
+        clearConnection(releaseFuture = false)
+    }
+
+    private fun clearConnection(releaseFuture: Boolean) {
+        controller?.removeListener(playerListener)
+        controller = null
+        val future = controllerFuture
+        controllerFuture = null
+        if (releaseFuture && future != null) {
+            MediaController.releaseFuture(future)
+        }
+        _state.value = PlaybackState()
     }
 
     private fun publishState(player: Player) {

@@ -26,24 +26,26 @@ class MediaPermissionController(
 @Composable
 fun rememberMediaPermissionController(
     kind: MediaKind,
-    onResult: (granted: Boolean, permanentlyDenied: Boolean) -> Unit,
+    onResult: (grant: MediaAccessGrant, permanentlyDenied: Boolean) -> Unit,
 ): MediaPermissionController {
     val context = LocalContext.current
-    val permission = remember(kind) { MediaPermissions.requiredPermission(kind) }
+    val permissions = remember(kind) { MediaPermissions.requiredPermissions(kind) }
 
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { results ->
+        val grantedPermissions = results.filterValues { it }.keys
+        val grant = MediaPermissions.resolveAccessGrant(kind, grantedPermissions)
         val activity = context.findActivity()
-        val permanentlyDenied = !granted &&
+        val permanentlyDenied = grant == MediaAccessGrant.NONE &&
             activity != null &&
-            !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
-        onResult(granted, permanentlyDenied)
+            permissions.none { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) }
+        onResult(grant, permanentlyDenied)
     }
 
-    return remember(context, permission, launcher) {
+    return remember(context, permissions, launcher) {
         MediaPermissionController(
-            requestPermission = { launcher.launch(permission) },
+            requestPermission = { launcher.launch(permissions.toTypedArray()) },
             openAppSettings = {
                 val intent = Intent(
                     Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

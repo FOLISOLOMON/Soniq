@@ -53,7 +53,9 @@ fun MusicScreen(
         topBar = { SoniqTopAppBar(title = stringResource(R.string.destination_music)) },
     ) { innerPadding ->
         when (uiState.accessState) {
-            MediaAccessState.GRANTED -> {
+            MediaAccessState.GRANTED,
+            MediaAccessState.PARTIAL,
+            -> {
                 SoniqEmptyState(
                     icon = painterResource(R.drawable.ic_music_note),
                     title = stringResource(R.string.library_music_ready_title),

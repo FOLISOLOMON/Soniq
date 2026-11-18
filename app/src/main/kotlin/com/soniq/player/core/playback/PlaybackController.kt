@@ -31,6 +31,7 @@ interface PlaybackController {
     val state: StateFlow<PlaybackState>
 
     fun connect()
+    fun disconnect()
     fun play()
     fun pause()
     fun stop()

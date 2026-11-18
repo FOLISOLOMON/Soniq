@@ -48,7 +48,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.R
@@ -135,6 +134,7 @@ fun SettingsScreen(
 ) {
     val spacing = SoniqTheme.tokens.spacing
     val sizes = SoniqTheme.tokens.sizes
+    val border = SoniqTheme.tokens.border
     val snackbarHostState = remember { SnackbarHostState() }
     val feedbackText = uiState.feedback?.let { stringResource(it.messageRes()) }
 
@@ -224,7 +224,7 @@ fun SettingsScreen(
                                     .clip(CircleShape)
                                     .background(swatch.color)
                                     .border(
-                                        width = if (isSelected) 3.dp else 1.dp,
+                                        width = if (isSelected) border.selected else border.thin,
                                         color = if (isSelected) {
                                             MaterialTheme.colorScheme.onSurface
                                         } else {

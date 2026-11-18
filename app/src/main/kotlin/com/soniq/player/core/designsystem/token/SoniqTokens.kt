@@ -138,6 +138,13 @@ data class SoniqMotion(
     val long: Int = 500,
 )
 
+/** Border / stroke width tokens. */
+@Immutable
+data class SoniqBorder(
+    val thin: Dp = 1.dp,
+    val selected: Dp = 3.dp,
+)
+
 /** Opacity tokens for overlays and backgrounds. */
 @Immutable
 data class SoniqAlpha(
@@ -145,6 +152,8 @@ data class SoniqAlpha(
     val backgroundImageScrim: Float = 0.72f,
     /** Strength of the accent tint at the top of the gradient background. */
     val gradientAccent: Float = 0.35f,
+    /** Translucent top app bar fill when content scrolls underneath. */
+    val topBarScrolled: Float = 0.92f,
     val disabled: Float = 0.38f,
 )
 
@@ -154,6 +163,7 @@ data class SoniqTokens(
     val spacing: SoniqSpacing = SoniqSpacing(),
     val radii: SoniqRadii = SoniqRadii(),
     val sizes: SoniqSizes = SoniqSizes(),
+    val border: SoniqBorder = SoniqBorder(),
     val elevation: SoniqElevation = SoniqElevation(),
     val motion: SoniqMotion = SoniqMotion(),
     val alpha: SoniqAlpha = SoniqAlpha(),

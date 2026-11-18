@@ -17,6 +17,9 @@
     <string name="permission_denied_permanently">Access was denied. You can enable it in the system app settings.</string>
     <string name="library_music_ready_title">Music access granted</string>
     <string name="library_video_ready_title">Video access granted</string>
+    <string name="library_video_partial_title">Selected videos accessible</string>
+    <string name="library_video_partial_message">SONIQ can access the videos you selected. You can allow additional videos anytime.</string>
+    <string name="permission_manage_video_access">Manage selected videos</string>
     <string name="library_indexing_pending">Library indexing will be available in the next development stage.</string>
 
     <!-- Settings -->

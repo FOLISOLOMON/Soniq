@@ -2,6 +2,7 @@ package com.soniq.player.feature.music
 
 import androidx.lifecycle.ViewModel
 import com.soniq.player.core.model.media.MediaKind
+import com.soniq.player.core.permissions.MediaAccessGrant
 import com.soniq.player.core.permissions.MediaAccessState
 import com.soniq.player.core.permissions.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,34 +27,42 @@ class MusicViewModel @Inject constructor(
 
     /** Re-checks permission state, e.g., when returning from system app settings. */
     fun refreshPermission() {
-        val granted = permissionChecker.hasMediaAccess(MediaKind.AUDIO)
+        val grant = permissionChecker.checkMediaAccess(MediaKind.AUDIO)
         _uiState.update { current ->
             current.copy(
-                accessState = when {
-                    granted -> MediaAccessState.GRANTED
-                    current.accessState == MediaAccessState.DENIED_PERMANENTLY -> MediaAccessState.DENIED_PERMANENTLY
-                    else -> MediaAccessState.NOT_GRANTED
+                accessState = when (grant) {
+                    MediaAccessGrant.FULL -> MediaAccessState.GRANTED
+                    MediaAccessGrant.PARTIAL -> MediaAccessState.PARTIAL
+                    MediaAccessGrant.NONE -> if (current.accessState == MediaAccessState.DENIED_PERMANENTLY) {
+                        MediaAccessState.DENIED_PERMANENTLY
+                    } else {
+                        MediaAccessState.NOT_GRANTED
+                    }
                 },
             )
         }
     }
 
-    fun onPermissionResult(granted: Boolean, permanentlyDenied: Boolean) {
+    fun onPermissionResult(grant: MediaAccessGrant, permanentlyDenied: Boolean) {
         _uiState.update {
             it.copy(
-                accessState = when {
-                    granted -> MediaAccessState.GRANTED
-                    permanentlyDenied -> MediaAccessState.DENIED_PERMANENTLY
-                    else -> MediaAccessState.NOT_GRANTED
+                accessState = when (grant) {
+                    MediaAccessGrant.FULL -> MediaAccessState.GRANTED
+                    MediaAccessGrant.PARTIAL -> MediaAccessState.PARTIAL
+                    MediaAccessGrant.NONE -> if (permanentlyDenied) {
+                        MediaAccessState.DENIED_PERMANENTLY
+                    } else {
+                        MediaAccessState.NOT_GRANTED
+                    }
                 },
             )
         }
     }
 
     private fun initialAccessState(): MediaAccessState =
-        if (permissionChecker.hasMediaAccess(MediaKind.AUDIO)) {
-            MediaAccessState.GRANTED
-        } else {
-            MediaAccessState.NOT_GRANTED
+        when (permissionChecker.checkMediaAccess(MediaKind.AUDIO)) {
+            MediaAccessGrant.FULL -> MediaAccessState.GRANTED
+            MediaAccessGrant.PARTIAL -> MediaAccessState.PARTIAL
+            MediaAccessGrant.NONE -> MediaAccessState.NOT_GRANTED
         }
 }
