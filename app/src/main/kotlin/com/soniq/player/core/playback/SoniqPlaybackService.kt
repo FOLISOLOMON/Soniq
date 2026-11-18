@@ -2,11 +2,15 @@ package com.soniq.player.core.playback
 
 import android.app.PendingIntent
 import android.content.Intent
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.soniq.player.MainActivity
+import com.soniq.player.core.model.media.MediaKind
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -24,9 +28,28 @@ class SoniqPlaybackService : MediaSessionService() {
     lateinit var player: ExoPlayer
 
     private var mediaSession: MediaSession? = null
+    private var currentAudioContentType: Int = C.AUDIO_CONTENT_TYPE_MUSIC
+
+    private val audioAttributeListener = object : Player.Listener {
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            val desiredType = when (MediaItemFactory.resolveMediaKind(mediaItem)) {
+                MediaKind.VIDEO -> C.AUDIO_CONTENT_TYPE_MOVIE
+                else -> C.AUDIO_CONTENT_TYPE_MUSIC
+            }
+            if (desiredType != currentAudioContentType) {
+                currentAudioContentType = desiredType
+                val attributes = AudioAttributes.Builder()
+                    .setContentType(desiredType)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build()
+                player.setAudioAttributes(attributes, /* handleAudioFocus = */ true)
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
+        player.addListener(audioAttributeListener)
         val sessionActivityIntent = PendingIntent.getActivity(
             this,
             0,
@@ -56,6 +79,7 @@ class SoniqPlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        player.removeListener(audioAttributeListener)
         mediaSession?.run {
             player.release()
             release()

@@ -8,12 +8,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.designsystem.theme.shouldUseDarkTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
+import com.soniq.player.feature.player.PlaybackViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -25,6 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
+    private val playbackViewModel: PlaybackViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -39,6 +42,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+            val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
+            val player by playbackViewModel.player.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+                playbackViewModel.ensureConnected()
+            }
+
             val appearance = when (val state = uiState) {
                 is MainUiState.Ready -> state.appearance
                 MainUiState.Loading -> AppearanceConfig()
@@ -63,7 +73,21 @@ class MainActivity : ComponentActivity() {
                 appearance = appearance,
                 darkTheme = darkTheme,
             ) {
-                SoniqApp()
+                SoniqApp(
+                    playbackState = playbackState,
+                    player = player,
+                    onPlayAudioQueue = playbackViewModel::playAudioQueue,
+                    onPlayVideo = playbackViewModel::playVideo,
+                    onTogglePlayPause = playbackViewModel::togglePlayPause,
+                    onSkipNext = playbackViewModel::skipToNext,
+                    onSkipPrevious = playbackViewModel::skipToPrevious,
+                    onSeekTo = playbackViewModel::seekTo,
+                    onSeekBy = playbackViewModel::seekBy,
+                    onToggleShuffle = playbackViewModel::toggleShuffle,
+                    onCycleRepeatMode = playbackViewModel::cycleRepeatMode,
+                    onCycleSpeed = playbackViewModel::cyclePlaybackSpeed,
+                    onPauseIfVideo = playbackViewModel::pauseIfVideo,
+                )
             }
         }
     }

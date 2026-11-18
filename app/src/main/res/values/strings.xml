@@ -63,6 +63,22 @@
         <item quantity="other">%d albums</item>
     </plurals>
 
+    <!-- Playback -->
+    <string name="player_now_playing">Now Playing</string>
+    <string name="player_nothing_playing">Nothing playing</string>
+    <string name="player_select_media_prompt">Choose a song or video from your library to begin playback.</string>
+    <string name="player_action_play">Play</string>
+    <string name="player_action_pause">Pause</string>
+    <string name="player_action_next">Next track</string>
+    <string name="player_action_previous">Previous track</string>
+    <string name="player_action_shuffle">Toggle shuffle</string>
+    <string name="player_action_repeat">Cycle repeat mode</string>
+    <string name="player_action_rewind">Rewind 10 seconds</string>
+    <string name="player_action_forward">Forward 10 seconds</string>
+    <string name="player_action_close">Close player</string>
+    <string name="player_speed_label">%1$sx</string>
+    <string name="player_queue_position">%1$d / %2$d</string>
+
     <!-- Settings -->
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_accent">Accent color</string>

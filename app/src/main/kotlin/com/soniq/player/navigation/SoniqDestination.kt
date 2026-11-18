@@ -15,6 +15,12 @@ sealed interface SoniqRoute {
 
     @Serializable
     data object Settings : SoniqRoute
+
+    @Serializable
+    data object AudioPlayer : SoniqRoute
+
+    @Serializable
+    data object VideoPlayer : SoniqRoute
 }
 
 /**

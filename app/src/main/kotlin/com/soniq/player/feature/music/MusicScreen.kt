@@ -61,6 +61,7 @@ import com.soniq.player.core.permissions.rememberMediaPermissionController
 @Composable
 fun MusicRoute(
     modifier: Modifier = Modifier,
+    onPlayTrack: (tracks: List<AudioTrack>, startIndex: Int) -> Unit = { _, _ -> },
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +88,10 @@ fun MusicRoute(
         onFolderClick = viewModel::selectFolder,
         onClearFilter = viewModel::clearFilter,
         onRefresh = viewModel::refreshLibrary,
+        onTrackClick = { clicked ->
+            val index = uiState.tracks.indexOfFirst { it.id == clicked.id }.coerceAtLeast(0)
+            onPlayTrack(uiState.tracks, index)
+        },
         modifier = modifier,
     )
 }

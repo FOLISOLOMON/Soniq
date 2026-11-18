@@ -112,11 +112,15 @@ data class SoniqRadii(
 data class SoniqSizes(
     val iconSmall: Dp = 18.dp,
     val icon: Dp = 24.dp,
+    val iconMedium: Dp = 32.dp,
     val iconLarge: Dp = 48.dp,
     val emptyStateIcon: Dp = 72.dp,
     val accentSwatch: Dp = 44.dp,
     val minTouchTarget: Dp = 48.dp,
+    val primaryTransportButton: Dp = 64.dp,
     val trackArtwork: Dp = 52.dp,
+    val compactPlayerArtwork: Dp = 88.dp,
+    val classicPlayerArtworkMax: Dp = 320.dp,
     val videoThumbnailWidth: Dp = 120.dp,
     val videoThumbnailHeight: Dp = 68.dp,
     val contentMaxWidth: Dp = 640.dp,
@@ -159,6 +163,8 @@ data class SoniqAlpha(
     val topBarScrolled: Float = 0.92f,
     /** Translucent badge overlay placed on video thumbnails. */
     val mediaBadgeScrim: Float = 0.78f,
+    /** Translucent overlay drawn behind video playback transport controls. */
+    val videoControlsScrim: Float = 0.56f,
     val disabled: Float = 0.38f,
 )
 

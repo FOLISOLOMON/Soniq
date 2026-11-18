@@ -31,6 +31,12 @@ fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
 fun NavDestination?.isTopLevelSelected(destination: TopLevelDestination): Boolean =
     this?.hierarchy?.any { it.hasRoute(destination.route::class) } == true
 
+/** Returns `true` when [this] destination is one of the full-screen player routes. */
+fun NavDestination?.isFullScreenPlayer(): Boolean =
+    this?.hierarchy?.any {
+        it.hasRoute(SoniqRoute.AudioPlayer::class) || it.hasRoute(SoniqRoute.VideoPlayer::class)
+    } == true
+
 /**
  * Root navigation graph for SONIQ. Feature content lambdas are parameterized with production
  * defaults so navigation behavior can be verified in isolation during UI tests.
@@ -43,6 +49,8 @@ fun SoniqNavHost(
     musicContent: @Composable () -> Unit = { MusicRoute() },
     videoContent: @Composable () -> Unit = { VideoRoute() },
     settingsContent: @Composable () -> Unit = { SettingsRoute() },
+    audioPlayerContent: @Composable () -> Unit = {},
+    videoPlayerContent: @Composable () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
@@ -52,5 +60,7 @@ fun SoniqNavHost(
         composable<SoniqRoute.Music> { musicContent() }
         composable<SoniqRoute.Video> { videoContent() }
         composable<SoniqRoute.Settings> { settingsContent() }
+        composable<SoniqRoute.AudioPlayer> { audioPlayerContent() }
+        composable<SoniqRoute.VideoPlayer> { videoPlayerContent() }
     }
 }

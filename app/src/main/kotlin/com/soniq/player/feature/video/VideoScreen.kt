@@ -59,6 +59,7 @@ import com.soniq.player.core.permissions.rememberMediaPermissionController
 @Composable
 fun VideoRoute(
     modifier: Modifier = Modifier,
+    onPlayVideo: (VideoItem) -> Unit = {},
     viewModel: VideoViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +84,7 @@ fun VideoRoute(
         onFolderClick = viewModel::selectFolder,
         onClearFilter = viewModel::clearFilter,
         onRefresh = viewModel::refreshLibrary,
+        onVideoClick = onPlayVideo,
         modifier = modifier,
     )
 }
