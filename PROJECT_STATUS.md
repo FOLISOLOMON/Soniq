@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (First Signed Release Verified)  
-**Current Stage**: **Stages 1–9 Complete + Liquid Glass UI/UX Redesign Complete + Private Updater Implemented + Permanent Release Signing Verified** → Ready for **Vercel Hosting Deployment, Physical-Device QA & User Release Approval**  
-**Latest Verified Code Commit**: `9f82d18` (`main`)
+**Last Updated**: 2026-11-20 (Bootstrap Update Build v0.2.0 Verified)  
+**Current Stage**: **SONIQ v0.2.0 (`versionCode = 2`) Signed Bootstrap APK Verified** with embedded `https://soniq-update-server.vercel.app/manifest.json` → Ready for manual phone install & user approval for Vercel Blob upload  
+**Latest Verified Code Commit**: `gradle.properties` v0.2.0 (`main`)
 
 ---
 
@@ -61,7 +61,7 @@
 | Check | Status | Details |
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.64 MB**) |
-| Release APK (`assembleRelease`) | **PASS (SIGNED)** | R8 minified + shrunk, v2 RSA-4096 signed (`app-release.apk`, **2.98 MB** / `3,126,234` B) |
+| Release APK (`assembleRelease`) | **PASS (SIGNED v0.2.0)** | R8 minified + shrunk, v2 RSA-4096 signed, manifest URL embedded (`app-release.apk`, **2.98 MB** / `3,126,238` B) |
 | Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **67 / 67 passed** across **32 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors** (3 `GradleDependency`, 2 `UnusedResources`, 1 `UsableSpace`, 1 `UseKtx` notices) |
 | Instrumented Tests (`connectedDebugAndroidTest`) | **PASS at `aeb1db6` (`emulator-5554`)** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 at `aeb1db6`; `Infinix_X6528` physical-device QA remains open (`DEBT-005`) |

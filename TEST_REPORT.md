@@ -10,7 +10,7 @@
 - **Build Environment**: Windows 11 (`10.0.26200`), Eclipse Temurin JDK `21.0.13+9-LTS`, Gradle `9.9.1`, AGP `9.5.1`, Kotlin `2.4.21`, Android SDK `compileSdk = 37`, `build-tools 37.0.0`, `adb 37.0.1`.
 - **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.64 MB** / `19,550,957` bytes).
 - **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`).
-- **Release APK (`./gradlew assembleRelease`)**: **PASS (SIGNED)** (R8 minification, resource shrinking, `lintVitalRelease` clean, and v2 RSA-4096 signature verified via `apksigner` matching `soniq-release` keystore SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`; `app/build/outputs/apk/release/app-release.apk`, **2.98 MB** / `3,126,234` bytes).
+- **Release APK (`./gradlew assembleRelease`)**: **PASS (SIGNED v0.2.0)** (R8 minification, resource shrinking, `lintVitalRelease` clean, `versionName=0.2.0`, `versionCode=2`, embedded `https://soniq-update-server.vercel.app/manifest.json` verified in `classes.dex`, v2 RSA-4096 signature verified via `apksigner` matching `soniq-release` keystore SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`; `app/build/outputs/apk/release/app-release.apk`, **2.98 MB** / `3,126,238` bytes, APK SHA-256 `3917ac0774b18d56f9682be6d66603b1b330acad329ac409b67ac05833c07450`).
 - **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors** (`3` `GradleDependency`, `2` `UnusedResources`, `1` `UsableSpace`, `1` `UseKtx` notices in `app/build/reports/lint-results-debug.sarif`).
 - **Room Schema Exports**: Verified `SoniqMediaDatabase/1.json` and `SoniqDatabase/1.json`, `2.json`, `3.json`.
 - **Merged Release Manifest Check**: **PASS** — `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`, and `androidx.core.content.FileProvider` present; zero ad/tracking permissions.
@@ -95,4 +95,5 @@
 | 2026-11-20 | UI/UX Redesign Phase 2 (`473241e`) | 58 / 58 PASS | 0 errors, 0 code/resource warnings | 3 / 3 PASS (`emulator-5554`) | PASS (2.90 MB unsigned APK) |
 | 2026-11-20 | Session 8 Visual QA (`aeb1db6`) | 62 / 62 PASS | 0 errors, 0 code/resource warnings | 3 / 3 PASS (`emulator-5554`) | PASS (2.91 MB unsigned APK) |
 | 2026-11-20 | Private Update System (`ffcbc12`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.97 MB unsigned APK) |
-| 2026-11-20 | **Signed Release Verification (`9f82d18`)** | **67 / 67 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.98 MB signed APK, v2 RSA-4096)** |
+| 2026-11-20 | Signed Release Verification (`9f82d18`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed APK, v2 RSA-4096) |
+| 2026-11-20 | **Bootstrap Update Build v0.2.0 (`versionCode=2`)** | **67 / 67 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.98 MB signed v0.2.0 APK, URL embedded)** |

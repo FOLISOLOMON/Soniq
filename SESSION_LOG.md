@@ -237,4 +237,6 @@
   - `ffcbc12` — `feat(update): add private user-initiated HTTPS updater, About SONIQ UI, and Vercel Blob config`
   - `6eccb29` — `docs(control): update all 8 control documents for Private Update System`
   - `9f82d18` — `chore(signing): align release signing template with permanent keystore path and alias`
-  - *(Signed release verification documentation commit follows immediately.)*
+  - `0ce664d` — `docs(release): record first verified RSA-4096 signed release APK`
+  - `ee2ce04` — `docs(signing): align keytool alias example with soniq-release`
+  - *(Bootstrap Update Build v0.2.0 commit follows immediately.)*
