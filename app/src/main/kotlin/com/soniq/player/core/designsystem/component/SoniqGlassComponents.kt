@@ -20,12 +20,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -120,10 +125,21 @@ fun SoniqGlassIconButton(
 ) {
     val glass = SoniqTheme.glass
     val metrics = SoniqTheme.glassMetrics
-    val backgroundBrush = if (highlighted) {
-        Brush.linearGradient(listOf(glass.activePillStart, glass.activePillEnd))
-    } else {
-        Brush.verticalGradient(listOf(glass.surfaceElevated, glass.surfaceBottom))
+    val backgroundBrush = remember(
+        highlighted,
+        glass.activePillStart,
+        glass.activePillEnd,
+        glass.surfaceElevated,
+        glass.surfaceBottom,
+    ) {
+        if (highlighted) {
+            Brush.linearGradient(listOf(glass.activePillStart, glass.activePillEnd))
+        } else {
+            Brush.verticalGradient(listOf(glass.surfaceElevated, glass.surfaceBottom))
+        }
+    }
+    val borderBrush = remember(glass.borderHighlight, glass.borderSubtle) {
+        Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle))
     }
 
     Surface(
@@ -132,7 +148,7 @@ fun SoniqGlassIconButton(
         color = Color.Transparent,
         border = BorderStroke(
             width = metrics.borderWidth,
-            brush = Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle)),
+            brush = borderBrush,
         ),
         modifier = modifier
             .size(size)
@@ -165,11 +181,22 @@ fun SoniqGlassPillChip(
     val glass = SoniqTheme.glass
     val metrics = SoniqTheme.glassMetrics
     val spacing = SoniqTheme.tokens.spacing
-    val shape = RoundedCornerShape(metrics.pillRadius)
-    val fillBrush = if (selected) {
-        Brush.horizontalGradient(listOf(glass.activePillStart, glass.activePillEnd))
-    } else {
-        Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom))
+    val shape = remember(metrics.pillRadius) { RoundedCornerShape(metrics.pillRadius) }
+    val fillBrush = remember(
+        selected,
+        glass.activePillStart,
+        glass.activePillEnd,
+        glass.surfaceTop,
+        glass.surfaceBottom,
+    ) {
+        if (selected) {
+            Brush.horizontalGradient(listOf(glass.activePillStart, glass.activePillEnd))
+        } else {
+            Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom))
+        }
+    }
+    val borderBrush = remember(glass.borderHighlight, glass.borderSubtle) {
+        Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle))
     }
 
     Box(
@@ -179,7 +206,7 @@ fun SoniqGlassPillChip(
             .background(fillBrush)
             .border(
                 width = metrics.borderWidth,
-                brush = Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle)),
+                brush = borderBrush,
                 shape = shape,
             )
             .semantics { this.selected = selected }
@@ -368,4 +395,51 @@ fun SoniqGlassLinearProgress(
             )
         }
     }
+}
+
+/** Translucent Liquid Glass modal bottom sheet shared across Queue, Audio Effects, and Tracks. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SoniqGlassModalSheet(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val glass = SoniqTheme.glass
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        modifier = modifier,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = glass.ambientMid.copy(alpha = 0.94f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        scrimColor = Color.Black.copy(alpha = 0.56f),
+        content = content,
+    )
+}
+
+/** Translucent Liquid Glass dialog wrapper shared across playlists and theme dialogs. */
+@Composable
+fun SoniqGlassDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissButton: (@Composable () -> Unit)? = null,
+    title: (@Composable () -> Unit)? = null,
+    text: (@Composable () -> Unit)? = null,
+) {
+    val glass = SoniqTheme.glass
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = confirmButton,
+        dismissButton = dismissButton,
+        title = title,
+        text = text,
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = glass.ambientMid.copy(alpha = 0.96f),
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }

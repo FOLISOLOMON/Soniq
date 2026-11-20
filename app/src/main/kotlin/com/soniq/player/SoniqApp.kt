@@ -23,7 +23,10 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +53,7 @@ import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.playback.AudioEffectsState
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.feature.home.HomeRoute
+import com.soniq.player.feature.music.MusicLibraryTab
 import com.soniq.player.feature.music.MusicRoute
 import com.soniq.player.feature.player.MiniPlayerBar
 import com.soniq.player.feature.player.NowPlayingScreen
@@ -109,13 +113,15 @@ fun SoniqApp(
     onSelectSubtitleTrack: (Int?, Int?) -> Unit = { _, _ -> },
     onAddExternalSubtitle: (String, String, String) -> Unit = { _, _, _ -> },
     onClearPlaybackError: () -> Unit = {},
+    pendingMusicTab: MutableState<MusicLibraryTab?> = remember { mutableStateOf(null) },
     homeContent: @Composable () -> Unit = {
         HomeRoute(
             onPlayTracks = { tracks, index ->
                 onPlayAudioQueue(tracks, index)
                 navController.navigate(SoniqRoute.AudioPlayer) { launchSingleTop = true }
             },
-            onOpenMusicTab = { _ ->
+            onOpenMusicTab = { tab ->
+                pendingMusicTab.value = tab
                 navController.navigateToTopLevel(TopLevelDestination.MUSIC)
             },
             onOpenVideo = { navController.navigateToTopLevel(TopLevelDestination.VIDEO) },
@@ -124,6 +130,8 @@ fun SoniqApp(
     },
     musicContent: @Composable () -> Unit = {
         MusicRoute(
+            requestedTab = pendingMusicTab.value,
+            onConsumedRequestedTab = { pendingMusicTab.value = null },
             onPlayTrack = { tracks, index ->
                 onPlayAudioQueue(tracks, index)
                 navController.navigate(SoniqRoute.AudioPlayer) { launchSingleTop = true }

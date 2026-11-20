@@ -57,6 +57,7 @@ import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqEmptyState
 import com.soniq.player.core.designsystem.component.SoniqGlassCard
 import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassModalSheet
 import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.theme.SoniqTheme
@@ -285,7 +286,7 @@ fun NowPlayingScreen(
     }
 
     if (showQueueSheet) {
-        ModalBottomSheet(onDismissRequest = { showQueueSheet = false }) {
+        SoniqGlassModalSheet(onDismissRequest = { showQueueSheet = false }) {
             QueueSheetContent(
                 queue = playbackState.queue,
                 onSelect = { index ->

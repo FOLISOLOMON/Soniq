@@ -8,6 +8,9 @@ import android.media.AudioManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,14 +34,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,14 +54,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -73,6 +78,10 @@ import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
 import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
+import com.soniq.player.core.designsystem.component.SoniqGlassCard
+import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassModalSheet
+import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.designsystem.token.SoniqNeutrals
 import com.soniq.player.core.playback.PlaybackState
@@ -83,6 +92,7 @@ import kotlin.math.roundToInt
 
 private const val VIDEO_SEEK_STEP_MS = 10_000L
 private const val HUD_AUTO_HIDE_MS = 900L
+private const val CONTROLS_AUTO_HIDE_MS = 3_500L
 private const val HORIZONTAL_SEEK_FULL_SWIPE_MS = 90_000L
 private val VIDEO_SPEED_OPTIONS = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
 
@@ -143,6 +153,13 @@ fun VideoPlayerScreen(
         if (hudLabel != null) {
             delay(HUD_AUTO_HIDE_MS)
             hudLabel = null
+        }
+    }
+
+    LaunchedEffect(controlsVisible, playbackState.isPlaying, showSpeedRow, showTracksSheet) {
+        if (controlsVisible && playbackState.isPlaying && !showSpeedRow && !showTracksSheet) {
+            delay(CONTROLS_AUTO_HIDE_MS)
+            controlsVisible = false
         }
     }
 
@@ -368,41 +385,42 @@ fun VideoPlayerScreen(
 
         // Gesture HUD pill
         hudLabel?.let { label ->
-            Surface(
-                shape = CircleShape,
-                color = SoniqNeutrals.AmoledBackground.copy(alpha = alpha.videoControlsScrim),
+            SoniqGlassCard(
+                cornerRadius = 999.dp,
+                elevated = true,
+                contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.sm),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .systemBarsPadding()
-                    .padding(top = spacing.xxxl),
+                    .padding(top = spacing.xxxl)
+                    .width(androidx.compose.ui.unit.Dp.Unspecified),
             ) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleMedium,
-                    color = SoniqNeutrals.DarkOnSurface,
-                    modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.sm),
+                    color = Color.White,
                 )
             }
         }
 
         // Playback error overlay (e.g., deleted or corrupt local file)
         playbackState.playbackError?.let { errorMsg ->
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.errorContainer,
+            SoniqGlassCard(
+                elevated = true,
+                contentPadding = PaddingValues(spacing.md),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(spacing.lg),
             ) {
                 Row(
-                    modifier = Modifier.padding(spacing.md),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(spacing.md),
                 ) {
                     Text(
                         text = errorMsg,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.weight(1f),
                     )
                     TextButton(onClick = onClearError) {
@@ -412,200 +430,232 @@ fun VideoPlayerScreen(
             }
         }
 
-        if (controlsVisible && !isInPipMode) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SoniqNeutrals.AmoledBackground.copy(alpha = alpha.videoControlsScrim))
-                    .systemBarsPadding()
-                    .padding(spacing.lg),
-            ) {
-                // Top bar
-                Column(
+        AnimatedVisibility(
+            visible = controlsVisible && !isInPipMode,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Subtle top & bottom edge scrims only (keeps center video crystal-clear)
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.TopCenter),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                    ) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.player_action_close),
-                                tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                        Text(
-                            text = playbackState.title ?: stringResource(R.string.destination_video),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = SoniqNeutrals.DarkOnSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        FilledTonalButton(
-                            onClick = {
-                                if (showSpeedRow) onCycleSpeed() else showSpeedRow = true
-                            },
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    R.string.player_speed_label,
-                                    PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
-                                ),
-                            )
-                        }
-                    }
+                        .height(148.dp)
+                        .align(Alignment.TopCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Black.copy(alpha = 0.68f), Color.Transparent),
+                            ),
+                        ),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.72f)),
+                            ),
+                        ),
+                )
 
-                    Row(
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding()
+                        .padding(spacing.lg),
+                ) {
+                    // Minimal Liquid Glass Top Panel
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(spacing.xs, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically,
+                            .align(Alignment.TopCenter),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs),
                     ) {
-                        IconButton(onClick = onEnterPip) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_picture_in_picture),
-                                contentDescription = stringResource(R.string.video_pip_action),
-                                tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                        IconButton(onClick = { showTracksSheet = true }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_subtitles),
-                                contentDescription = stringResource(R.string.video_tracks_title),
-                                tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                resizeMode = when (resizeMode) {
-                                    VideoResizeMode.FIT -> VideoResizeMode.FILL
-                                    VideoResizeMode.FILL -> VideoResizeMode.ZOOM
-                                    VideoResizeMode.ZOOM -> VideoResizeMode.FIT
-                                }
-                                hudLabel = when (resizeMode) {
-                                    VideoResizeMode.FIT -> aspectFitLabel
-                                    VideoResizeMode.FILL -> aspectFillLabel
-                                    VideoResizeMode.ZOOM -> aspectZoomLabel
-                                }
-                                hudVersion++
-                            },
+                        SoniqGlassCard(
+                            elevated = true,
+                            cornerRadius = SoniqTheme.glassMetrics.cardRadius,
+                            contentPadding = PaddingValues(horizontal = spacing.sm, vertical = spacing.xs),
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_aspect_ratio),
-                                contentDescription = stringResource(R.string.video_aspect_mode_label),
-                                tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                isLandscapeLocked = !isLandscapeLocked
-                                activity?.requestedOrientation = if (isLandscapeLocked) {
-                                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                                } else {
-                                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                                }
-                            },
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_screen_rotation),
-                                contentDescription = stringResource(R.string.video_orientation_toggle),
-                                tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                    }
-
-                    if (showSpeedRow) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                        ) {
-                            VIDEO_SPEED_OPTIONS.forEach { speed ->
-                                FilterChip(
-                                    selected = abs(playbackState.playbackSpeed - speed) < 0.03f,
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                            ) {
+                                SoniqGlassIconButton(
+                                    onClick = onNavigateBack,
+                                    painter = painterResource(R.drawable.ic_arrow_back),
+                                    contentDescription = stringResource(R.string.player_action_close),
+                                    size = 40.dp,
+                                    iconSize = sizes.iconSmall,
+                                    tint = Color.White,
+                                )
+                                Text(
+                                    text = playbackState.title ?: stringResource(R.string.destination_video),
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                SoniqGlassPillChip(
+                                    label = stringResource(
+                                        R.string.player_speed_label,
+                                        PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
+                                    ),
+                                    selected = showSpeedRow,
                                     onClick = {
-                                        onSetSpeed(speed)
-                                        showSpeedRow = false
-                                    },
-                                    label = {
-                                        Text(
-                                            stringResource(
-                                                R.string.player_speed_label,
-                                                PlaybackViewModel.formatSpeed(speed),
-                                            ),
-                                        )
+                                        if (showSpeedRow) onCycleSpeed() else showSpeedRow = true
                                     },
                                 )
                             }
                         }
-                    }
-                }
 
-                // Center transport controls
-                Row(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xl),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = { onSeekBy(-VIDEO_SEEK_STEP_MS) }) {
-                        Icon(
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(spacing.xs, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            SoniqGlassIconButton(
+                                onClick = onEnterPip,
+                                painter = painterResource(R.drawable.ic_picture_in_picture),
+                                contentDescription = stringResource(R.string.video_pip_action),
+                                size = 40.dp,
+                                iconSize = sizes.iconSmall,
+                                tint = Color.White,
+                            )
+                            SoniqGlassIconButton(
+                                onClick = { showTracksSheet = true },
+                                painter = painterResource(R.drawable.ic_subtitles),
+                                contentDescription = stringResource(R.string.video_tracks_title),
+                                size = 40.dp,
+                                iconSize = sizes.iconSmall,
+                                tint = Color.White,
+                            )
+                            SoniqGlassIconButton(
+                                onClick = {
+                                    resizeMode = when (resizeMode) {
+                                        VideoResizeMode.FIT -> VideoResizeMode.FILL
+                                        VideoResizeMode.FILL -> VideoResizeMode.ZOOM
+                                        VideoResizeMode.ZOOM -> VideoResizeMode.FIT
+                                    }
+                                    hudLabel = when (resizeMode) {
+                                        VideoResizeMode.FIT -> aspectFitLabel
+                                        VideoResizeMode.FILL -> aspectFillLabel
+                                        VideoResizeMode.ZOOM -> aspectZoomLabel
+                                    }
+                                    hudVersion++
+                                },
+                                painter = painterResource(R.drawable.ic_aspect_ratio),
+                                contentDescription = stringResource(R.string.video_aspect_mode_label),
+                                size = 40.dp,
+                                iconSize = sizes.iconSmall,
+                                tint = Color.White,
+                            )
+                            SoniqGlassIconButton(
+                                onClick = {
+                                    isLandscapeLocked = !isLandscapeLocked
+                                    activity?.requestedOrientation = if (isLandscapeLocked) {
+                                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                    } else {
+                                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                                    }
+                                },
+                                painter = painterResource(R.drawable.ic_screen_rotation),
+                                contentDescription = stringResource(R.string.video_orientation_toggle),
+                                size = 40.dp,
+                                iconSize = sizes.iconSmall,
+                                highlighted = isLandscapeLocked,
+                                tint = Color.White,
+                            )
+                        }
+
+                        if (showSpeedRow) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                            ) {
+                                VIDEO_SPEED_OPTIONS.forEach { speed ->
+                                    SoniqGlassPillChip(
+                                        label = stringResource(
+                                            R.string.player_speed_label,
+                                            PlaybackViewModel.formatSpeed(speed),
+                                        ),
+                                        selected = abs(playbackState.playbackSpeed - speed) < 0.03f,
+                                        onClick = {
+                                            onSetSpeed(speed)
+                                            showSpeedRow = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Center Glass Transport Controls
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalArrangement = Arrangement.spacedBy(spacing.xl),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SoniqGlassIconButton(
+                            onClick = { onSeekBy(-VIDEO_SEEK_STEP_MS) },
                             painter = painterResource(R.drawable.ic_replay_10),
                             contentDescription = stringResource(R.string.player_action_rewind),
-                            tint = SoniqNeutrals.DarkOnSurface,
-                            modifier = Modifier.size(sizes.iconMedium),
+                            size = 52.dp,
+                            iconSize = sizes.iconMedium,
+                            tint = Color.White,
                         )
-                    }
-                    FilledIconButton(
-                        onClick = onTogglePlayPause,
-                        shape = CircleShape,
-                        modifier = Modifier.size(sizes.primaryTransportButton),
-                    ) {
-                        Icon(
+                        SoniqGlassIconButton(
+                            onClick = onTogglePlayPause,
                             painter = painterResource(
                                 if (playbackState.isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
                             ),
                             contentDescription = stringResource(
                                 if (playbackState.isPlaying) R.string.player_action_pause else R.string.player_action_play,
                             ),
-                            modifier = Modifier.size(sizes.iconMedium),
+                            size = sizes.primaryTransportButton,
+                            iconSize = sizes.iconMedium,
+                            highlighted = true,
                         )
-                    }
-                    IconButton(onClick = { onSeekBy(VIDEO_SEEK_STEP_MS) }) {
-                        Icon(
+                        SoniqGlassIconButton(
+                            onClick = { onSeekBy(VIDEO_SEEK_STEP_MS) },
                             painter = painterResource(R.drawable.ic_forward_10),
                             contentDescription = stringResource(R.string.player_action_forward),
-                            tint = SoniqNeutrals.DarkOnSurface,
-                            modifier = Modifier.size(sizes.iconMedium),
+                            size = 52.dp,
+                            iconSize = sizes.iconMedium,
+                            tint = Color.White,
                         )
                     }
-                }
 
-                // Bottom seek scrubber
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                ) {
-                    PlaybackScrubber(
-                        positionMs = if (gestureSeekPreviewMs >= 0L) gestureSeekPreviewMs else playbackState.positionMs,
-                        durationMs = playbackState.durationMs,
-                        onSeekTo = onSeekTo,
-                    )
+                    // Minimal Liquid Glass Bottom Scrubber Panel
+                    SoniqGlassCard(
+                        elevated = true,
+                        cornerRadius = SoniqTheme.glassMetrics.cardRadius,
+                        contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.xs),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                    ) {
+                        PlaybackScrubber(
+                            positionMs = if (gestureSeekPreviewMs >= 0L) gestureSeekPreviewMs else playbackState.positionMs,
+                            durationMs = playbackState.durationMs,
+                            onSeekTo = onSeekTo,
+                        )
+                    }
                 }
             }
         }
     }
 
     if (showTracksSheet) {
-        ModalBottomSheet(onDismissRequest = { showTracksSheet = false }) {
+        SoniqGlassModalSheet(onDismissRequest = { showTracksSheet = false }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -616,7 +666,8 @@ fun VideoPlayerScreen(
             ) {
                 Text(
                     text = stringResource(R.string.video_tracks_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.semantics { heading() },
                 )
 
                 Text(
@@ -690,15 +741,13 @@ private fun TrackChoiceRow(
     onClick: () -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+    SoniqGlassCard(
+        elevated = selected,
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.sm),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.sm),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -706,7 +755,7 @@ private fun TrackChoiceRow(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (selected) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 },
@@ -716,7 +765,7 @@ private fun TrackChoiceRow(
                 Icon(
                     painter = painterResource(R.drawable.ic_check),
                     contentDescription = stringResource(R.string.cd_selected),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }

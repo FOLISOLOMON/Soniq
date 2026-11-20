@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.soniq.player.core.designsystem.theme.SoniqTheme
@@ -103,8 +105,8 @@ fun SoniqSectionHeader(
     val spacing = SoniqTheme.tokens.spacing
     Text(
         text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = modifier
             .semantics { heading() }
             .padding(
@@ -170,12 +172,29 @@ fun SoniqEmptyState(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            painter = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(sizes.emptyStateIcon),
-        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(sizes.emptyStateIcon + spacing.xl)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(SoniqTheme.glass.surfaceElevated, SoniqTheme.glass.surfaceBottom),
+                    ),
+                )
+                .border(
+                    width = SoniqTheme.glassMetrics.borderWidth,
+                    color = SoniqTheme.glass.borderHighlight,
+                    shape = CircleShape,
+                ),
+        ) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(sizes.emptyStateIcon),
+            )
+        }
         Spacer(modifier = Modifier.height(spacing.lg))
         Text(
             text = title,
@@ -210,12 +229,22 @@ fun <T> SoniqSegmentedChoice(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val glass = SoniqTheme.glass
+    val colors = SegmentedButtonDefaults.colors(
+        activeContainerColor = glass.activePillStart.copy(alpha = 0.34f),
+        activeContentColor = MaterialTheme.colorScheme.onBackground,
+        activeBorderColor = glass.borderHighlight,
+        inactiveContainerColor = glass.surfaceBottom,
+        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        inactiveBorderColor = glass.borderSubtle,
+    )
     SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
         options.forEachIndexed { index, option ->
             SegmentedButton(
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                colors = colors,
                 label = {
                     Text(
                         text = labelFor(option),

@@ -20,15 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,10 +58,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.R
+import com.soniq.player.core.designsystem.component.SoniqGlassDialog
+import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.component.SoniqSectionHeader
 import com.soniq.player.core.designsystem.component.SoniqSegmentedChoice
@@ -197,14 +200,16 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         val appearance = uiState.appearance
+        val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(
                 start = spacing.screenHorizontal,
                 end = spacing.screenHorizontal,
-                bottom = spacing.xxl,
+                bottom = spacing.xxxl + spacing.xl,
             ),
             verticalArrangement = Arrangement.spacedBy(spacing.md),
         ) {
@@ -533,6 +538,21 @@ fun SettingsScreen(
                     onDelete = { onDeletePreset(preset.id) },
                 )
             }
+
+            item(key = "privacy_offline") {
+                SoniqSectionHeader(title = stringResource(R.string.settings_section_privacy))
+                SoniqSurfaceCard {
+                    Text(
+                        text = stringResource(R.string.settings_privacy_offline_title),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_privacy_offline_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 
@@ -628,16 +648,19 @@ private fun PresetRowCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            FilledTonalButton(onClick = onApply) {
-                Text(text = stringResource(R.string.settings_preset_apply))
-            }
+            SoniqGlassPillChip(
+                label = stringResource(R.string.settings_preset_apply),
+                selected = false,
+                onClick = onApply,
+            )
             Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_more_vert),
-                        contentDescription = stringResource(R.string.settings_preset_actions, preset.name),
-                    )
-                }
+                SoniqGlassIconButton(
+                    onClick = { menuExpanded = true },
+                    painter = painterResource(R.drawable.ic_more_vert),
+                    contentDescription = stringResource(R.string.settings_preset_actions, preset.name),
+                    size = 40.dp,
+                    iconSize = sizes.iconSmall,
+                )
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
@@ -684,7 +707,7 @@ private fun CustomAccentColorDialog(
     val hexText = remember(previewArgb) { "#%06X".format(previewArgb and 0xFFFFFF) }
     val spacing = SoniqTheme.tokens.spacing
 
-    AlertDialog(
+    SoniqGlassDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_custom_accent_title)) },
         text = {
@@ -748,7 +771,7 @@ private fun RenamePresetDialog(
     onConfirm: (String) -> Unit,
 ) {
     var name by remember(initialName) { mutableStateOf(initialName) }
-    AlertDialog(
+    SoniqGlassDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_preset_rename_title)) },
         text = {

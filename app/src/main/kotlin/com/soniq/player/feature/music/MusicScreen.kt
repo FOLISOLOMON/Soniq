@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqEmptyState
 import com.soniq.player.core.designsystem.component.SoniqGlassCard
+import com.soniq.player.core.designsystem.component.SoniqGlassDialog
 import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
 import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.component.SoniqGlassSearchBar
@@ -75,6 +77,8 @@ import com.soniq.player.core.permissions.rememberMediaPermissionController
 @Composable
 fun MusicRoute(
     modifier: Modifier = Modifier,
+    requestedTab: MusicLibraryTab? = null,
+    onConsumedRequestedTab: () -> Unit = {},
     onPlayTrack: (tracks: List<AudioTrack>, startIndex: Int) -> Unit = { _, _ -> },
     onPlayNext: (AudioTrack) -> Unit = {},
     onAddToQueue: (AudioTrack) -> Unit = {},
@@ -85,6 +89,14 @@ fun MusicRoute(
         kind = MediaKind.AUDIO,
         onResult = viewModel::onPermissionResult,
     )
+
+    LaunchedEffect(requestedTab) {
+        if (requestedTab != null) {
+            viewModel.clearFilter()
+            viewModel.selectTab(requestedTab)
+            onConsumedRequestedTab()
+        }
+    }
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshPermission()
@@ -425,7 +437,7 @@ private fun MusicLibraryContent(
 
     val targetTrack = playlistPickerTrack
     if (targetTrack != null) {
-        AlertDialog(
+        SoniqGlassDialog(
             onDismissRequest = { playlistPickerTrack = null },
             title = { Text(text = stringResource(R.string.playlist_add_to)) },
             text = {
@@ -599,7 +611,7 @@ private fun PlaylistsSection(
 
     val activeRename = renamingPlaylist
     if (activeRename != null) {
-        AlertDialog(
+        SoniqGlassDialog(
             onDismissRequest = { renamingPlaylist = null },
             title = { Text(text = stringResource(R.string.playlist_rename_title)) },
             text = {

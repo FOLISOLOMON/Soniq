@@ -247,4 +247,7 @@
     <string name="library_create_playlist_subtitle">Build your own collection</string>
     <string name="cd_clear_search">Clear search</string>
     <string name="player_queue_empty">Queue is empty</string>
+    <string name="settings_section_privacy">Privacy &amp; offline guarantee</string>
+    <string name="settings_privacy_offline_title">100% Offline &amp; Private</string>
+    <string name="settings_privacy_offline_summary">Zero network permissions, no ads, and no telemetry. All media indexes, playlists, and theme preferences stay locally on your device.</string>
 </resources>

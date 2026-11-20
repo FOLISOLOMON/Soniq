@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -168,5 +169,27 @@ class SoniqAppNavigationUiTest {
 
         composeRule.waitForIdle()
         assertThat(observedBackground).isEqualTo(Color.Black)
+    }
+
+    @Test
+    fun homeQuickAccessBubbleDeepLinksToRequestedMusicTab() {
+        var openedTab: com.soniq.player.feature.music.MusicLibraryTab? = null
+
+        composeRule.setContent {
+            SoniqTheme {
+                HomeScreen(
+                    uiState = HomeUiState(),
+                    onSearchQueryChanged = {},
+                    onPlayTracks = { _, _ -> },
+                    onOpenMusicTab = { tab -> openedTab = tab },
+                    onOpenVideo = {},
+                    onOpenSettings = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Playlists").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertThat(openedTab).isEqualTo(com.soniq.player.feature.music.MusicLibraryTab.PLAYLISTS)
     }
 }

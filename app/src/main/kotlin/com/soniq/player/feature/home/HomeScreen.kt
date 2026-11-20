@@ -398,7 +398,7 @@ private fun HomeCategoryBubble(
         ) {
             Icon(
                 painter = painterResource(iconRes),
-                contentDescription = label,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(24.dp),
             )
