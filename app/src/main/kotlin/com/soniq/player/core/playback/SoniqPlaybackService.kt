@@ -64,6 +64,9 @@ class SoniqPlaybackService : MediaSessionService() {
     lateinit var audioEffectsManager: SoniqAudioEffectsManager
 
     @Inject
+    lateinit var sleepTimerManager: SoniqSleepTimerManager
+
+    @Inject
     @IoDispatcher
     lateinit var ioDispatcher: CoroutineDispatcher
 
@@ -214,6 +217,9 @@ class SoniqPlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationProvider)
 
         player.addListener(servicePlayerListener)
+        sleepTimerManager.attachExpirationHandler {
+            player.pause()
+        }
         if (player.audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
             audioEffectsManager.attachToAudioSession(player.audioSessionId)
         }
@@ -270,6 +276,7 @@ class SoniqPlaybackService : MediaSessionService() {
         crossfadeJob?.cancel()
         crossfadeJob = null
         player.volume = 1.0f
+        sleepTimerManager.detachExpirationHandler()
         audioEffectsManager.detachFromAudioSession()
         persistAudioSnapshot()
         player.removeListener(servicePlayerListener)

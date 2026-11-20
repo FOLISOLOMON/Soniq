@@ -1,7 +1,13 @@
 package com.soniq.player
 
+import android.app.PictureInPictureParams
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,11 +18,13 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.designsystem.theme.shouldUseDarkTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
+import com.soniq.player.core.model.media.MediaKind
 import com.soniq.player.core.permissions.NotificationPermissions
 import com.soniq.player.feature.player.PlaybackViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,6 +39,7 @@ class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
     private val playbackViewModel: PlaybackViewModel by viewModels()
+    private val inPipMode = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -47,6 +56,7 @@ class MainActivity : ComponentActivity() {
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
             val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
             val audioEffectsState by playbackViewModel.audioEffectsState.collectAsStateWithLifecycle()
+            val sleepTimerRemainingMs by playbackViewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
             val isCurrentFavorite by playbackViewModel.isCurrentFavorite.collectAsStateWithLifecycle()
             val player by playbackViewModel.player.collectAsStateWithLifecycle()
 
@@ -58,6 +68,16 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 playbackViewModel.ensureConnected()
+            }
+
+            LaunchedEffect(playbackState.isPlaying, playbackState.activeMediaKind) {
+                if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+                ) {
+                    val autoPip = playbackState.isPlaying && playbackState.activeMediaKind == MediaKind.VIDEO
+                    setPictureInPictureParams(buildPipParams(autoEnter = autoPip))
+                }
             }
 
             // Request optional POST_NOTIFICATIONS once on API 33+ when playback first becomes active.
@@ -98,7 +118,9 @@ class MainActivity : ComponentActivity() {
                 SoniqApp(
                     playbackState = playbackState,
                     audioEffectsState = audioEffectsState,
+                    sleepTimerRemainingMs = sleepTimerRemainingMs,
                     isCurrentFavorite = isCurrentFavorite,
+                    isInPipMode = inPipMode.value,
                     player = player,
                     onPlayAudioQueue = playbackViewModel::playAudioQueue,
                     onPlayNext = playbackViewModel::playNext,
@@ -125,6 +147,9 @@ class MainActivity : ComponentActivity() {
                     onSetBassBoostStrength = playbackViewModel::setBassBoostStrength,
                     onSetGaplessEnabled = playbackViewModel::setGaplessEnabled,
                     onSetCrossfadeDurationSec = playbackViewModel::setCrossfadeDurationSec,
+                    onStartSleepTimer = playbackViewModel::startSleepTimer,
+                    onCancelSleepTimer = playbackViewModel::cancelSleepTimer,
+                    onEnterPip = ::enterPipModeIfSupported,
                     onSelectAudioTrack = playbackViewModel::selectAudioTrack,
                     onSelectSubtitleTrack = playbackViewModel::selectSubtitleTrack,
                     onAddExternalSubtitle = playbackViewModel::addExternalSubtitle,
@@ -132,6 +157,43 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration,
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        inPipMode.value = isInPictureInPictureMode
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        val state = playbackViewModel.playbackState.value
+        if (state.isPlaying && state.activeMediaKind == MediaKind.VIDEO) {
+            enterPipModeIfSupported()
+        }
+    }
+
+    private fun buildPipParams(autoEnter: Boolean): PictureInPictureParams {
+        val state = playbackViewModel.playbackState.value
+        val w = state.videoWidth.takeIf { it > 0 } ?: 16
+        val h = state.videoHeight.takeIf { it > 0 } ?: 9
+        val ratio = Rational(w, h).coerceIn(Rational(1, 2), Rational(2, 1))
+        val decor = window.decorView
+        val sourceRect = Rect(0, 0, decor.width.coerceAtLeast(1), decor.height.coerceAtLeast(1))
+        val builder = PictureInPictureParams.Builder()
+            .setAspectRatio(ratio)
+            .setSourceRectHint(sourceRect)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setAutoEnterEnabled(autoEnter)
+        }
+        return builder.build()
+    }
+
+    private fun enterPipModeIfSupported() {
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return
+        enterPictureInPictureMode(buildPipParams(autoEnter = true))
     }
 
     private companion object {

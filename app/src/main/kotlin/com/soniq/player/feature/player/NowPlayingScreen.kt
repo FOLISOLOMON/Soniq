@@ -86,6 +86,9 @@ fun NowPlayingScreen(
     onSetBassBoostStrength: (Int) -> Unit = {},
     onSetGaplessEnabled: (Boolean) -> Unit = {},
     onSetCrossfadeDurationSec: (Int) -> Unit = {},
+    sleepTimerRemainingMs: Long? = null,
+    onStartSleepTimer: (Int) -> Unit = {},
+    onCancelSleepTimer: () -> Unit = {},
     playerLayout: PlayerLayout = SoniqTheme.appearance.playerLayout,
 ) {
     var showQueueSheet by remember { mutableStateOf(false) }
@@ -224,6 +227,9 @@ fun NowPlayingScreen(
             onSetBassBoostStrength = onSetBassBoostStrength,
             onSetGaplessEnabled = onSetGaplessEnabled,
             onSetCrossfadeDurationSec = onSetCrossfadeDurationSec,
+            sleepTimerRemainingMs = sleepTimerRemainingMs,
+            onStartSleepTimer = onStartSleepTimer,
+            onCancelSleepTimer = onCancelSleepTimer,
         )
     }
 }

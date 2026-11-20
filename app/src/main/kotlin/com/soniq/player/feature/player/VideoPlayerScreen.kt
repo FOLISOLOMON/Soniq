@@ -109,6 +109,8 @@ fun VideoPlayerScreen(
     onCycleSpeed: () -> Unit,
     onLeaveScreen: () -> Unit,
     modifier: Modifier = Modifier,
+    isInPipMode: Boolean = false,
+    onEnterPip: () -> Unit = {},
     onSetSpeed: (Float) -> Unit = {},
     onSelectAudioTrack: (Int, Int) -> Unit = { _, _ -> },
     onSelectSubtitleTrack: (Int?, Int?) -> Unit = { _, _ -> },
@@ -410,7 +412,7 @@ fun VideoPlayerScreen(
             }
         }
 
-        if (controlsVisible) {
+        if (controlsVisible && !isInPipMode) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -445,6 +447,34 @@ fun VideoPlayerScreen(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f),
                         )
+                        FilledTonalButton(
+                            onClick = {
+                                if (showSpeedRow) onCycleSpeed() else showSpeedRow = true
+                            },
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.player_speed_label,
+                                    PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
+                                ),
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(spacing.xs, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconButton(onClick = onEnterPip) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_picture_in_picture),
+                                contentDescription = stringResource(R.string.video_pip_action),
+                                tint = SoniqNeutrals.DarkOnSurface,
+                            )
+                        }
                         IconButton(onClick = { showTracksSheet = true }) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_subtitles),
@@ -487,18 +517,6 @@ fun VideoPlayerScreen(
                                 painter = painterResource(R.drawable.ic_screen_rotation),
                                 contentDescription = stringResource(R.string.video_orientation_toggle),
                                 tint = SoniqNeutrals.DarkOnSurface,
-                            )
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                if (showSpeedRow) onCycleSpeed() else showSpeedRow = true
-                            },
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    R.string.player_speed_label,
-                                    PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
-                                ),
                             )
                         }
                     }

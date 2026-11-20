@@ -17,6 +17,7 @@ import com.soniq.player.core.playback.AudioEffectsBackend
 import com.soniq.player.core.playback.PlaybackController
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.core.playback.SoniqAudioEffectsManager
+import com.soniq.player.core.playback.SoniqSleepTimerManager
 import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import com.soniq.player.testutil.MainDispatcherRule
 import kotlinx.coroutines.Dispatchers
@@ -69,6 +70,7 @@ class PlaybackViewModelTest {
             notificationPermissionChecker = notifChecker,
             userLibraryRepository = fakeUserLibrary,
             audioEffectsManager = effectsManager,
+            sleepTimerManager = SoniqSleepTimerManager(),
         )
 
         assertThat(PlaybackViewModel.formatSpeed(1.0f)).isEqualTo("1")
@@ -168,6 +170,7 @@ class PlaybackViewModelTest {
             notificationPermissionChecker = grantedChecker,
             userLibraryRepository = FakeUserLibraryRepository(0L),
             audioEffectsManager = effectsManager,
+            sleepTimerManager = SoniqSleepTimerManager(),
         )
         assertThat(grantedVm.shouldPromptForNotifications()).isFalse()
 
@@ -181,6 +184,7 @@ class PlaybackViewModelTest {
             notificationPermissionChecker = deniedChecker,
             userLibraryRepository = FakeUserLibraryRepository(0L),
             audioEffectsManager = effectsManager,
+            sleepTimerManager = SoniqSleepTimerManager(),
         )
         deniedVm.markNotificationPromptShown()
         assertThat(deniedVm.shouldPromptForNotifications()).isFalse()

@@ -100,6 +100,7 @@ class PlayerScreensUiTest {
     @Test
     fun videoPlayerDisplaysTitleAndSeekControls() {
         var soughtDelta = 0L
+        var pipClicked = false
 
         composeRule.setContent {
             SoniqTheme {
@@ -119,11 +120,14 @@ class PlayerScreensUiTest {
                     onSeekBy = { soughtDelta = it },
                     onCycleSpeed = {},
                     onLeaveScreen = {},
+                    onEnterPip = { pipClicked = true },
                 )
             }
         }
 
         composeRule.onNodeWithText("Demo Reel").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Picture-in-Picture").performClick()
+        assertThat(pipClicked).isTrue()
         composeRule.onNodeWithContentDescription("Forward 10 seconds").performClick()
         assertThat(soughtDelta).isEqualTo(10_000L)
     }

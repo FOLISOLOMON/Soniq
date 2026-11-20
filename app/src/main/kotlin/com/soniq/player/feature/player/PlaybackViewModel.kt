@@ -14,6 +14,7 @@ import com.soniq.player.core.playback.AudioEffectsState
 import com.soniq.player.core.playback.PlaybackController
 import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.core.playback.SoniqAudioEffectsManager
+import com.soniq.player.core.playback.SoniqSleepTimerManager
 import com.soniq.player.core.userlibrary.domain.UserLibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,11 +38,13 @@ class PlaybackViewModel @Inject constructor(
     private val notificationPermissionChecker: NotificationPermissionChecker,
     private val userLibraryRepository: UserLibraryRepository,
     private val audioEffectsManager: SoniqAudioEffectsManager,
+    private val sleepTimerManager: SoniqSleepTimerManager,
 ) : ViewModel() {
 
     val playbackState: StateFlow<PlaybackState> = playbackController.state
     val player: StateFlow<Player?> = playbackController.player
     val audioEffectsState: StateFlow<AudioEffectsState> = audioEffectsManager.state
+    val sleepTimerRemainingMs: StateFlow<Long?> = sleepTimerManager.remainingMillis
 
     val preferences: StateFlow<PlaybackPreferences> = playbackPreferences.preferences
         .stateIn(
@@ -203,6 +206,14 @@ class PlaybackViewModel @Inject constructor(
 
     fun setCrossfadeDurationSec(seconds: Int) {
         audioEffectsManager.setCrossfadeDurationSec(seconds)
+    }
+
+    fun startSleepTimer(minutes: Int) {
+        sleepTimerManager.startTimer(minutes)
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimerManager.cancelTimer()
     }
 
     fun selectAudioTrack(groupIndex: Int, trackIndex: Int) {

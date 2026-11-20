@@ -221,4 +221,11 @@
     <string name="settings_background_blur">Background blur (%1$d dp)</string>
     <string name="settings_background_blur_api31">Background blur requires Android 12 or newer</string>
     <string name="settings_load_starter_presets">Load starter presets</string>
+
+    <!-- Stage 9: Sleep Timer & Picture-in-Picture -->
+    <string name="sleep_timer_title">Sleep timer</string>
+    <string name="sleep_timer_off">Off</string>
+    <string name="sleep_timer_minutes">%1$d min</string>
+    <string name="sleep_timer_remaining">Pausing in %1$s</string>
+    <string name="video_pip_action">Picture-in-Picture</string>
 </resources>

@@ -26,8 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.soniq.player.R
+import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.playback.AudioEffectsState
+import com.soniq.player.core.playback.SoniqSleepTimerManager
 import kotlin.math.roundToInt
 
 /**
@@ -46,6 +48,9 @@ fun AudioEffectsSheet(
     onSetBassBoostStrength: (Int) -> Unit,
     onSetGaplessEnabled: (Boolean) -> Unit,
     onSetCrossfadeDurationSec: (Int) -> Unit,
+    sleepTimerRemainingMs: Long? = null,
+    onStartSleepTimer: (Int) -> Unit = {},
+    onCancelSleepTimer: () -> Unit = {},
 ) {
     val spacing = SoniqTheme.tokens.spacing
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -251,6 +256,45 @@ fun AudioEffectsSheet(
                                     },
                                 )
                             },
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            // Sleep timer
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                Text(
+                    text = stringResource(R.string.sleep_timer_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (sleepTimerRemainingMs != null) {
+                    Text(
+                        text = stringResource(
+                            R.string.sleep_timer_remaining,
+                            MediaFormatters.formatDuration(sleepTimerRemainingMs),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                ) {
+                    FilterChip(
+                        selected = sleepTimerRemainingMs == null,
+                        onClick = onCancelSleepTimer,
+                        label = { Text(stringResource(R.string.sleep_timer_off)) },
+                    )
+                    SoniqSleepTimerManager.PRESET_MINUTES.forEach { minutes ->
+                        FilterChip(
+                            selected = false,
+                            onClick = { onStartSleepTimer(minutes) },
+                            label = { Text(stringResource(R.string.sleep_timer_minutes, minutes)) },
                         )
                     }
                 }
