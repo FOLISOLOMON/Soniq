@@ -250,4 +250,5 @@
     <string name="settings_section_privacy">Privacy &amp; offline guarantee</string>
     <string name="settings_privacy_offline_title">100% Offline &amp; Private</string>
     <string name="settings_privacy_offline_summary">Zero network permissions, no ads, and no telemetry. All media indexes, playlists, and theme preferences stay locally on your device.</string>
+    <string name="audio_effects_graph_title">Frequency response</string>
 </resources>

@@ -2,12 +2,16 @@ package com.soniq.player.feature.player
 
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -259,5 +263,63 @@ class PlayerScreensUiTest {
         composeRule.onNodeWithContentDescription("Audio & Subtitles").performClick()
         composeRule.onNodeWithText("English Stereo").performClick()
         assertThat(selectedAudio).isEqualTo(1 to 0)
+    }
+
+    @Test
+    fun equalizerFrequencyGraphAndPresetsDispatchRealBandAndPresetCallbacks() {
+        var changedBand = -1
+        var changedLevel = Int.MIN_VALUE
+        var selectedPreset = -1
+        var toggledEnabled: Boolean? = null
+
+        composeRule.setContent {
+            SoniqTheme {
+                AudioEffectsSheet(
+                    effects = AudioEffectsState(
+                        isSessionAttached = true,
+                        isEqualizerSupported = true,
+                        isEqualizerEnabled = true,
+                        bandCount = 5,
+                        bandCenterFreqHz = listOf(60, 230, 910, 3600, 14000),
+                        minBandLevelMb = -1500,
+                        maxBandLevelMb = 1500,
+                        bandLevelsMb = listOf(200, 0, -100, 300, 100),
+                        presetNames = listOf("Acoustic", "Bass Booster", "Classical"),
+                        selectedPresetIndex = 0,
+                    ),
+                    onDismiss = {},
+                    onSetEqualizerEnabled = { toggledEnabled = it },
+                    onSelectPreset = { selectedPreset = it },
+                    onSetBandLevel = { band, level ->
+                        changedBand = band
+                        changedLevel = level
+                    },
+                    onSetBassBoostEnabled = {},
+                    onSetBassBoostStrength = {},
+                    onSetGaplessEnabled = {},
+                    onSetCrossfadeDurationSec = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("eq_frequency_graph").assertIsDisplayed()
+        composeRule.onNodeWithText("60").assertIsDisplayed()
+        composeRule.onNodeWithText("3.6k").assertIsDisplayed()
+        composeRule.onNodeWithText("Acoustic").performScrollTo().assertIsDisplayed()
+
+        // Tap inside the frequency graph area to adjust a real band gain.
+        composeRule.onNodeWithContentDescription("Frequency response").performTouchInput {
+            click(center)
+        }
+        assertThat(changedBand).isIn(0..4)
+        assertThat(changedLevel).isIn(-1500..1500)
+
+        // Select a preset row.
+        composeRule.onNodeWithText("Classical").performScrollTo().performClick()
+        assertThat(selectedPreset).isEqualTo(2)
+
+        // Toggle Equalizer switch.
+        composeRule.onAllNodes(isToggleable())[0].performScrollTo().performClick()
+        assertThat(toggledEnabled).isFalse()
     }
 }

@@ -1,16 +1,23 @@
 package com.soniq.player.feature.player
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -20,10 +27,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqGlassCard
@@ -76,7 +89,7 @@ fun AudioEffectsSheet(
                 modifier = Modifier.semantics { heading() },
             )
 
-            // Equalizer section
+            // Equalizer section (Interactive Frequency Graph + Glass Preset List)
             SoniqGlassCard {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -85,7 +98,7 @@ fun AudioEffectsSheet(
                 ) {
                     Text(
                         text = stringResource(R.string.audio_effects_equalizer),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
                     Switch(
                         checked = effects.isEqualizerSupported && effects.isEqualizerEnabled,
@@ -100,62 +113,38 @@ fun AudioEffectsSheet(
                             ?: stringResource(R.string.audio_effects_equalizer),
                     )
                 } else {
-                    if (effects.presetNames.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.audio_effects_presets),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                                .alpha(if (effects.isEqualizerEnabled) 1f else 0.5f),
-                            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                        ) {
-                            SoniqGlassPillChip(
-                                label = stringResource(R.string.audio_effects_custom_preset),
-                                selected = effects.selectedPresetIndex < 0,
-                                onClick = {},
-                            )
-                            effects.presetNames.forEachIndexed { index, name ->
-                                SoniqGlassPillChip(
-                                    label = name,
-                                    selected = effects.selectedPresetIndex == index,
-                                    onClick = { if (effects.isEqualizerEnabled) onSelectPreset(index) },
-                                )
-                            }
-                        }
-                    }
+                    EqualizerFrequencyGraph(
+                        bandCenterFreqHz = effects.bandCenterFreqHz,
+                        bandLevelsMb = effects.bandLevelsMb,
+                        minBandLevelMb = effects.minBandLevelMb,
+                        maxBandLevelMb = effects.maxBandLevelMb,
+                        enabled = effects.isEqualizerEnabled,
+                        onBandLevelChanged = onSetBandLevel,
+                    )
 
-                    effects.bandCenterFreqHz.forEachIndexed { index, freqHz ->
-                        val levelMb = effects.bandLevelsMb.getOrElse(index) { 0 }
-                        val minMb = effects.minBandLevelMb.toFloat()
-                        val maxMb = effects.maxBandLevelMb.coerceAtLeast(effects.minBandLevelMb + 1).toFloat()
-                        Column(verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = if (freqHz >= 1000) {
-                                        stringResource(R.string.audio_effects_band_khz, freqHz / 1000f)
-                                    } else {
-                                        stringResource(R.string.audio_effects_band_hz, freqHz)
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                                Text(
-                                    text = stringResource(R.string.audio_effects_band_db, (levelMb / 100f).roundToInt()),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                            Slider(
-                                value = levelMb.toFloat().coerceIn(minMb, maxMb),
-                                onValueChange = { value -> onSetBandLevel(index, value.roundToInt()) },
-                                valueRange = minMb..maxMb,
+                    Text(
+                        text = stringResource(R.string.audio_effects_presets),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = spacing.xs),
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                        modifier = Modifier.alpha(if (effects.isEqualizerEnabled) 1f else 0.55f),
+                    ) {
+                        EqualizerPresetRow(
+                            label = stringResource(R.string.audio_effects_custom_preset),
+                            selected = effects.selectedPresetIndex < 0,
+                            enabled = false,
+                            onClick = {},
+                        )
+                        effects.presetNames.forEachIndexed { index, name ->
+                            EqualizerPresetRow(
+                                label = name,
+                                selected = effects.selectedPresetIndex == index,
                                 enabled = effects.isEqualizerEnabled,
+                                onClick = { onSelectPreset(index) },
                             )
                         }
                     }
@@ -298,6 +287,61 @@ fun AudioEffectsSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun EqualizerPresetRow(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val spacing = SoniqTheme.tokens.spacing
+    val glass = SoniqTheme.glass
+    val shape = RoundedCornerShape(14.dp)
+    val bgBrush = if (selected) {
+        Brush.horizontalGradient(
+            listOf(
+                glass.activePillStart.copy(alpha = 0.28f),
+                glass.activePillEnd.copy(alpha = 0.20f),
+            ),
+        )
+    } else {
+        Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom))
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(bgBrush)
+            .border(
+                width = 1.dp,
+                color = if (selected) glass.borderHighlight else glass.borderSubtle,
+                shape = shape,
+            )
+            .semantics { this.selected = selected }
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = spacing.md, vertical = spacing.sm + 2.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            ),
+            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+        )
+        if (selected) {
+            Icon(
+                painter = painterResource(R.drawable.ic_check),
+                contentDescription = stringResource(R.string.cd_selected),
+                tint = glass.scrubberEnd,
+                modifier = Modifier.size(SoniqTheme.tokens.sizes.iconSmall),
+            )
         }
     }
 }
