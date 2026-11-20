@@ -178,4 +178,22 @@
   - `connectedDebugAndroidTest` on `Infinix_X6528` (`112173741O045288`): Test APKs compiled cleanly, installation blocked by XOS USB-install restriction (`DEBT-005`).
 - **Git Checkpoints Created in Session 6**:
   - `47dc1a3` — `feat(ui): implement Liquid Glass design system, Home screen, and Phase 1 visual redesign`
-  - *(Final Session 6 documentation sync commit follows immediately.)*
+  - `9a694fd` — `docs(control): update project memory after Session 6 (UI/UX Redesign Phase 1)`
+
+---
+
+## Session 7 — UI/UX Visual Redesign Phase 2: Settings, VideoPlayer, AudioEffects, Dialogs/Sheets & Home Deep Linking (2026-11-20)
+
+- **Starting State**: Clean `main` at `9a694fd` (Session 6 Phase 1 complete), followed by emulator QA fix `522a407`.
+- **Objectives Executed (`522a407`, `473241e`)**:
+  1. **Scroll & Contrast Fix (`522a407`)**: Fixed dark section headings on Home (`onBackground` + `LocalContentColor` in `SoniqBackground`) and cached gradients via `drawWithCache` / `remember` for smooth scrolling.
+  2. **Shared Glass Primitives (`473241e`)**: Added `SoniqGlassModalSheet` and `SoniqGlassDialog`, upgraded `SoniqSegmentedChoice`, `SoniqEmptyState`, and `SoniqSectionHeader` to Liquid Glass styling, and cached remaining icon/pill brushes.
+  3. **Home Quick Access Deep Linking**: Wired `pendingMusicTab` in `SoniqApp` and `requestedTab` in `MusicRoute` so every Home category bubble navigates directly to its target `MusicLibraryTab`.
+  4. **Screen & Overlay Redesign**: Redesigned `VideoPlayerScreen` (auto-hiding minimal glass top/bottom panels, edge scrims, `SoniqGlassModalSheet` tracks sheet), `AudioEffectsSheet` (`SoniqGlassModalSheet` + `SoniqGlassCard` sections + `SoniqGlassPillChip` controls), `SettingsScreen` (glass segmented controls, `SoniqGlassDialog`s, preset pills, Privacy & Offline Guarantee card), and `MusicScreen` / `NowPlayingScreen` dialogs & sheets.
+- **Verification Results**:
+  - `assembleDebug testDebugUnitTest lintDebug assembleRelease`: **PASS** (**58 / 58** unit & Robolectric tests PASS, `0` errors / `0` code-manifest-resource Lint warnings, `app-debug.apk` `18.07 MB`, `app-release-unsigned.apk` `2.90 MB`).
+  - `connectedDebugAndroidTest` on `emulator-5554` (`Small_Phone(AVD)`, Android 17): **3 / 3 PASSED**; `app-debug.apk` installed & launched cleanly (`TotalTime: 1786 ms`).
+- **Git Checkpoints Created in Session 7**:
+  - `522a407` — `fix(ui): fix dark section heading contrast and cache glass/background gradients for smooth scroll`
+  - `473241e` — `feat(ui): complete Liquid Glass Phase 2 across Settings, VideoPlayer, AudioEffects, dialogs, and Home deep linking`
+  - *(Final Session 7 documentation sync commit follows immediately.)*

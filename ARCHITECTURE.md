@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-20 (Commit `47dc1a3`, Stages 1–9 Complete + UI/UX Redesign Phase 1)  
+**Last Updated**: 2026-11-20 (Commit `473241e`, Stages 1–9 Complete + UI/UX Redesign Phases 1 & 2)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -43,7 +43,7 @@ com.soniq.player
 │   ├── designsystem/
 │   │   ├── token/                          # SoniqTokens.kt + SoniqGlassTokens.kt (SoniqGlassColors, SoniqGlassMetrics, SoniqGlassPalettes)
 │   │   ├── theme/                          # ColorMath, SoniqColorSchemes, SoniqTypography, SoniqTheme (tokens, glass, glassMetrics)
-│   │   └── component/                      # SoniqBackground (ambient glow orbs), SoniqGlassComponents, SoniqScaffold, SoniqTopAppBar, frosted cards, empty states
+│   │   └── component/                      # SoniqBackground (drawWithCache ambient orbs + LocalContentColor), SoniqGlassComponents (cards, pills, search, modal sheets, dialogs), SoniqScaffold, SoniqTopAppBar, glass segmented choice & empty states
 │   ├── theme/                              # AppearanceRepository (domain), DefaultAppearanceRepository (data), ThemePresetMapper, ThemeModule
 │   ├── database/
 │   │   ├── SoniqDatabase.kt                # Persistent user Room DB v2 (soniq.db; backed up; explicit non-destructive migrations only)

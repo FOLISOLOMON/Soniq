@@ -1,7 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-20 (End of Session 6)  
-**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) + **UI/UX Visual Redesign Phase 1 COMPLETED** (`47dc1a3`) → Next: **UI/UX Visual Redesign Phase 2, Physical-Device / Emulator Regression QA & Production Signing**  
+**Last Updated**: 2026-11-20 (End of Session 7)  
+**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) + **UI/UX Visual Redesign Phases 1 & 2 COMPLETED** (`47dc1a3`, `522a407`, `473241e`) → Next: **Final Visual/Theme QA, Physical-Device Verification & Production Signing**  
 
 ---
 
@@ -46,9 +46,10 @@
 
 ---
 
-## UI/UX Visual Redesign Phase 1 — **COMPLETED** (`47dc1a3`)
+## UI/UX Visual Redesign Phase 2 — **COMPLETED** (`522a407`, `473241e`)
 - **Delivered**:
-  1. **Liquid Glass Design System**: `SoniqGlassTokens.kt` (`SoniqGlassColors`, `SoniqGlassMetrics`, `SoniqGlassPalettes`), `SoniqTheme.glass` / `glassMetrics`, `SoniqBackground` lavender/periwinkle/violet ambient gradients + radial glow orbs, `SoniqGlassComponents.kt`, and frosted-glass `SoniqSurfaceCard`.
-  2. **Home Screen & Navigation Shell**: `HomeViewModel` + `HomeScreen` as `SoniqRoute.Home` start destination with floating `SoniqGlassBottomBar` / `SoniqGlassNavigationRail` (`Home`, `Music`, `Video`, `Settings`).
-  3. **Player & Library Screens**: Liquid Glass `MiniPlayerBar`, `NowPlayingScreen` (all 3 `PlayerLayout`s, glowing artwork, pink-to-cyan scrubber, frosted utility dock), `MusicScreen` ("My Library" + pill tabs + Create New Playlist card), and `VideoScreen` (pill tabs + glass cards).
-- **Phase 2 (Next)**: Dedicated Settings visual polish, `VideoPlayerScreen` glass overlay refinement, and Home Quick Access deep-linking into specific `MusicLibraryTab`s.
+  1. **Scroll & Contrast Hardening (`522a407`)**: Fixed unreadable dark section headings on Home (`LocalContentColor` in `SoniqBackground` + explicit `onBackground`), and cached gradient `Brush`es via `drawWithCache` / `remember` for smooth scrolling.
+  2. **Shared Glass Primitives**: Added `SoniqGlassModalSheet` & `SoniqGlassDialog`, upgraded `SoniqSegmentedChoice`, `SoniqEmptyState`, and `SoniqSectionHeader`.
+  3. **Home Quick Access Deep Linking**: Wired `pendingMusicTab` in `SoniqApp` and `requestedTab` in `MusicRoute` so every Home category bubble opens its exact `MusicLibraryTab`.
+  4. **Screens & Overlays**: Redesigned `VideoPlayerScreen` (auto-hiding minimal glass top/bottom panels, edge scrims, `SoniqGlassModalSheet` tracks sheet), `AudioEffectsSheet`, `SettingsScreen` (plus Privacy & Offline Guarantee card), and `MusicScreen` / `NowPlayingScreen` dialogs & sheets.
+- **Session 8 Priorities (Optional Polish)**: Cross-theme visual QA (Light/Dark/AMOLED/Custom Image), physical-device media & Bluetooth hardware QA (`Infinix_X6528`).

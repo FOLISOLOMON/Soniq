@@ -1,6 +1,6 @@
 # SONIQ — Defect & Technical Debt Register
 
-**Last Updated**: 2026-11-20 (End of Session 6)  
+**Last Updated**: 2026-11-20 (End of Session 7)  
 **Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
 
 ---
@@ -9,7 +9,7 @@
 
 | ID | Severity | Area | Description | Status | Proposed Fix | Verification |
 |---|---|---|---|---|---|---|
-| **DEBT-005** | Low | Testing / Device | `Infinix_X6528` (`112173741O045288`, Android 13) connected via ADB in Session 6, but `connectedDebugAndroidTest` failed at `adb install` (`Performing Streamed Install / adb.exe: failed to install app-debug.apk`) due to Infinix XOS USB-install restriction; the x86_64 emulator remains unable to boot without host hypervisor acceleration. | **OPEN** (External) | Enable Developer Options → "Install via USB" on `Infinix_X6528` (or re-enable Windows Hypervisor Platform / AEHD for `emulator-5554`) and run `./gradlew connectedDebugAndroidTest` + manual hardware QA. | Run on physical device/emulator and record results in `TEST_REPORT.md`. |
+| **DEBT-005** | Low | Testing / Device | `Infinix_X6528` (`112173741O045288`, Android 13) connected in Session 6, where `adb install` failed (`Performing Streamed Install / adb.exe: failed to install app-debug.apk`) due to Infinix XOS USB-install restriction; disconnected by end of Session 7. Emulator `connectedDebugAndroidTest` passed **3 / 3** in Session 7. | **OPEN** (External) | Enable Developer Options → "Install via USB" on `Infinix_X6528` and run `./gradlew connectedDebugAndroidTest` + manual hardware QA. | Run on physical device and record results in `TEST_REPORT.md`. |
 | **DEBT-006** | Info | Manifest Merger | `tools:node="remove"` on `INTERNET` / `ACCESS_NETWORK_STATE` emits informational manifest merger warnings confirming no dependency declared them. | **ACCEPTED** | Keep as intentional defense-in-depth privacy safeguard. | Verify merged manifest remains free of network permissions. |
 
 ---

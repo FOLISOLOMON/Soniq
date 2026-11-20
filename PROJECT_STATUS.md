@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (End of Session 6 — UI/UX Visual Redesign Phase 1)  
-**Current Stage**: **Stages 1–9 Engineering Complete + UI/UX Visual Redesign Phase 1 Complete** (`Liquid Glass` Design System, Home, Shell, Now Playing, MiniPlayer, My Library, Video) → Ready for **UI/UX Visual Redesign Phase 2 & Physical-Device QA**  
-**Latest Verified Code Commit**: `47dc1a3` (`main`)
+**Last Updated**: 2026-11-20 (End of Session 7 — UI/UX Visual Redesign Phase 2)  
+**Current Stage**: **Stages 1–9 Engineering Complete + UI/UX Visual Redesign Phases 1 & 2 Complete** (Full-app Liquid Glass Design System across Home, Navigation, Now Playing, MiniPlayer, My Library, Video, VideoPlayer, AudioEffects, Settings, Dialogs & Sheets) → Ready for **Physical-Device QA & Final Visual Polish (Session 8)**  
+**Latest Verified Code Commit**: `473241e` (`main`)
 
 ---
 
@@ -41,14 +41,17 @@
 - **Stage 7 — Complete Theme Customization (`3f1fd87`, `c2b9264`)**: Custom HSL accent picker with Hex & WCAG contrast preview (`DEBT-003`), unreadable SAF background-image URI detection & recovery (`DEBT-004`), background scrim (`35%..95%`) & Android 12+ blur (`0..24 dp`) controls, `soniq.db` `MIGRATION_2_3`, preset Rename/Duplicate, and 4 curated non-destructive starter presets (`SoniqStarterPresets`).
 - **Stage 8 — Performance, Accessibility & Compatibility (`c2b9264`)**: Off-main-thread 10k+ track aggregation, periodic `ensureActive()` scan cancellation checks, `>= 48dp` touch targets + `heading()` semantics, `currentWindowAdaptiveInfoV2()` (`0` compiler warnings).
 - **Stage 9 — Release Preparation (`c1c710d`)**: Service-coordinated Sleep Timer, Android PiP (`VideoPlayerScreen` + `MainActivity`), externalized release signing template (`keystore.properties.example`).
-- **UI/UX Visual Redesign Phase 1 (`47dc1a3`)**:
-  - **Liquid Glass Design System**: `SoniqGlassTokens` (`SoniqGlassColors`, `SoniqGlassMetrics`, `SoniqGlassPalettes`), `SoniqTheme.glass` / `glassMetrics`, `SoniqBackground` lavender/periwinkle/violet ambient gradients + radial glow orbs, `SoniqGlassComponents` (`SoniqGlassCard`, `SoniqGlassIconButton`, `SoniqGlassPillChip`, `SoniqGlassSearchBar`, `SoniqGlassMediaRow`, `SoniqGlassLinearProgress`), and frosted-glass `SoniqSurfaceCard`.
-  - **Home & Navigation**: `HomeViewModel` + `HomeScreen` (greeting, live offline search, Continue Listening hero card, Quick Access categories, Recently Played) wired as `SoniqRoute.Home` start destination with floating `SoniqGlassBottomBar` & `SoniqGlassNavigationRail`.
-  - **Player & Libraries**: Liquid Glass `MiniPlayerBar`, `NowPlayingScreen` (glowing artwork halo, pink-to-cyan scrubber, frosted utility dock with Queue/EQ/Sleep Timer across all 3 `PlayerLayout`s), `MusicScreen` ("My Library" + pill tabs + Create New Playlist card), and `VideoScreen` (pill tabs + glass cards).
+- **UI/UX Visual Redesign Phase 1 (`47dc1a3`, `522a407`)**:
+  - **Liquid Glass Design System**: `SoniqGlassTokens`, `SoniqTheme.glass` / `glassMetrics`, `SoniqBackground` (`drawWithCache` ambient gradients + glow orbs + `LocalContentColor`), `SoniqGlassComponents`, frosted-glass `SoniqSurfaceCard`.
+  - **Home, Navigation & Core Screens**: `HomeViewModel` + `HomeScreen`, `SoniqRoute.Home` start destination, floating `SoniqGlassBottomBar` / `SoniqGlassNavigationRail`, Liquid Glass `MiniPlayerBar`, `NowPlayingScreen`, `MusicScreen`, `VideoScreen`.
+- **UI/UX Visual Redesign Phase 2 (`473241e`)**:
+  - **Shared Glass Primitives**: Added `SoniqGlassModalSheet` & `SoniqGlassDialog`, `remember`ed glass brushes/shapes, Liquid Glass `SoniqSegmentedChoice`, glowing circular `SoniqEmptyState` badge, and high-contrast `SoniqSectionHeader`.
+  - **Home Deep Linking**: Quick Access bubbles (`Songs`, `Playlists`, `Favorites`, `Albums`, `Artists`) now deep-link directly to the corresponding `MusicLibraryTab` via `pendingMusicTab` in `SoniqApp` / `MusicRoute`.
+  - **Remaining Screens & Overlays**: Redesigned `VideoPlayerScreen` (minimal floating glass top/bottom panels, `AnimatedVisibility` 3.5s auto-hide, subtle edge scrims, `SoniqGlassModalSheet` tracks sheet), `AudioEffectsSheet` (`SoniqGlassModalSheet` + `SoniqGlassCard` sections + `SoniqGlassPillChip` presets/crossfade/sleep timer), `SettingsScreen` (glass segmented choices, `SoniqGlassDialog`s, preset pills, Privacy & Offline Guarantee card), and `MusicScreen` / `NowPlayingScreen` dialogs & sheets.
 
 ### Remaining Roadmap
-- **UI/UX Visual Redesign Phase 2**: Dedicated Settings visual polish, VideoPlayerScreen glass control styling, and Home Quick Access deep-linking directly into specific `MusicLibraryTab`s.
-- **Physical-Device & Hardware QA (`DEBT-005`)**: Re-run `connectedDebugAndroidTest` on `emulator-5554` (once host hypervisor acceleration is restored) and enable "Install via USB" on `Infinix_X6528` (`112173741O045288`) for physical-device + Bluetooth/headset QA.
+- **UI/UX Visual Redesign Phase 3 / Final Polish (Session 8)**: Optional micro-animation refinements, edge-to-edge visual QA across Light/Dark/AMOLED/Custom-Image modes, and physical-device media walkthrough.
+- **Physical-Device & Hardware QA (`DEBT-005`)**: Enable "Install via USB" on `Infinix_X6528` (`112173741O045288`) for physical-device + Bluetooth/headset QA.
 - **Release Approval**: Remains **UNAPPROVED** until user supplies production signing `keystore.properties` and gives explicit approval.
 
 ---
@@ -58,7 +61,7 @@
 | Check | Status | Details |
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.07 MB**) |
-| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.91 MB**) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **57 / 57 passed** across **28 suites** (0 failures, 0 errors, 0 skipped) |
+| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.90 MB**) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **58 / 58 passed** across **28 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest/resource warnings** (3 informational `GradleDependency` notices only) |
-| Instrumented Tests (`connectedDebugAndroidTest`) | **BLOCKED ON DEVICE (`DEBT-005`)** | `Infinix_X6528` (`112173741O045288`) attached, but `adb install` failed due to Infinix XOS USB-install restriction; last emulator run **3 / 3 passed** at `c2b9264` |
+| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS on `emulator-5554`** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 (`SoniqDatabaseMigrationTest`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); `Infinix_X6528` blocked by XOS USB-install restriction (`DEBT-005`) |

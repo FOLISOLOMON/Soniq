@@ -1,7 +1,7 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-20 (End of Session 6)  
-**Release Readiness Status**: **UI/UX REDESIGN PHASE 1 ARTIFACTS GENERATED (Pending Phase 2 Polish, Physical-Device QA & Production Signing)**  
+**Last Updated**: 2026-11-20 (End of Session 7)  
+**Release Readiness Status**: **UI/UX REDESIGN PHASES 1 & 2 COMPLETE (Pending Physical-Device QA & Production Signing)**  
 **User Release Approval Status**: **UNAPPROVED** *(Release remains unapproved until explicitly approved by the user.)*
 
 ---
@@ -21,13 +21,13 @@
 
 ---
 
-## 2. APK & Bundle Outputs (Commit `47dc1a3`)
+## 2. APK & Bundle Outputs (Commit `473241e`)
 
 | Variant | Output Path | Verified Commit | Size | Install Verification |
 |---|---|---|---|---|
-| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `47dc1a3` (2026-11-20) | 18.07 MB | Built & verified against 57/57 unit/Robolectric tests; `adb install` on `Infinix_X6528` blocked by XOS USB-install restriction (`DEBT-005`) |
-| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `47dc1a3` (2026-11-20) | — | Compiled cleanly; **3 / 3 passed** at `c2b9264` on `Medium_Phone_API_37.0` |
-| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `47dc1a3` (2026-11-20) | 2.91 MB | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `473241e` (2026-11-20) | 18.07 MB (`18,952,944` B) | Installed & launched on `emulator-5554` (`Status: ok`, `1786 ms`); 58/58 unit/Robolectric tests PASS |
+| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `473241e` (2026-11-20) | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
+| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `473241e` (2026-11-20) | 2.90 MB (`3,036,218` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
 
 ---
 
