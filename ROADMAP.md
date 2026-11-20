@@ -1,8 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
-**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) → Next: **Physical-Device / Emulator Regression QA, Production Signing & Post-Engineering UI/UX Visual Redesign Phase**  
-*(Note: Visual UI/UX redesign is explicitly frozen until all planned engineering stages are complete.)*
+**Last Updated**: 2026-11-20 (End of Session 6)  
+**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) + **UI/UX Visual Redesign Phase 1 COMPLETED** (`47dc1a3`) → Next: **UI/UX Visual Redesign Phase 2, Physical-Device / Emulator Regression QA & Production Signing**  
 
 ---
 
@@ -42,6 +41,14 @@
   4. Added externalized release signing template (`keystore.properties.example`, gitignored `keystore.properties` wiring in `app/build.gradle.kts`).
   5. Built R8-minified, resource-shrunk `app-release-unsigned.apk` (`2.92 MB`) and `app-release.aab` (`7.10 MB`), verified `56/56` unit/Robolectric tests & `0` code/manifest Lint warnings.
 - **Pending External Actions Before Release Approval**:
-  1. Physical-device (`Infinix_X6528`) & Bluetooth/headset end-to-end QA + emulator instrumented re-run on `c1c710d` once host hypervisor acceleration is active.
+  1. Physical-device (`Infinix_X6528`) & Bluetooth/headset end-to-end QA + emulator instrumented re-run once host hypervisor acceleration or XOS USB-install approval is active.
   2. User-supplied production `keystore.properties` and **explicit user release approval**.
-- **Post-Stage 9**: Dedicated **UI/UX Visual Redesign Phase**.
+
+---
+
+## UI/UX Visual Redesign Phase 1 — **COMPLETED** (`47dc1a3`)
+- **Delivered**:
+  1. **Liquid Glass Design System**: `SoniqGlassTokens.kt` (`SoniqGlassColors`, `SoniqGlassMetrics`, `SoniqGlassPalettes`), `SoniqTheme.glass` / `glassMetrics`, `SoniqBackground` lavender/periwinkle/violet ambient gradients + radial glow orbs, `SoniqGlassComponents.kt`, and frosted-glass `SoniqSurfaceCard`.
+  2. **Home Screen & Navigation Shell**: `HomeViewModel` + `HomeScreen` as `SoniqRoute.Home` start destination with floating `SoniqGlassBottomBar` / `SoniqGlassNavigationRail` (`Home`, `Music`, `Video`, `Settings`).
+  3. **Player & Library Screens**: Liquid Glass `MiniPlayerBar`, `NowPlayingScreen` (all 3 `PlayerLayout`s, glowing artwork, pink-to-cyan scrubber, frosted utility dock), `MusicScreen` ("My Library" + pill tabs + Create New Playlist card), and `VideoScreen` (pill tabs + glass cards).
+- **Phase 2 (Next)**: Dedicated Settings visual polish, `VideoPlayerScreen` glass overlay refinement, and Home Quick Access deep-linking into specific `MusicLibraryTab`s.

@@ -161,4 +161,21 @@
   - Emulator & physical device: Emulator failed to start after host reboot due to missing hypervisor acceleration (`x86_64 emulation currently requires hardware acceleration`), and `Infinix_X6528` was disconnected (`DEBT-005`).
 - **Git Checkpoints Created in Session 5**:
   - `c1c710d` — `feat(release): add sleep timer, Picture-in-Picture, and externalized release signing template`
-  - *(Final Session 5 documentation sync commit follows immediately.)*
+  - `7e91457` — `docs(control): update project memory after Session 5 (Stage 9 complete)`
+
+---
+
+## Session 6 — UI/UX Visual Redesign Phase 1: Liquid Glass Design System, Home, Navigation & Core Screens (2026-11-20)
+
+- **Starting State**: Clean `main` at `7e91457` (Stages 1–9 engineering complete, 56/56 tests, 0 Lint warnings).
+- **Objectives Executed (`47dc1a3`)**:
+  1. **Liquid Glass Design System**: Created `SoniqGlassTokens.kt` (`SoniqGlassColors`, `SoniqGlassMetrics`, `SoniqGlassPalettes`) and `SoniqGlassComponents.kt` (`SoniqGlassCard`, `SoniqGlassIconButton`, `SoniqGlassPillChip`, `SoniqGlassSearchBar`, `SoniqGlassMediaRow`, `SoniqGlassLinearProgress`); wired `LocalSoniqGlass` & `LocalSoniqGlassMetrics` into `SoniqTheme`; upgraded `SoniqBackground` with lavender/periwinkle/violet ambient gradients + radial glow orbs and restyled `SoniqSurfaceCard`.
+  2. **Home Experience & Navigation Shell**: Added `HomeViewModel` + `HomeScreen` (greeting, live offline search, Continue Listening hero card, Quick Access categories, Recently Played) as `SoniqRoute.Home` start destination; replaced `NavigationSuiteScaffold` bottom bar with floating frosted-glass `SoniqGlassBottomBar` / `SoniqGlassNavigationRail` in `SoniqApp.kt`.
+  3. **Player & Library Redesign**: Upgraded `MiniPlayerBar`, `NowPlayingScreen` (all 3 `PlayerLayout`s, glowing artwork halo, pink-to-cyan scrubber, frosted utility dock with Queue/EQ/Sleep Timer), `MusicScreen` ("My Library", pill tabs, Create New Playlist glass card), and `VideoScreen` (pill tabs, glass folder/video cards).
+  4. **Testing**: Added `HomeViewModelTest` and updated `SoniqAppNavigationUiTest` for `Home → Music → Video → Settings`.
+- **Verification Results**:
+  - `./gradlew assembleDebug testDebugUnitTest lintDebug assembleRelease`: **PASS** (**57 / 57** unit & Robolectric tests PASS across 28 suites, `0` errors / `0` code-manifest-resource Lint warnings, `app-debug.apk` `18.07 MB`, `app-release-unsigned.apk` `2.91 MB`).
+  - `connectedDebugAndroidTest` on `Infinix_X6528` (`112173741O045288`): Test APKs compiled cleanly, installation blocked by XOS USB-install restriction (`DEBT-005`).
+- **Git Checkpoints Created in Session 6**:
+  - `47dc1a3` — `feat(ui): implement Liquid Glass design system, Home screen, and Phase 1 visual redesign`
+  - *(Final Session 6 documentation sync commit follows immediately.)*

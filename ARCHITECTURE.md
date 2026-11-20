@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-20 (Commit `c1c710d`, Stages 1–9 Engineering Complete)  
+**Last Updated**: 2026-11-20 (Commit `47dc1a3`, Stages 1–9 Complete + UI/UX Redesign Phase 1)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -25,10 +25,10 @@ com.soniq.player
 ├── SoniqApplication.kt                     # @HiltAndroidApp entry point
 ├── MainActivity.kt                         # Single-Activity Compose host, SplashScreen, edge-to-edge, PlaybackViewModel & POST_NOTIFICATIONS launcher
 ├── MainViewModel.kt                        # Eagerly loads AppearanceConfig for splash gate
-├── SoniqApp.kt                             # SoniqBackground + adaptive NavigationSuiteScaffold + docked MiniPlayerBar + full-screen player chrome hiding
+├── SoniqApp.kt                             # SoniqBackground + floating SoniqGlassBottomBar / SoniqGlassNavigationRail + docked MiniPlayerBar + full-screen player chrome hiding
 ├── navigation/
-│   ├── SoniqDestination.kt                 # @Serializable SoniqRoute (Music, Video, Settings, AudioPlayer, VideoPlayer) & TopLevelDestination
-│   └── SoniqNavHost.kt                     # Root NavHost, state-preserving tab navigation, full-screen route helpers
+│   ├── SoniqDestination.kt                 # @Serializable SoniqRoute (Home, Music, Video, Settings, AudioPlayer, VideoPlayer) & TopLevelDestination
+│   └── SoniqNavHost.kt                     # Root NavHost (startDestination = Home), state-preserving tab navigation, full-screen route helpers
 ├── core/
 │   ├── common/
 │   │   ├── Results.kt                      # Cancellation-safe suspendRunCatching & enumValueOrDefault
@@ -41,9 +41,9 @@ com.soniq.player
 │   │       ├── MediaItems.kt               # AudioTrack, VideoItem, AlbumSummary, ArtistSummary, MediaFolderSummary, sort orders, LibrarySyncState
 │   │       └── UserMedia.kt                # mediaKey(), PlaylistSummary, PlaybackHistoryEntry, MediaResumePosition
 │   ├── designsystem/
-│   │   ├── token/SoniqTokens.kt            # SoniqNeutrals, SoniqAccents, Spacing, Radii, Sizes, Border, Elevation, Motion, Alpha, SoniqTokens
-│   │   ├── theme/                          # ColorMath, SoniqColorSchemes, SoniqTypography, SoniqTheme
-│   │   └── component/                      # SoniqBackground, SoniqScaffold, SoniqTopAppBar, cards, empty states, segmented selector
+│   │   ├── token/                          # SoniqTokens.kt + SoniqGlassTokens.kt (SoniqGlassColors, SoniqGlassMetrics, SoniqGlassPalettes)
+│   │   ├── theme/                          # ColorMath, SoniqColorSchemes, SoniqTypography, SoniqTheme (tokens, glass, glassMetrics)
+│   │   └── component/                      # SoniqBackground (ambient glow orbs), SoniqGlassComponents, SoniqScaffold, SoniqTopAppBar, frosted cards, empty states
 │   ├── theme/                              # AppearanceRepository (domain), DefaultAppearanceRepository (data), ThemePresetMapper, ThemeModule
 │   ├── database/
 │   │   ├── SoniqDatabase.kt                # Persistent user Room DB v2 (soniq.db; backed up; explicit non-destructive migrations only)
@@ -95,7 +95,8 @@ com.soniq.player
 │   │   └── di/PlaybackModule.kt            # ServiceScoped ExoPlayer + Singleton PlaybackController + AudioEffectsBackend
 │   └── permissions/                        # API 26-37 MediaPermissions (incl. Android 14+ partial access), NotificationPermissions (API 33+), AndroidPermissionChecker, DI
 └── feature/
-    ├── music/                              # MusicViewModel, MusicRoute, MusicScreen (Songs/Albums/Artists/Folders/Playlists/Favorites, dialogs, track overflow actions)
+    ├── home/                               # HomeViewModel, HomeRoute, HomeScreen (greeting, live offline search, Continue Listening hero, Quick Access, Recently Played)
+    ├── music/                              # MusicViewModel, MusicRoute, MusicScreen ("My Library", pill tabs, Create New Playlist card, Songs/Albums/Artists/Folders/Playlists/Favorites)
     ├── video/                              # VideoViewModel, VideoRoute, VideoScreen (Videos/Folders, thumbnails, saved resume progress overlay, partial-access banner)
     ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen, AudioEffectsSheet, VideoPlayerScreen (Fit/Fill/Zoom, subtitles, tracks, gestures, orientation)
     └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (custom HSL accent picker, broken-URI recovery, preset rename/duplicate/delete, Playback card)

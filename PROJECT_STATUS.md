@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (End of Autonomous Session 5 — Stage 9 Engineering Complete)  
-**Current Stage**: **Stages 1–9 Engineering Complete** (Sleep Timer, Picture-in-Picture, Externalized Release Signing Template, R8 Release APK & AAB Generated) → Ready for **Physical-Device QA & Post-Roadmap UI/UX Visual Redesign Phase**  
-**Latest Verified Code Commit**: `c1c710d` (`main`)
+**Last Updated**: 2026-11-20 (End of Session 6 — UI/UX Visual Redesign Phase 1)  
+**Current Stage**: **Stages 1–9 Engineering Complete + UI/UX Visual Redesign Phase 1 Complete** (`Liquid Glass` Design System, Home, Shell, Now Playing, MiniPlayer, My Library, Video) → Ready for **UI/UX Visual Redesign Phase 2 & Physical-Device QA**  
+**Latest Verified Code Commit**: `47dc1a3` (`main`)
 
 ---
 
@@ -31,7 +31,7 @@
 
 ## 3. Implementation Status Matrix
 
-### Implemented & Verified (Stages 1–8)
+### Implemented & Verified (Stages 1–9 + Redesign Phase 1)
 - **Stage 1 — Foundation & Hardening (`2b8937f`, `46be15f`)**: `SoniqApplication`, `MainActivity`, adaptive `SoniqApp` shell, centralized `SoniqTokens`, Light/Dark/AMOLED/Dynamic Color, offline/privacy manifest stripping.
 - **Stage 2 — Local Media Discovery & Library Management (`53cbae1`)**: `soniq_media.db`, `MediaStoreAudioScanner`, `MediaStoreVideoScanner`, `Mutex`-guarded repositories, debounced `MediaStoreChangeObserver`, `MusicScreen`, `VideoScreen`, Android 14+ partial-access banner.
 - **Stage 3 — Audio & Video Playback Engine (`41c8fbc`)**: `MediaItemFactory`, dynamic `MUSIC`/`MOVIE` `AudioAttributes`, `Media3PlaybackController`, `MiniPlayerBar`, `NowPlayingScreen` (3 layouts), `VideoPlayerScreen` (`PlayerSurface`).
@@ -39,14 +39,16 @@
 - **Stage 5 — Playlists, Favorites, History, Resume Positions & Queue Management (`f265823`)**: `soniq.db` `MIGRATION_1_2`, `UserLibraryRepository`, playlists CRUD, Favorites, playback history, video resume tracking, Up Next `ModalBottomSheet` queue editor.
 - **Stage 6 — Advanced Audio & Video (`13983a8`, `ae90175`)**: `SoniqAudioEffectsManager` (`Equalizer` presets/bands + `BassBoost`) with explicit unsupported-state UI, Gapless + Crossfade, `VideoResizeMode` (`FIT`/`FILL`/`ZOOM`), embedded & external `.srt`/`.vtt` subtitles + cue overlay, audio track selection, speed selector, immersive orientation toggle, and brightness/volume/seek gestures.
 - **Stage 7 — Complete Theme Customization (`3f1fd87`, `c2b9264`)**: Custom HSL accent picker with Hex & WCAG contrast preview (`DEBT-003`), unreadable SAF background-image URI detection & recovery (`DEBT-004`), background scrim (`35%..95%`) & Android 12+ blur (`0..24 dp`) controls, `soniq.db` `MIGRATION_2_3`, preset Rename/Duplicate, and 4 curated non-destructive starter presets (`SoniqStarterPresets`).
-- **Stage 8 — Performance, Accessibility & Compatibility (`c2b9264`)**:
-  - **Performance**: Off-main-thread 10k+ track aggregation (`.flowOn(Dispatchers.Default)` & `withContext(Dispatchers.IO)` in `DefaultMediaLibraryRepositories`), periodic `ensureActive()` scan cancellation checks in `MediaStoreAudioScanner`/`MediaStoreVideoScanner`, verified 10,000-track stress test.
-  - **Accessibility**: Minimum `48.dp` touch target on accent swatches, `heading()` semantics on `SoniqSectionHeader` and modal sheet titles (`AudioEffectsSheet`, `Up Next`, `Audio & Subtitles`).
-  - **Compatibility**: Migrated `SoniqApp` to `currentWindowAdaptiveInfoV2()` (`DEBT-008`, 0 compiler warnings).
+- **Stage 8 — Performance, Accessibility & Compatibility (`c2b9264`)**: Off-main-thread 10k+ track aggregation, periodic `ensureActive()` scan cancellation checks, `>= 48dp` touch targets + `heading()` semantics, `currentWindowAdaptiveInfoV2()` (`0` compiler warnings).
+- **Stage 9 — Release Preparation (`c1c710d`)**: Service-coordinated Sleep Timer, Android PiP (`VideoPlayerScreen` + `MainActivity`), externalized release signing template (`keystore.properties.example`).
+- **UI/UX Visual Redesign Phase 1 (`47dc1a3`)**:
+  - **Liquid Glass Design System**: `SoniqGlassTokens` (`SoniqGlassColors`, `SoniqGlassMetrics`, `SoniqGlassPalettes`), `SoniqTheme.glass` / `glassMetrics`, `SoniqBackground` lavender/periwinkle/violet ambient gradients + radial glow orbs, `SoniqGlassComponents` (`SoniqGlassCard`, `SoniqGlassIconButton`, `SoniqGlassPillChip`, `SoniqGlassSearchBar`, `SoniqGlassMediaRow`, `SoniqGlassLinearProgress`), and frosted-glass `SoniqSurfaceCard`.
+  - **Home & Navigation**: `HomeViewModel` + `HomeScreen` (greeting, live offline search, Continue Listening hero card, Quick Access categories, Recently Played) wired as `SoniqRoute.Home` start destination with floating `SoniqGlassBottomBar` & `SoniqGlassNavigationRail`.
+  - **Player & Libraries**: Liquid Glass `MiniPlayerBar`, `NowPlayingScreen` (glowing artwork halo, pink-to-cyan scrubber, frosted utility dock with Queue/EQ/Sleep Timer across all 3 `PlayerLayout`s), `MusicScreen` ("My Library" + pill tabs + Create New Playlist card), and `VideoScreen` (pill tabs + glass cards).
 
 ### Remaining Roadmap
-- **Physical-Device & Hardware QA (`DEBT-005`)**: Re-run `connectedDebugAndroidTest` on `emulator-5554` (once host hypervisor acceleration is restored) and execute physical-device + Bluetooth/headset QA on `Infinix_X6528`.
-- **Post-Roadmap**: Dedicated **UI/UX Redesign Phase** (explicitly frozen until engineering roadmap completes).
+- **UI/UX Visual Redesign Phase 2**: Dedicated Settings visual polish, VideoPlayerScreen glass control styling, and Home Quick Access deep-linking directly into specific `MusicLibraryTab`s.
+- **Physical-Device & Hardware QA (`DEBT-005`)**: Re-run `connectedDebugAndroidTest` on `emulator-5554` (once host hypervisor acceleration is restored) and enable "Install via USB" on `Infinix_X6528` (`112173741O045288`) for physical-device + Bluetooth/headset QA.
 - **Release Approval**: Remains **UNAPPROVED** until user supplies production signing `keystore.properties` and gives explicit approval.
 
 ---
@@ -56,9 +58,7 @@
 | Check | Status | Details |
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.07 MB**) |
-| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.92 MB**) |
-| Release Bundle (`bundleRelease`) | **PASS** | R8 minified + shrunk (`app-release.aab`, **7.10 MB**) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **56 / 56 passed** across 27 suites (0 failures, 0 errors, 0 skipped) |
-| Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest warnings** (3 informational `GradleDependency` notices only) |
-| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS at `c2b9264` / Pending re-run on `c1c710d`** | **3 / 3 passed** on `Medium_Phone_API_37.0` at `c2b9264`; emulator failed to boot in Session 5 due to missing host hypervisor acceleration after reboot |
-| Physical Device Verification (`Infinix_X6528`, `112173741O045288`) | **NOT VERIFIED** | Device not attached to ADB in Session 5 (`DEBT-005`) |
+| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.91 MB**) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **57 / 57 passed** across **28 suites** (0 failures, 0 errors, 0 skipped) |
+| Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest/resource warnings** (3 informational `GradleDependency` notices only) |
+| Instrumented Tests (`connectedDebugAndroidTest`) | **BLOCKED ON DEVICE (`DEBT-005`)** | `Infinix_X6528` (`112173741O045288`) attached, but `adb install` failed due to Infinix XOS USB-install restriction; last emulator run **3 / 3 passed** at `c2b9264` |

@@ -1,26 +1,25 @@
 # SONIQ — Test & Verification Report
 
-**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
-**Latest Verified Build Commit**: `c1c710d` (`main` — Stages 1–9 Engineering Complete)
+**Last Updated**: 2026-11-20 (End of Session 6 — UI/UX Redesign Phase 1)  
+**Latest Verified Build Commit**: `47dc1a3` (`main` — Liquid Glass Design System, Home, Navigation & Redesigned Screens)
 
 ---
 
-## 1. Latest Verified Build Summary (Commit `c1c710d`)
+## 1. Latest Verified Build Summary (Commit `47dc1a3`)
 
 - **Build Environment**: Windows 11 (`10.0.26200`), Eclipse Temurin JDK `21.0.13+9-LTS`, Gradle `9.9.1`, AGP `9.5.1`, Kotlin `2.4.21`, Android SDK `compileSdk = 37`, `build-tools 37.0.0`, `adb 37.0.1`.
-- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.07 MB**).
-- **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`, **2.36 MB**).
-- **Release APK (`./gradlew assembleRelease`)**: **PASS** (R8 minification, resource shrinking, and `lintVitalRelease` all passed; `app/build/outputs/apk/release/app-release-unsigned.apk`, **2.92 MB**).
-- **Release App Bundle (`./gradlew bundleRelease`)**: **PASS** (R8 minification & resource shrinking; `app/build/outputs/bundle/release/app-release.aab`, **7.10 MB**).
-- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors, 0 code/manifest warnings** (only 3 informational `GradleDependency` notices in `app/build/reports/lint-results-debug.sarif`).
+- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.07 MB** / `18,951,540` bytes).
+- **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`).
+- **Release APK (`./gradlew assembleRelease`)**: **PASS** (R8 minification, resource shrinking, and `lintVitalRelease` all passed; `app/build/outputs/apk/release/app-release-unsigned.apk`, **2.91 MB** / `3,051,198` bytes).
+- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors, 0 code/manifest/resource warnings** (only 3 informational `GradleDependency` notices in `app/build/reports/lint-results-debug.sarif`).
 - **Room Schema Exports**: Verified `SoniqMediaDatabase/1.json` and `SoniqDatabase/1.json`, `2.json`, `3.json`.
-- **Merged Release Manifest Privacy Check**: **PASS** — `POST_NOTIFICATIONS` present; zero `INTERNET` or `ACCESS_NETWORK_STATE` permissions present.
+- **Merged Release Manifest Privacy Check**: **PASS** — `POST_NOTIFICATIONS` present; zero `INTERNET`, `ACCESS_NETWORK_STATE`, or `ACCESS_WIFI_STATE` permissions present.
 
 ---
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **56 / 56 PASSED** across **27 test suites** (0 failures, 0 errors, 0 skipped) — including new `SoniqSleepTimerManagerTest` (`1` test) and updated `PlaybackViewModelTest` (`2` tests) & `PlayerScreensUiTest` (`6` tests, verifying PiP button & narrow-screen layout fix).
+**Result**: **57 / 57 PASSED** across **28 test suites** (0 failures, 0 errors, 0 skipped) — including new `HomeViewModelTest` (`1` test) and updated `SoniqAppNavigationUiTest` (`2` tests covering `Home → Music → Video → Settings`).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -48,8 +47,9 @@
 | `MediaItemFactoryTest` | Robolectric (SDK 35) | 2 | PASS | Audio & Video `MediaItem` metadata and `MediaKind` resolution |
 | `SoniqOfflineBitmapLoaderTest` | Robolectric (SDK 35) | 2 | PASS | Rejects `http`/`https` URIs with `SecurityException`; decodes & downsamples local artwork |
 | `Media3PlaybackControllerTest` | Robolectric (SDK 35) | 1 | PASS | Connect, disconnect, service-disconnection recovery, safe no-ops |
+| `HomeViewModelTest` | JVM Unit | 1 | PASS | Offline `HomeUiState` featured track, history resolution, and live search filtering |
 | `PlayerScreensUiTest` | Robolectric Compose UI | 6 | PASS | `MiniPlayerBar`, `NowPlayingScreen`, Favorite & Up Next sheet, `AudioEffectsSheet`, `VideoPlayerScreen` |
-| `SoniqAppNavigationUiTest` | Robolectric Compose UI | 2 | PASS | Music → Video → Settings & AMOLED theme |
+| `SoniqAppNavigationUiTest` | Robolectric Compose UI | 2 | PASS | Home → Music → Video → Settings & AMOLED theme |
 
 ---
 
@@ -65,8 +65,8 @@
 
 ## 4. Physical-Device Verification (`Infinix_X6528`, Android 13, `112173741O045288`)
 
-- **Status**: **NOT VERIFIED BY AUTOMATED ADB RUN**
-- **Reason**: Device was not attached to ADB during Session 4 (`adb devices -l` listed only `emulator-5554`). The user manually installed an earlier Session 3 build (`app-debug.apk`) on the phone and confirmed the app ran, reporting that the UI is currently basic (visual redesign postponed until engineering roadmap completes).
+- **Status**: **INSTALL BLOCKED BY XOS USB-INSTALL RESTRICTION (`DEBT-005`)**
+- **Details**: Device was connected via ADB (`112173741O045288`, Android 13) during Session 6; `connectedDebugAndroidTest` compiled both APKs cleanly, then failed on `adb install app-debug.apk` (`Performing Streamed Install / adb.exe: failed to install`). Enable Developer Options → "Install via USB" on the device to allow ADB test installation.
 
 ---
 
@@ -89,4 +89,5 @@
 | 2026-11-18 | Stage 5 (`f265823` / `c5fabc0`) | 49 / 49 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.85 MB unsigned) |
 | 2026-11-18 | Stage 6 + Stage 7 Foundation (`13983a8` / `3f1fd87`) | 54 / 54 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.90 MB unsigned) |
 | 2026-11-18 | Stages 7 + 8 Complete (`c2b9264`) | 55 / 55 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.92 MB unsigned) |
-| 2026-11-20 | **Stage 9 Engineering Complete (`c1c710d`)** | **56 / 56 PASS** | **0 errors, 0 code warnings** | **Pending hypervisor / device (`DEBT-005`)** | **PASS (2.92 MB APK / 7.10 MB AAB)** |
+| 2026-11-20 | Stage 9 Engineering Complete (`c1c710d`) | 56 / 56 PASS | 0 errors, 0 code warnings | Pending hypervisor / device (`DEBT-005`) | PASS (2.92 MB APK / 7.10 MB AAB) |
+| 2026-11-20 | **UI/UX Redesign Phase 1 (`47dc1a3`)** | **57 / 57 PASS** | **0 errors, 0 code/resource warnings** | **XOS install blocked (`DEBT-005`)** | **PASS (2.91 MB unsigned APK)** |
