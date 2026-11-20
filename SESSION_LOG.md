@@ -235,4 +235,6 @@
   - `assembleDebug testDebugUnitTest lintDebug assembleRelease`: **PASS** (**67 / 67** unit & Robolectric tests PASS across 32 suites; **0** Lint errors; `app-debug.apk` `18.64 MB`, `app-release-unsigned.apk` `2.97 MB`).
 - **Git Checkpoints**:
   - `ffcbc12` — `feat(update): add private user-initiated HTTPS updater, About SONIQ UI, and Vercel Blob config`
-  - *(Final documentation sync commit follows immediately.)*
+  - `6eccb29` — `docs(control): update all 8 control documents for Private Update System`
+  - `9f82d18` — `chore(signing): align release signing template with permanent keystore path and alias`
+  - *(Signed release verification documentation commit follows immediately.)*

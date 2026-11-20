@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (Private Update System Implementation)  
-**Current Stage**: **Stages 1–9 Complete + Liquid Glass UI/UX Redesign Complete + Private User-Initiated Update System Implemented** → Ready for **Permanent Release Keystore Setup, Vercel Hosting Deployment & Physical-Device QA**  
-**Latest Verified Code Commit**: `ffcbc12` (`main`)
+**Last Updated**: 2026-11-20 (First Signed Release Verified)  
+**Current Stage**: **Stages 1–9 Complete + Liquid Glass UI/UX Redesign Complete + Private Updater Implemented + Permanent Release Signing Verified** → Ready for **Vercel Hosting Deployment, Physical-Device QA & User Release Approval**  
+**Latest Verified Code Commit**: `9f82d18` (`main`)
 
 ---
 
@@ -61,7 +61,7 @@
 | Check | Status | Details |
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.64 MB**) |
-| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.97 MB**) |
+| Release APK (`assembleRelease`) | **PASS (SIGNED)** | R8 minified + shrunk, v2 RSA-4096 signed (`app-release.apk`, **2.98 MB** / `3,126,234` B) |
 | Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **67 / 67 passed** across **32 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors** (3 `GradleDependency`, 2 `UnusedResources`, 1 `UsableSpace`, 1 `UseKtx` notices) |
 | Instrumented Tests (`connectedDebugAndroidTest`) | **PASS at `aeb1db6` (`emulator-5554`)** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 at `aeb1db6`; `Infinix_X6528` physical-device QA remains open (`DEBT-005`) |

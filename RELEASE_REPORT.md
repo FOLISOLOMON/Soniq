@@ -1,7 +1,7 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-20 (Private Update System Implemented)  
-**Release Readiness Status**: **PRIVATE UPDATER IMPLEMENTED (Pending Permanent Keystore, Vercel Deployment & Physical-Device QA)**  
+**Last Updated**: 2026-11-20 (First Signed Release Verified)  
+**Release Readiness Status**: **SIGNED RELEASE APK VERIFIED (Pending Vercel Deployment, Physical-Device QA & Explicit Release Approval)**  
 **User Release Approval Status**: **UNAPPROVED** *(Release remains unapproved until explicitly approved by the user.)*
 
 ---
@@ -17,17 +17,17 @@
 | Version Code / Name | `1` / `0.1.0` (`0.1.0-debug` for debug) |
 | SDK Levels | `minSdk = 26`, `targetSdk = 37`, `compileSdk = 37` |
 | Release Optimization | `isMinifyEnabled = true`, `isShrinkResources = true`, `app/proguard-rules.pro` |
-| Signing | Debug keystore only for debug builds; optional `keystore.properties` template (`keystore.properties.example`, real `keystore.properties` gitignored) — release artifacts currently **unsigned** |
+| Signing | Debug keystore for debug builds; permanent RSA-4096 release keystore (`soniq-release`, SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`) configured via gitignored `keystore.properties` |
 
 ---
 
-## 2. APK & Bundle Outputs (Commit `ffcbc12`)
+## 2. APK & Bundle Outputs (Commit `9f82d18`)
 
 | Variant | Output Path | Verified Commit | Size | Install Verification |
 |---|---|---|---|---|
 | Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `ffcbc12` (2026-11-20) | 18.64 MB (`19,550,957` B) | Built & verified against **67 / 67** unit/Robolectric tests |
 | Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `aeb1db6` (2026-11-20) | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
-| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `ffcbc12` (2026-11-20) | 2.97 MB (`3,109,850` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Release APK (Signed) | `app/build/outputs/apk/release/app-release.apk` | `9f82d18` (2026-11-20) | 2.98 MB (`3,126,234` B) | R8 minified, resource shrunk, `lintVitalRelease` clean, v2 RSA-4096 signature verified (`apksigner` SHA-256 matches keystore; not installed) |
 
 ---
 
