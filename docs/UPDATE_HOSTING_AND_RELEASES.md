@@ -19,7 +19,7 @@ Run this locally outside the Git repository (or keep it out of commits — `*.jk
 ```powershell
 keytool -genkeypair -v `
   -keystore soniq-release.jks `
-  -alias soniq_release `
+  -alias soniq-release `
   -keyalg RSA -keysize 4096 `
   -validity 10000
 ```
