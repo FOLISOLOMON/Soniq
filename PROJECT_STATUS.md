@@ -62,6 +62,6 @@
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.07 MB**) |
 | Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.90 MB**) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **58 / 58 passed** across **28 suites** (0 failures, 0 errors, 0 skipped) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **61 / 61 passed** across **29 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest/resource warnings** (3 informational `GradleDependency` notices only) |
 | Instrumented Tests (`connectedDebugAndroidTest`) | **PASS on `emulator-5554`** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 (`SoniqDatabaseMigrationTest`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); `Infinix_X6528` blocked by XOS USB-install restriction (`DEBT-005`) |

@@ -98,7 +98,7 @@ com.soniq.player
     ├── home/                               # HomeViewModel, HomeRoute, HomeScreen (greeting, live offline search, Continue Listening hero, Quick Access, Recently Played)
     ├── music/                              # MusicViewModel, MusicRoute, MusicScreen ("My Library", pill tabs, Create New Playlist card, Songs/Albums/Artists/Folders/Playlists/Favorites)
     ├── video/                              # VideoViewModel, VideoRoute, VideoScreen (Videos/Folders, thumbnails, saved resume progress overlay, partial-access banner)
-    ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen, AudioEffectsSheet, VideoPlayerScreen (Fit/Fill/Zoom, subtitles, tracks, gestures, orientation)
+    ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen, AudioEffectsSheet, EqualizerFrequencyGraph, VideoPlayerScreen (Fit/Fill/Zoom, subtitles, tracks, gestures, orientation)
     └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (custom HSL accent picker, broken-URI recovery, preset rename/duplicate/delete, Playback card)
 ```
 

@@ -19,7 +19,7 @@
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **58 / 58 PASSED** across **28 test suites** (0 failures, 0 errors, 0 skipped) — including new `homeQuickAccessBubbleDeepLinksToRequestedMusicTab` test in `SoniqAppNavigationUiTest` (`3` tests).
+**Result**: **61 / 61 PASSED** across **29 test suites** (0 failures, 0 errors, 0 skipped) — including new `EqualizerGraphMathTest` (`2` tests) and `PlayerScreensUiTest` (`7` tests covering the interactive Equalizer frequency graph, preset selection, and EQ toggle).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -48,7 +48,8 @@
 | `SoniqOfflineBitmapLoaderTest` | Robolectric (SDK 35) | 2 | PASS | Rejects `http`/`https` URIs with `SecurityException`; decodes & downsamples local artwork |
 | `Media3PlaybackControllerTest` | Robolectric (SDK 35) | 1 | PASS | Connect, disconnect, service-disconnection recovery, safe no-ops |
 | `HomeViewModelTest` | JVM Unit | 1 | PASS | Offline `HomeUiState` featured track, history resolution, and live search filtering |
-| `PlayerScreensUiTest` | Robolectric Compose UI | 6 | PASS | `MiniPlayerBar`, `NowPlayingScreen`, Favorite & Up Next sheet, `AudioEffectsSheet`, `VideoPlayerScreen` |
+| `EqualizerGraphMathTest` | JVM Unit | 2 | PASS | Gain/Y-coordinate conversion, dynamic band X spacing, nearest-band lookup, frequency & dB formatting |
+| `PlayerScreensUiTest` | Robolectric Compose UI | 7 | PASS | `MiniPlayerBar`, `NowPlayingScreen`, Favorite & Up Next sheet, `AudioEffectsSheet` (interactive EQ graph, presets, unsupported state), `VideoPlayerScreen` |
 | `SoniqAppNavigationUiTest` | Robolectric Compose UI | 2 | PASS | Home → Music → Video → Settings & AMOLED theme |
 
 ---

@@ -21,13 +21,13 @@
 
 ---
 
-## 2. APK & Bundle Outputs (Commit `473241e`)
+## 2. APK & Bundle Outputs (Commit `b77c5c3`)
 
 | Variant | Output Path | Verified Commit | Size | Install Verification |
 |---|---|---|---|---|
-| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `473241e` (2026-11-20) | 18.07 MB (`18,952,944` B) | Installed & launched on `emulator-5554` (`Status: ok`, `1786 ms`); 58/58 unit/Robolectric tests PASS |
+| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `b77c5c3` (2026-11-20) | 18.26 MB (`19,148,540` B) | Installed & launched on `emulator-5554`; **61 / 61** unit/Robolectric tests PASS |
 | Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `473241e` (2026-11-20) | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
-| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `473241e` (2026-11-20) | 2.90 MB (`3,036,218` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `b77c5c3` (2026-11-20) | 2.91 MB (`3,052,966` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
 
 ---
 

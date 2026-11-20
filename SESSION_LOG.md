@@ -196,4 +196,6 @@
 - **Git Checkpoints Created in Session 7**:
   - `522a407` — `fix(ui): fix dark section heading contrast and cache glass/background gradients for smooth scroll`
   - `473241e` — `feat(ui): complete Liquid Glass Phase 2 across Settings, VideoPlayer, AudioEffects, dialogs, and Home deep linking`
-  - *(Final Session 7 documentation sync commit follows immediately.)*
+  - `d046a8a` — `docs(control): update project memory after Session 7 (UI/UX Redesign Phase 2)`
+  - `b77c5c3` — `feat(eq): redesign Equalizer with interactive Liquid Glass frequency response graph and preset list`
+  - *(Documentation sync commit for Equalizer redesign follows immediately.)*
