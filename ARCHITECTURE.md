@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-18 (Commit `c2b9264`, Stages 1–8 Complete)  
+**Last Updated**: 2026-11-20 (Commit `c1c710d`, Stages 1–9 Engineering Complete)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -84,6 +84,7 @@ com.soniq.player
 │   ├── playback/
 │   │   ├── AudioEffects.kt                 # AudioEffectsState (capability detection + EQ/BassBoost/Gapless/Crossfade)
 │   │   ├── SoniqAudioEffectsManager.kt     # Hardware Equalizer/BassBoost lifecycle + DataStore persistence
+│   │   ├── SoniqSleepTimerManager.kt       # Service-coordinated sleep timer countdown & expiration callback
 │   │   ├── MediaItemFactory.kt             # AudioTrack / VideoItem -> rich Media3 MediaItem + MediaKind resolver
 │   │   ├── SoniqOfflineBitmapLoader.kt     # Strictly offline Media3 BitmapLoader (rejects http/https, max 512px downsample)
 │   │   ├── SoniqSessionCommands.kt         # COMMAND_TOGGLE_SHUFFLE, COMMAND_CYCLE_REPEAT, SLOT_OVERFLOW button prefs

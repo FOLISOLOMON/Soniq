@@ -1,7 +1,7 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
-**Release Readiness Status**: **NOT READY (Stages 1–8 Complete; Stage 9 Release Prep & Physical-Device QA Remaining; UI Redesign Frozen Until Post-Engineering Phase)**  
+**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
+**Release Readiness Status**: **STAGE 9 ARTIFACTS GENERATED (Pending Physical-Device QA, Production Signing & Post-Engineering UI/UX Redesign)**  
 **User Release Approval Status**: **UNAPPROVED** *(Release remains unapproved until explicitly approved by the user.)*
 
 ---
@@ -17,17 +17,18 @@
 | Version Code / Name | `1` / `0.1.0` (`0.1.0-debug` for debug) |
 | SDK Levels | `minSdk = 26`, `targetSdk = 37`, `compileSdk = 37` |
 | Release Optimization | `isMinifyEnabled = true`, `isShrinkResources = true`, `app/proguard-rules.pro` |
-| Signing | Debug keystore only for debug builds; release APK currently **unsigned** (no production keystore configured or committed) |
+| Signing | Debug keystore only for debug builds; optional `keystore.properties` template (`keystore.properties.example`, real `keystore.properties` gitignored) — release artifacts currently **unsigned** |
 
 ---
 
-## 2. APK Outputs & Installation Verification (Commit `c2b9264`)
+## 2. APK & Bundle Outputs (Commit `c1c710d`)
 
 | Variant | Output Path | Verified Commit | Size | Install Verification |
 |---|---|---|---|---|
-| Debug | `app/build/outputs/apk/debug/app-debug.apk` | `c2b9264` (2026-11-18) | 18.06 MB | Installed & launched cleanly on `Medium_Phone_API_37.0` emulator (`PID 5839`, 0 SONIQ crashes) |
-| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `c2b9264` (2026-11-18) | 2.36 MB | **3 / 3 passed** on `Medium_Phone_API_37.0` emulator (including `v1 → v3` migration) |
-| Release (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `c2b9264` (2026-11-18) | 2.92 MB | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `c1c710d` (2026-11-20) | 18.07 MB | Built & verified against 56/56 unit/Robolectric tests (emulator boot blocked on host hypervisor after reboot; `c2b9264` launched cleanly on `emulator-5554` at `PID 5839`) |
+| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `c1c710d` (2026-11-20) | 2.36 MB | **3 / 3 passed** at `c2b9264` on `Medium_Phone_API_37.0`; re-run on `c1c710d` pending hypervisor/device |
+| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `c1c710d` (2026-11-20) | 2.92 MB | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Release AAB (Unsigned) | `app/build/outputs/bundle/release/app-release.aab` | `c1c710d` (2026-11-20) | 7.10 MB | R8 minified & resource shrunk via `bundleRelease` (unsigned) |
 
 ---
 

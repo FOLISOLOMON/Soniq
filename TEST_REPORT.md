@@ -1,17 +1,18 @@
 # SONIQ — Test & Verification Report
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
-**Latest Verified Build Commit**: `c2b9264` (`main` — Stages 1–8 Complete)
+**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
+**Latest Verified Build Commit**: `c1c710d` (`main` — Stages 1–9 Engineering Complete)
 
 ---
 
-## 1. Latest Verified Build Summary (Commit `c2b9264`)
+## 1. Latest Verified Build Summary (Commit `c1c710d`)
 
 - **Build Environment**: Windows 11 (`10.0.26200`), Eclipse Temurin JDK `21.0.13+9-LTS`, Gradle `9.9.1`, AGP `9.5.1`, Kotlin `2.4.21`, Android SDK `compileSdk = 37`, `build-tools 37.0.0`, `adb 37.0.1`.
-- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.06 MB**).
+- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.07 MB**).
 - **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`, **2.36 MB**).
 - **Release APK (`./gradlew assembleRelease`)**: **PASS** (R8 minification, resource shrinking, and `lintVitalRelease` all passed; `app/build/outputs/apk/release/app-release-unsigned.apk`, **2.92 MB**).
-- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors, 0 warnings** (`Lint results count: 0` verified in `app/build/reports/lint-results-debug.sarif`).
+- **Release App Bundle (`./gradlew bundleRelease`)**: **PASS** (R8 minification & resource shrinking; `app/build/outputs/bundle/release/app-release.aab`, **7.10 MB**).
+- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors, 0 code/manifest warnings** (only 3 informational `GradleDependency` notices in `app/build/reports/lint-results-debug.sarif`).
 - **Room Schema Exports**: Verified `SoniqMediaDatabase/1.json` and `SoniqDatabase/1.json`, `2.json`, `3.json`.
 - **Merged Release Manifest Privacy Check**: **PASS** — `POST_NOTIFICATIONS` present; zero `INTERNET` or `ACCESS_NETWORK_STATE` permissions present.
 
@@ -19,7 +20,7 @@
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **55 / 55 PASSED** across **26 test suites** (0 failures, 0 errors, 0 skipped)
+**Result**: **56 / 56 PASSED** across **27 test suites** (0 failures, 0 errors, 0 skipped) — including new `SoniqSleepTimerManagerTest` (`1` test) and updated `PlaybackViewModelTest` (`2` tests) & `PlayerScreensUiTest` (`6` tests, verifying PiP button & narrow-screen layout fix).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -87,4 +88,5 @@
 | 2026-11-18 | Stage 4 (`057fb56`) | 45 / 45 PASS | 0 errors, 0 warnings | Verified with Stage 5 | Verified with Stage 5 |
 | 2026-11-18 | Stage 5 (`f265823` / `c5fabc0`) | 49 / 49 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.85 MB unsigned) |
 | 2026-11-18 | Stage 6 + Stage 7 Foundation (`13983a8` / `3f1fd87`) | 54 / 54 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.90 MB unsigned) |
-| 2026-11-18 | **Stages 7 + 8 Complete (`c2b9264`)** | **55 / 55 PASS** | **0 errors, 0 warnings** | **3 / 3 PASS (`Medium_Phone_API_37.0`)** | **PASS (2.92 MB unsigned)** |
+| 2026-11-18 | Stages 7 + 8 Complete (`c2b9264`) | 55 / 55 PASS | 0 errors, 0 warnings | 3 / 3 PASS (`Medium_Phone_API_37.0`) | PASS (2.92 MB unsigned) |
+| 2026-11-20 | **Stage 9 Engineering Complete (`c1c710d`)** | **56 / 56 PASS** | **0 errors, 0 code warnings** | **Pending hypervisor / device (`DEBT-005`)** | **PASS (2.92 MB APK / 7.10 MB AAB)** |

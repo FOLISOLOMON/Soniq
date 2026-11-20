@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
-**Current Stage**: **Stages 1–8 Complete** (UI Redesign Frozen by User Decision Until Engineering Roadmap Finishes) → Ready for **Stage 9 (Release Prep, Physical-Device QA, Optional Sleep Timer / PiP)**  
-**Latest Verified Code Commit**: `c2b9264` (`main`)
+**Last Updated**: 2026-11-20 (End of Autonomous Session 5 — Stage 9 Engineering Complete)  
+**Current Stage**: **Stages 1–9 Engineering Complete** (Sleep Timer, Picture-in-Picture, Externalized Release Signing Template, R8 Release APK & AAB Generated) → Ready for **Physical-Device QA & Post-Roadmap UI/UX Visual Redesign Phase**  
+**Latest Verified Code Commit**: `c1c710d` (`main`)
 
 ---
 
@@ -45,9 +45,9 @@
   - **Compatibility**: Migrated `SoniqApp` to `currentWindowAdaptiveInfoV2()` (`DEBT-008`, 0 compiler warnings).
 
 ### Remaining Roadmap
-- **Optional Deferred Features**: Sleep Timer (Stage 6) and Picture-in-Picture / PiP (Stage 6).
-- **Stage 9**: Release signing setup, physical-device & Bluetooth/headset QA, final release approval.
+- **Physical-Device & Hardware QA (`DEBT-005`)**: Re-run `connectedDebugAndroidTest` on `emulator-5554` (once host hypervisor acceleration is restored) and execute physical-device + Bluetooth/headset QA on `Infinix_X6528`.
 - **Post-Roadmap**: Dedicated **UI/UX Redesign Phase** (explicitly frozen until engineering roadmap completes).
+- **Release Approval**: Remains **UNAPPROVED** until user supplies production signing `keystore.properties` and gives explicit approval.
 
 ---
 
@@ -55,9 +55,10 @@
 
 | Check | Status | Details |
 |---|---|---|
-| Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.06 MB**) |
-| Release Build (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.92 MB**) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **55 / 55 passed** across 26 suites (0 failures, 0 errors, 0 skipped) |
-| Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 warnings** (`Lint results count: 0`) |
-| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS on Emulator** | **3 / 3 passed** on `Medium_Phone_API_37.0` (Android 17): `SoniqDatabaseMigrationTest` (`1 → 3`), `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest` + clean launch check (`PID 5839`, 0 SONIQ crashes) |
-| Physical Device Verification (`Infinix_X6528`, `112173741O045288`) | **NOT VERIFIED** | Device not attached to ADB in Session 4 (`adb devices` only listed `emulator-5554`); user manually installed & evaluated UI visually on phone |
+| Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.07 MB**) |
+| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.92 MB**) |
+| Release Bundle (`bundleRelease`) | **PASS** | R8 minified + shrunk (`app-release.aab`, **7.10 MB**) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **56 / 56 passed** across 27 suites (0 failures, 0 errors, 0 skipped) |
+| Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest warnings** (3 informational `GradleDependency` notices only) |
+| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS at `c2b9264` / Pending re-run on `c1c710d`** | **3 / 3 passed** on `Medium_Phone_API_37.0` at `c2b9264`; emulator failed to boot in Session 5 due to missing host hypervisor acceleration after reboot |
+| Physical Device Verification (`Infinix_X6528`, `112173741O045288`) | **NOT VERIFIED** | Device not attached to ADB in Session 5 (`DEBT-005`) |

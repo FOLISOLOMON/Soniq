@@ -145,4 +145,20 @@
   - Physical device (`Infinix_X6528`): **NOT VERIFIED BY ADB** (not attached in Session 4).
 - **Git Checkpoints Created in Session 4**:
   - `c2b9264` — `feat(theme,perf): complete Stage 7 backgrounds/starter presets and Stage 8 perf/a11y/compat`
-  - *(Final Session 4 documentation sync commit follows immediately.)*
+  - `cd4b883` — `docs(control): update project memory after Session 4 (Stages 7 and 8 complete)`
+
+---
+
+## Autonomous Session 5 — Stage 9 Engineering: Sleep Timer, Picture-in-Picture, Signing Template & Release Artifacts (2026-11-18 to 2026-11-20)
+
+- **Starting State**: Clean `main` at `cd4b883` (Stages 1–8 complete, 55/55 tests, 0 Lint warnings, 3/3 emulator instrumented tests).
+- **Objectives Executed (`c1c710d`)**:
+  1. **Sleep Timer**: Implemented `SoniqSleepTimerManager` (`Off` / `15m` / `30m` / `45m` / `60m` + live countdown), wired expiration pause into `SoniqPlaybackService`, exposed in `PlaybackViewModel` and `AudioEffectsSheet`.
+  2. **Picture-in-Picture (PiP)**: Added `android:supportsPictureInPicture="true"` + `configChanges` in `AndroidManifest.xml`, `PictureInPictureParams` with `setSourceRectHint` and API 31+ `setAutoEnterEnabled` in `MainActivity`, PiP button & control hiding in `VideoPlayerScreen`, and fixed narrow-screen top-bar title squeeze (`BUG-015`).
+  3. **Release Signing Template & Artifacts**: Added `keystore.properties.example` and optional `keystore.properties` release signing in `app/build.gradle.kts`; generated R8-minified `app-release-unsigned.apk` (`2.92 MB`) and `app-release.aab` (`7.10 MB`).
+- **Verification Results**:
+  - `./gradlew assembleDebug testDebugUnitTest lintDebug assembleRelease bundleRelease`: **PASS** (`56 / 56` unit & Robolectric tests PASS, `0` errors / `0` code-or-manifest Lint warnings).
+  - Emulator & physical device: Emulator failed to start after host reboot due to missing hypervisor acceleration (`x86_64 emulation currently requires hardware acceleration`), and `Infinix_X6528` was disconnected (`DEBT-005`).
+- **Git Checkpoints Created in Session 5**:
+  - `c1c710d` — `feat(release): add sleep timer, Picture-in-Picture, and externalized release signing template`
+  - *(Final Session 5 documentation sync commit follows immediately.)*

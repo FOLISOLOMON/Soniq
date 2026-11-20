@@ -1,7 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
-**Active Stage**: Stages 1–8 **COMPLETED** → Next: **Stage 9 — Release Preparation, Physical-Device QA & Optional Deferred Features (Sleep Timer / PiP)**  
+**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
+**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) → Next: **Physical-Device / Emulator Regression QA, Production Signing & Post-Engineering UI/UX Visual Redesign Phase**  
 *(Note: Visual UI/UX redesign is explicitly frozen until all planned engineering stages are complete.)*
 
 ---
@@ -34,10 +34,14 @@
 
 ---
 
-## Stage 9 — Release Preparation, Physical-Device QA & Optional Deferred Features — **NEXT**
-- **Objectives**:
-  1. Optional deferred engineering items if requested: Audio Sleep Timer & Video Picture-in-Picture (PiP).
-  2. Physical-device (`Infinix_X6528`) & Bluetooth/headset end-to-end QA checklist execution.
-  3. Externalized release signing template (`keystore.properties`, gitignored) without committing secrets.
-  4. Final R8-minified release APK & AAB build, merged-manifest privacy audit, full regression suite, and waiting for **explicit user release approval**.
+## Stage 9 — Release Preparation, APK/AAB Generation & Deferred Features — **COMPLETED (Engineering)** (`c1c710d`)
+- **Delivered**:
+  1. Implemented service-coordinated **Sleep Timer** (`SoniqSleepTimerManager`, live countdown, `Off` / `15m` / `30m` / `45m` / `60m` chips in `AudioEffectsSheet`).
+  2. Implemented Android **Picture-in-Picture (PiP)** support (`android:supportsPictureInPicture="true"`, `PictureInPictureParams` with `setSourceRectHint` and API 31+ `setAutoEnterEnabled`, PiP button & control hiding in `VideoPlayerScreen`, `onUserLeaveHint` auto-PiP in `MainActivity`).
+  3. Fixed narrow-screen video top-bar button overflow (`PlayerScreensUiTest` regression caught & fixed by moving secondary video actions to a scrollable second row).
+  4. Added externalized release signing template (`keystore.properties.example`, gitignored `keystore.properties` wiring in `app/build.gradle.kts`).
+  5. Built R8-minified, resource-shrunk `app-release-unsigned.apk` (`2.92 MB`) and `app-release.aab` (`7.10 MB`), verified `56/56` unit/Robolectric tests & `0` code/manifest Lint warnings.
+- **Pending External Actions Before Release Approval**:
+  1. Physical-device (`Infinix_X6528`) & Bluetooth/headset end-to-end QA + emulator instrumented re-run on `c1c710d` once host hypervisor acceleration is active.
+  2. User-supplied production `keystore.properties` and **explicit user release approval**.
 - **Post-Stage 9**: Dedicated **UI/UX Visual Redesign Phase**.

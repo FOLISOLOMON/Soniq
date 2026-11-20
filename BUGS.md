@@ -1,6 +1,6 @@
 # SONIQ — Defect & Technical Debt Register
 
-**Last Updated**: 2026-11-18 (End of Autonomous Session 4)  
+**Last Updated**: 2026-11-20 (End of Autonomous Session 5)  
 **Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
 
 ---
@@ -9,15 +9,17 @@
 
 | ID | Severity | Area | Description | Status | Proposed Fix | Verification |
 |---|---|---|---|---|---|---|
-| **DEBT-005** | Low | Testing / Device | Physical device `Infinix_X6528` (`112173741O045288`, Android 13) was not attached to ADB during Session 4 (`adb devices` listed only `emulator-5554`). Automated physical-device instrumented tests and hardware Bluetooth/headset QA remain pending. | **OPEN** (External) | Reconnect phone via reliable data USB cable in File Transfer (MTP) mode with Developer Options → **Install via USB** enabled, run `ANDROID_SERIAL=112173741O045288 ./gradlew connectedDebugAndroidTest`, and execute physical Bluetooth/headset QA checklist. | Run on physical device and record results in `TEST_REPORT.md`. |
+| **DEBT-005** | Low | Testing / Device | Physical device `Infinix_X6528` (`112173741O045288`, Android 13) was not attached to ADB during Session 5, and the x86_64 emulator failed to boot (`Android Emulator hypervisor driver is not installed on this machine` after host reboot). Instrumented re-run on `c1c710d` and physical-device/Bluetooth QA remain pending. | **OPEN** (External) | Re-enable Windows Hypervisor Platform / AEHD for emulator-5554 or connect `Infinix_X6528` via USB (MTP + Install via USB) and run `./gradlew connectedDebugAndroidTest` + manual hardware QA. | Run on emulator/physical device and record results in `TEST_REPORT.md`. |
 | **DEBT-006** | Info | Manifest Merger | `tools:node="remove"` on `INTERNET` / `ACCESS_NETWORK_STATE` emits informational manifest merger warnings confirming no dependency declared them. | **ACCEPTED** | Keep as intentional defense-in-depth privacy safeguard. | Verify merged manifest remains free of network permissions. |
-| **DEBT-009** | Low | Roadmap / Deferred | Optional Stage 6 features (**Sleep Timer** and **Picture-in-Picture (PiP)**) were not implemented in Sessions 3–4 and remain deferred for Stage 9 / user prioritization. | **DEFERRED** (Optional) | Implement Sleep Timer in `SoniqPlaybackService` and PiP in `MainActivity`/`VideoPlayerScreen` if prioritized before release. | Unit + UI tests when implemented. |
 
 ---
 
 ## Resolved Issues (Historical Audit Trail)
 
 | ID | Severity | Area | Description | Status | Resolution & Verification |
+|---|---|---|---|---|---|
+| **DEBT-009** | Low | Roadmap / Deferred | Optional Stage 6 features (**Sleep Timer** and **Picture-in-Picture (PiP)**) were deferred in Session 4. | **RESOLVED** (Session 5 / Stage 9 / `c1c710d`) | Implemented `SoniqSleepTimerManager` (service-coordinated countdown + `AudioEffectsSheet` UI) and Android PiP (`MainActivity` `PictureInPictureParams` + `setAutoEnterEnabled` + `setSourceRectHint` + `VideoPlayerScreen` PiP button & control hiding). Verified by `SoniqSleepTimerManagerTest`, `PlayerScreensUiTest`, and `lintDebug` (0 code/manifest warnings). |
+| **BUG-015** | Medium | UI / Layout | Adding the PiP button to `VideoPlayerScreen`'s single-row top bar squeezed the video title `Text(..., weight(1f))` to `0dp` width on narrow portrait screens (`PlayerScreensUiTest > videoPlayerDisplaysTitleAndSeekControls` failed). | **RESOLVED** (Session 5 / Stage 9 / `c1c710d`) | Moved secondary video actions (`PiP`, `Audio & Subtitles`, `Aspect ratio`, `Toggle landscape`) into a horizontally scrollable second row below the title bar. Verified by `PlayerScreensUiTest` (6/6 PASS). |
 |---|---|---|---|---|---|
 | **DEBT-008** | Low | UI / Deprecation | `SoniqApp.kt` called deprecated `currentWindowAdaptiveInfo()`, emitting 1 Kotlin compiler warning. | **RESOLVED** (Session 4 / Stage 8 / `c2b9264`) | Migrated to `currentWindowAdaptiveInfoV2()` in `SoniqApp.kt`. Verified **0 Kotlin compiler warnings** across debug, release, and test builds. |
 | **BUG-013** | Medium | Performance / Concurrency | `DefaultMusicLibraryRepository` and `DefaultVideoLibraryRepository` executed `toDomain()`, `groupBy`, and `sortedBy` on the collector's dispatcher (Main thread when collected by ViewModels) and lacked periodic cancellation checks during MediaStore cursor loops. | **RESOLVED** (Session 4 / Stage 8 / `c2b9264`) | Added `.flowOn(Dispatchers.Default)`, `withContext(Dispatchers.IO)` in `sync()`, and periodic `coroutineContext.ensureActive()` in `MediaStoreAudioScanner` / `MediaStoreVideoScanner`. Verified with 10,000-track stress test. |
