@@ -62,9 +62,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.soniq.player.BuildConfig
 import com.soniq.player.R
+import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqGlassDialog
 import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassLinearProgress
 import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.component.SoniqSectionHeader
@@ -83,13 +86,19 @@ import com.soniq.player.core.model.appearance.TextScale
 import com.soniq.player.core.model.appearance.ThemeMode
 import com.soniq.player.core.model.appearance.ThemePreset
 import com.soniq.player.core.permissions.NotificationPermissions
+import com.soniq.player.core.update.UpdateRelease
+import com.soniq.player.core.update.UpdateUiState
+import java.io.File
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsRoute(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val updateUiState by updateViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val imagePicker = rememberLauncherForActivityResult(
@@ -145,6 +154,13 @@ fun SettingsRoute(
         onDuplicatePreset = viewModel::duplicatePreset,
         onDeletePreset = viewModel::deletePreset,
         onFeedbackDismissed = viewModel::onFeedbackDismissed,
+        installedVersionName = updateViewModel.installedVersionName,
+        installedVersionCode = updateViewModel.installedVersionCode,
+        updateUiState = updateUiState,
+        onCheckForUpdates = updateViewModel::checkForUpdates,
+        onDownloadUpdate = updateViewModel::downloadUpdate,
+        onCancelUpdateDownload = updateViewModel::cancelDownload,
+        onInstallUpdate = updateViewModel::installUpdate,
         modifier = modifier,
     )
 }
@@ -177,6 +193,13 @@ fun SettingsScreen(
     onDuplicatePreset: (Long) -> Unit = {},
     onContinueVideoInBackgroundToggled: (Boolean) -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
+    installedVersionName: String = BuildConfig.VERSION_NAME,
+    installedVersionCode: Int = BuildConfig.VERSION_CODE,
+    updateUiState: UpdateUiState = UpdateUiState.Idle,
+    onCheckForUpdates: () -> Unit = {},
+    onDownloadUpdate: (UpdateRelease) -> Unit = {},
+    onCancelUpdateDownload: () -> Unit = {},
+    onInstallUpdate: (UpdateRelease, File) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val spacing = SoniqTheme.tokens.spacing
@@ -553,6 +576,19 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            item(key = "about_soniq") {
+                SoniqSectionHeader(title = stringResource(R.string.settings_section_about))
+                AboutSoniqCard(
+                    installedVersionName = installedVersionName,
+                    installedVersionCode = installedVersionCode,
+                    updateUiState = updateUiState,
+                    onCheckForUpdates = onCheckForUpdates,
+                    onDownloadUpdate = onDownloadUpdate,
+                    onCancelDownload = onCancelUpdateDownload,
+                    onInstallUpdate = onInstallUpdate,
+                )
+            }
         }
     }
 
@@ -796,6 +832,166 @@ private fun RenamePresetDialog(
             }
         },
     )
+}
+
+@Composable
+private fun AboutSoniqCard(
+    installedVersionName: String,
+    installedVersionCode: Int,
+    updateUiState: UpdateUiState,
+    onCheckForUpdates: () -> Unit,
+    onDownloadUpdate: (UpdateRelease) -> Unit,
+    onCancelDownload: () -> Unit,
+    onInstallUpdate: (UpdateRelease, File) -> Unit,
+) {
+    val spacing = SoniqTheme.tokens.spacing
+    SoniqSurfaceCard {
+        Text(
+            text = stringResource(
+                R.string.settings_installed_version,
+                installedVersionName,
+                installedVersionCode,
+            ),
+            style = MaterialTheme.typography.titleSmall,
+        )
+
+        when (updateUiState) {
+            is UpdateUiState.Idle -> {
+                Button(onClick = onCheckForUpdates) {
+                    Text(text = stringResource(R.string.settings_update_check))
+                }
+            }
+            is UpdateUiState.Checking -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(SoniqTheme.tokens.sizes.icon),
+                        strokeWidth = SoniqTheme.tokens.border.selected,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_update_checking),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            is UpdateUiState.UpToDate -> {
+                Text(
+                    text = stringResource(R.string.settings_update_up_to_date),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                OutlinedButton(onClick = onCheckForUpdates) {
+                    Text(text = stringResource(R.string.settings_update_check))
+                }
+            }
+            is UpdateUiState.Available -> {
+                val release = updateUiState.release
+                Text(
+                    text = stringResource(
+                        R.string.settings_update_available,
+                        release.versionName,
+                        release.versionCode,
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (release.mandatory || updateUiState.isBelowMinimumSupported) {
+                    Text(
+                        text = stringResource(R.string.settings_update_mandatory),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                if (release.releaseNotes.isNotBlank()) {
+                    Text(
+                        text = release.releaseNotes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    text = stringResource(
+                        R.string.settings_update_size,
+                        MediaFormatters.formatFileSize(release.apkSizeBytes),
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Button(onClick = { onDownloadUpdate(release) }) {
+                    Text(text = stringResource(R.string.settings_update_download))
+                }
+            }
+            is UpdateUiState.Downloading -> {
+                val percent = (updateUiState.progressFraction * 100f).roundToInt()
+                Text(
+                    text = stringResource(
+                        R.string.settings_update_downloading,
+                        MediaFormatters.formatFileSize(updateUiState.bytesDownloaded),
+                        MediaFormatters.formatFileSize(updateUiState.totalBytes),
+                        percent,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                SoniqGlassLinearProgress(progress = updateUiState.progressFraction)
+                OutlinedButton(onClick = onCancelDownload) {
+                    Text(text = stringResource(R.string.settings_update_cancel))
+                }
+            }
+            is UpdateUiState.Verifying -> {
+                Text(
+                    text = stringResource(R.string.settings_update_verifying),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                SoniqGlassLinearProgress(progress = 1f)
+            }
+            is UpdateUiState.ReadyToInstall -> {
+                Text(
+                    text = stringResource(R.string.settings_update_ready),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Button(onClick = { onInstallUpdate(updateUiState.release, updateUiState.apkFile) }) {
+                    Text(text = stringResource(R.string.settings_update_install))
+                }
+            }
+            is UpdateUiState.InstallRequested -> {
+                Text(
+                    text = stringResource(R.string.settings_update_install_requested),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(onClick = { onInstallUpdate(updateUiState.release, updateUiState.apkFile) }) {
+                    Text(text = stringResource(R.string.settings_update_install))
+                }
+            }
+            is UpdateUiState.Error -> {
+                Text(
+                    text = updateUiState.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                val retryRelease = updateUiState.recoverableRelease
+                if (retryRelease != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                        Button(onClick = { onDownloadUpdate(retryRelease) }) {
+                            Text(text = stringResource(R.string.settings_update_retry))
+                        }
+                        OutlinedButton(onClick = onCheckForUpdates) {
+                            Text(text = stringResource(R.string.settings_update_check))
+                        }
+                    }
+                } else {
+                    OutlinedButton(onClick = onCheckForUpdates) {
+                        Text(text = stringResource(R.string.settings_update_check))
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun SettingsFeedback.messageRes(): Int = when (this) {

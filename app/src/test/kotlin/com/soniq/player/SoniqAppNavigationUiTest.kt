@@ -6,10 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import com.google.common.truth.Truth.assertThat
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -221,5 +224,42 @@ class SoniqAppNavigationUiTest {
             composeRule.onNodeWithText("SONIQ").assertIsDisplayed()
             composeRule.onNodeWithText("Quick Access").performScrollTo().assertIsDisplayed()
         }
+    }
+
+    @Test
+    fun settingsAboutSoniqCheckForUpdatesTriggersExplicitCallback() {
+        var checked = false
+
+        composeRule.setContent {
+            SoniqTheme {
+                SettingsScreen(
+                    uiState = SettingsUiState(),
+                    dynamicColorSupported = true,
+                    onThemeModeSelected = {},
+                    onAmoledBlackToggled = {},
+                    onDynamicColorToggled = {},
+                    onAccentColorSelected = {},
+                    onFontFamilySelected = {},
+                    onTextScaleSelected = {},
+                    onBackgroundStyleSelected = {},
+                    onChooseBackgroundImage = {},
+                    onPlayerLayoutSelected = {},
+                    onPresetNameChanged = {},
+                    onSavePreset = {},
+                    onApplyPreset = {},
+                    onDeletePreset = {},
+                    onFeedbackDismissed = {},
+                    installedVersionName = "0.1.0",
+                    installedVersionCode = 1,
+                    onCheckForUpdates = { checked = true },
+                )
+            }
+        }
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("About SONIQ"))
+        composeRule.onNodeWithText("About SONIQ").assertIsDisplayed()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Check for updates"))
+        composeRule.onNodeWithText("Check for updates").performClick()
+        assertThat(checked).isTrue()
     }
 }

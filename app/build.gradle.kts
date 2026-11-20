@@ -21,12 +21,24 @@ val soniqApplicationId: String = providers.gradleProperty("soniq.applicationId")
     .get()
 val soniqVersionCode: Int = providers.gradleProperty("soniq.versionCode").orElse("1").get().toInt()
 val soniqVersionName: String = providers.gradleProperty("soniq.versionName").orElse("0.1.0").get()
+val soniqUpdateManifestUrl: String = providers.gradleProperty("soniq.updateManifestUrl")
+    .orElse(providers.environmentVariable("SONIQ_UPDATE_MANIFEST_URL"))
+    .orElse("")
+    .get()
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.isFile) {
         keystorePropertiesFile.inputStream().use(::load)
     }
 }
+val releaseStorePath: String? = keystoreProperties.getProperty("storeFile")?.takeIf { it.isNotBlank() }
+    ?: System.getenv("SONIQ_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+val releaseStorePassword: String? = keystoreProperties.getProperty("storePassword")?.takeIf { it.isNotBlank() }
+    ?: System.getenv("SONIQ_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+val releaseKeyAlias: String? = keystoreProperties.getProperty("keyAlias")?.takeIf { it.isNotBlank() }
+    ?: System.getenv("SONIQ_KEY_ALIAS")?.takeIf { it.isNotBlank() }
+val releaseKeyPassword: String? = keystoreProperties.getProperty("keyPassword")?.takeIf { it.isNotBlank() }
+    ?: System.getenv("SONIQ_KEY_PASSWORD")?.takeIf { it.isNotBlank() }
 
 android {
     namespace = "com.soniq.player"
@@ -39,16 +51,28 @@ android {
         versionCode = soniqVersionCode
         versionName = soniqVersionName
 
+        val escapedManifestUrl = soniqUpdateManifestUrl.replace("\"", "\\\"")
+        buildConfigField("String", "UPDATE_MANIFEST_URL", "\"$escapedManifestUrl\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.isFile) {
+        if (
+            releaseStorePath != null &&
+            releaseStorePassword != null &&
+            releaseKeyAlias != null &&
+            releaseKeyPassword != null
+        ) {
+            val resolvedStoreFile = rootProject.file(releaseStorePath)
+            require(resolvedStoreFile.isFile) {
+                "Release keystore file not found: ${resolvedStoreFile.absolutePath}"
+            }
             create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = resolvedStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
             }
         }
     }
@@ -76,6 +100,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     testOptions {
