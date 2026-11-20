@@ -1,8 +1,8 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening Release Candidate)  
-**Release Readiness Status**: **v0.3.1 (`versionCode = 4`) SIGNED RELEASE CANDIDATE VERIFIED LOCALLY** (`v0.3.0` remains live at `https://soniq-update-server.vercel.app/manifest.json` until v0.3.1 publication is explicitly approved)  
-**User Release Approval Status**: **AWAITING EXPLICIT APPROVAL FOR v0.3.1 PUBLICATION**
+**Last Updated**: 2026-11-20T23:39:15Z (v0.3.1 Production OTA Publication)  
+**Release Readiness Status**: **v0.3.1 (`versionCode = 4`) LIVE IN PRODUCTION (`https://soniq-update-server.vercel.app/manifest.json`)**  
+**User Release Approval Status**: **APPROVED & PUBLISHED (v0.3.1, 2026-11-20T23:39:15Z)**
 
 ---
 
@@ -21,13 +21,21 @@
 
 ---
 
-## 2. APK & Bundle Outputs (OTA Hardening Release Candidate v0.3.1, `versionCode = 4`)
+## 2. APK & Bundle Outputs (Published OTA Release v0.3.1, `versionCode = 4`)
 
 | Variant | Output Path | Version | Size & SHA-256 | Verification |
 |---|---|---|---|---|
 | Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `0.3.0-debug` (`3`, prior build) | 17.91 MB (`18,776,667` B) | `70 / 70` unit/Robolectric tests PASS on `v0.3.1` sources |
 | Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | — | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) at `473241e` |
-| Release APK (Signed RC) | `app/build/outputs/apk/release/app-release.apk` | `0.3.1` (`4`) | 2.98 MB (`3,126,238` B) / SHA-256 `f560f40b3d9a7afb9107d9b6ef847a9352690e0f3b5b55155c83cefe15f285b6` | R8 minified, v2 RSA-4096 signed (`e49a06da...`), embedded `https://soniq-update-server.vercel.app/manifest.json`; **not uploaded** (awaiting approval) |
+| Release APK (Published) | `app/build/outputs/apk/release/app-release.apk` | `0.3.1` (`4`) | 2.98 MB (`3,126,238` B) / SHA-256 `3db8d55d19ebdd0e3e90755958fb27bc315e1f35464fb467fc927d902610fcc2` | R8 minified, v2 RSA-4096 signed (`e49a06da...`), embedded `https://soniq-update-server.vercel.app/manifest.json`; rebuilt clean from `2c1a4df`, published to Vercel Blob & live on `soniq-update-server` (`40748c9`) |
+
+### Production OTA Publication Details (`v0.3.1`)
+- **Publication Timestamp (UTC):** `2026-11-20T23:39:15Z`
+- **Public APK URL:** `https://rehezvrea6xtcs58.public.blob.vercel-storage.com/releases/soniq-v0.3.1.apk`
+- **Live Manifest URL:** `https://soniq-update-server.vercel.app/manifest.json` (HTTP `200`, `versionCode: 4`, `versionName: "0.3.1"`)
+- **Blob Upload Verification:** HTTP `200`, `Content-Type: application/vnd.android.package-archive`, `Content-Length: 3126238` (`v0.3.0` at `releases/soniq-v0.3.0.apk` remains accessible, HTTP `200`)
+- **Deployment Status:** Deployed & live on Vercel (`soniq-update-server`, manifest commit `40748c9`, code commit `2c1a4df`)
+- **Live Download Verification:** Independent download of `soniq-v0.3.1.apk` matched `3,126,238` bytes, SHA-256 `3db8d55d19ebdd0e3e90755958fb27bc315e1f35464fb467fc927d902610fcc2`, `com.soniq.player` `v0.3.1` (`versionCode=4`), and `apksigner` RSA-4096 cert `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`
 
 ---
 
