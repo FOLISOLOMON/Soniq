@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-20 (Commit `ffcbc12`, Private Update System Implemented)  
+**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -93,7 +93,7 @@ com.soniq.player
 │   │   ├── SoniqPlaybackService.kt         # MediaSessionService: ExoPlayer, AudioEffects attachment, Crossfade, dynamic AudioAttributes, MediaSession
 │   │   ├── Media3PlaybackController.kt     # Application-scoped MediaController: cold-start queue + paused restoration, track/subtitle/cue/error state
 │   │   └── di/PlaybackModule.kt            # ServiceScoped ExoPlayer + Singleton PlaybackController + AudioEffectsBackend
-│   ├── update/                             # UpdateModels, HttpsUpdateRemoteDataSource, AndroidApkVerifier (SHA-256 + cert), AndroidApkInstaller (FileProvider), UpdateRepository, UpdateModule
+│   ├── update/                             # UpdateModels, HttpsUpdateRemoteDataSource, AndroidApkVerifier (SHA-256 + apkContentsSigners-first cert check), AndroidApkInstaller (FileProvider), UpdateRepository, UpdateModule
 │   └── permissions/                        # API 26-37 MediaPermissions (incl. Android 14+ partial access), NotificationPermissions (API 33+), AndroidPermissionChecker, DI
 └── feature/
     ├── home/                               # HomeViewModel, HomeRoute, HomeScreen (greeting, live offline search, Continue Listening hero, Quick Access, Recently Played)

@@ -241,4 +241,14 @@
   - `ee2ce04` — `docs(signing): align keytool alias example with soniq-release`
   - `4260538` — `chore(release): prepare signed bootstrap build v0.2.0 with Vercel manifest URL`
   - `8845af2` — `chore(release): prepare signed OTA release v0.3.0 and harden updater verifier/cleanup`
-  - *(First production OTA publication v0.3.0 commit follows immediately.)*
+  - `bde9c33` — `chore(ota): publish production manifest.json for SONIQ v0.3.0`
+
+---
+
+## Session 10 — v0.3.1 OTA Verification Hardening (2026-11-20)
+
+- **Starting State**: Clean `main` at `bde9c33` (v0.3.0 live on Vercel). Forensic investigation confirmed `v0.2.0 → v0.3.0` OTA failed because `v0.2.0` (`4260538`) read only `signingInfo.signingCertificateHistory` on v2-only APKs (`null`) and reported unreadable certificates as a signature mismatch.
+- **Objectives Executed**:
+  1. **Hardened `AndroidApkVerifier` (`ApkVerifier.kt`)**: Prioritized `signingInfo.apkContentsSigners` (non-null and non-empty), fell back to `signingInfo.signingCertificateHistory` only when needed for single-signer APKs, preserved `< API 28` `signatures` handling, and separated `"Unable to read the APK signing certificate."` / `"Unable to read the installed SONIQ signing certificate."` from `"APK signing certificate does not match the installed SONIQ signature."` (`BUG-016`).
+  2. **Expanded `AndroidApkVerifierTest` (`AndroidApkVerifierTest.kt`)**: Added tests for v2-only signer extraction, empty signing history with populated `apkContentsSigners`, v3 rotated preference for `apkContentsSigners`, fallback to `signingCertificateHistory`, empty/unavailable signers, legacy `< API 28`, unreadable vs mismatch vs matching certificates, and existing size/checksum/corrupt checks.
+  3. **Release Candidate `v0.3.1` (`versionCode = 4`)**: Bumped `gradle.properties` to `0.3.1` / `4`, built and verified signed `app-release.apk` (`3,126,238` bytes, SHA-256 `f560f40b3d9a7afb9107d9b6ef847a9352690e0f3b5b55155c83cefe15f285b6`, v2 RSA-4096 `e49a06da...`), passed `70 / 70` unit/Robolectric tests and `lintDebug` (0 errors), and left `update-server/manifest.json` unchanged awaiting explicit publication approval.

@@ -1,7 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-20 (Private Update System)  
-**Active Stage**: Stages 1–9 **COMPLETED** + Liquid Glass Redesign **COMPLETED** + **Private User-Initiated Update System IMPLEMENTED (`ffcbc12`)** → Next: **User Keystore Generation, Vercel + Vercel Blob Deployment, Physical-Device Verification (`Infinix_X6528`) & Release Approval**  
+**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening)  
+**Active Stage**: Stages 1–9 **COMPLETED** + Liquid Glass Redesign **COMPLETED** + **v0.3.0 OTA Published (`bde9c33`)** → **v0.3.1 (`versionCode = 4`) OTA Verification Hardening Release Candidate Prepared & Verified Locally (Awaiting Explicit Publication Approval)**  
 
 ---
 
@@ -53,4 +53,4 @@
   3. **Home Quick Access Deep Linking**: Wired `pendingMusicTab` in `SoniqApp` and `requestedTab` in `MusicRoute` so every Home category bubble opens its exact `MusicLibraryTab`.
   4. **Screens & Overlays**: Redesigned `VideoPlayerScreen` (auto-hiding minimal glass top/bottom panels, edge scrims, `SoniqGlassModalSheet` tracks sheet), `AudioEffectsSheet`, `SettingsScreen` (plus Privacy & Offline Guarantee card), and `MusicScreen` / `NowPlayingScreen` dialogs & sheets.
 - **Private User-Initiated Update System — COMPLETED (`ffcbc12`)**: Implemented `core/update/` (`UpdateModels`, `HttpsUpdateRemoteDataSource`, `AndroidApkVerifier` SHA-256 + package ID + signing-cert verification, `AndroidApkInstaller` via `FileProvider`), `UpdateViewModel`, Settings → **About SONIQ** UI, `BuildConfig.UPDATE_MANIFEST_URL` + env-var/properties signing in `app/build.gradle.kts`, and Vercel + Vercel Blob hosting templates (`update-server/`, `docs/UPDATE_HOSTING_AND_RELEASES.md`).
-- **Next (User Actions & First OTA Gate)**: With explicit user approval, upload signed `app-release.apk` (v0.3.0, `versionCode=3`) to Vercel Blob, publish `update-server/manifest.json` to `soniq-update-server` on Vercel, and test end-to-end OTA delivery from installed v0.2.0 (`versionCode=2`) via **Settings → About SONIQ → Check for updates**.
+- **Next (Awaiting Explicit Approval)**: With explicit user approval, upload signed `app-release.apk` (`v0.3.1`, `versionCode=4`) to Vercel Blob and publish the updated `update-server/manifest.json` to `soniq-update-server` on Vercel.

@@ -3,6 +3,7 @@ package com.soniq.player.core.update
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.os.Build
 import com.soniq.player.core.common.di.IoDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -56,9 +57,21 @@ class AndroidApkVerifier @Inject constructor(
                 return@withContext UpdateVerificationResult.Invalid("Downloaded file is not a valid Android APK.")
             }
 
-        if (archiveInfo.packageName != context.packageName) {
+        val installedSigners = getInstalledSigners(pm, context.packageName)
+        val result = verifyArchiveMetadata(archiveInfo, expectedRelease, installedSigners)
+        if (result is UpdateVerificationResult.Invalid) {
             apkFile.delete()
-            return@withContext UpdateVerificationResult.Invalid(
+        }
+        result
+    }
+
+    internal fun verifyArchiveMetadata(
+        archiveInfo: PackageInfo,
+        expectedRelease: UpdateRelease,
+        installedSigners: Set<String>,
+    ): UpdateVerificationResult {
+        if (archiveInfo.packageName != context.packageName) {
+            return UpdateVerificationResult.Invalid(
                 "APK package ID mismatch (${archiveInfo.packageName} != ${context.packageName}).",
             )
         }
@@ -70,20 +83,29 @@ class AndroidApkVerifier @Inject constructor(
             archiveInfo.versionCode.toLong()
         }
         if (archiveVersionCode < expectedRelease.versionCode.toLong()) {
-            apkFile.delete()
-            return@withContext UpdateVerificationResult.Invalid("APK versionCode does not match manifest.")
+            return UpdateVerificationResult.Invalid("APK versionCode does not match manifest.")
         }
 
-        val installedSigners = getInstalledSigners(pm, context.packageName)
+        if (installedSigners.isEmpty()) {
+            return UpdateVerificationResult.Invalid(
+                "Unable to read the installed SONIQ signing certificate.",
+            )
+        }
+
         val archiveSigners = extractSignerDigests(archiveInfo)
-        if (installedSigners.isEmpty() || archiveSigners.isEmpty() || installedSigners != archiveSigners) {
-            apkFile.delete()
-            return@withContext UpdateVerificationResult.Invalid(
+        if (archiveSigners.isEmpty()) {
+            return UpdateVerificationResult.Invalid(
+                "Unable to read the APK signing certificate.",
+            )
+        }
+
+        if (installedSigners != archiveSigners) {
+            return UpdateVerificationResult.Invalid(
                 "APK signing certificate does not match the installed SONIQ signature.",
             )
         }
 
-        UpdateVerificationResult.Valid
+        return UpdateVerificationResult.Valid
     }
 
     @Suppress("DEPRECATION")
@@ -108,21 +130,52 @@ class AndroidApkVerifier @Inject constructor(
     }
 
     @Suppress("DEPRECATION")
-    private fun extractSignerDigests(info: PackageInfo): Set<String> {
-        val rawSignatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+    internal fun extractSignerDigests(info: PackageInfo): Set<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val signingInfo = info.signingInfo ?: return emptySet()
-            if (signingInfo.hasMultipleSigners()) {
-                signingInfo.apkContentsSigners
-            } else {
-                signingInfo.signingCertificateHistory ?: signingInfo.apkContentsSigners
+            extractSignerDigestsFromParts(
+                apkContentsSigners = signingInfo.apkContentsSigners,
+                signingCertificateHistory = signingInfo.signingCertificateHistory,
+                hasMultipleSigners = signingInfo.hasMultipleSigners(),
+                legacySignatures = null,
+                isApi28Plus = true,
+            )
+        } else {
+            extractSignerDigestsFromParts(
+                apkContentsSigners = null,
+                signingCertificateHistory = null,
+                hasMultipleSigners = false,
+                legacySignatures = info.signatures,
+                isApi28Plus = false,
+            )
+        }
+    }
+
+    internal fun extractSignerDigestsFromParts(
+        apkContentsSigners: Array<Signature>?,
+        signingCertificateHistory: Array<Signature>?,
+        hasMultipleSigners: Boolean,
+        legacySignatures: Array<Signature>?,
+        isApi28Plus: Boolean,
+    ): Set<String> {
+        val rawSignatures: Array<Signature>? = if (isApi28Plus) {
+            val contentSigners = apkContentsSigners?.takeIf { it.isNotEmpty() }
+            when {
+                contentSigners != null -> contentSigners
+                !hasMultipleSigners -> signingCertificateHistory?.takeIf { it.isNotEmpty() }
+                else -> null
             }
         } else {
-            info.signatures
-        } ?: return emptySet()
+            legacySignatures?.takeIf { it.isNotEmpty() }
+        }
+
+        if (rawSignatures.isNullOrEmpty()) return emptySet()
 
         val md = MessageDigest.getInstance("SHA-256")
-        return rawSignatures.map { sig ->
-            md.digest(sig.toByteArray()).joinToString("") { "%02x".format(it) }
+        return rawSignatures.mapNotNull { sig ->
+            val bytes = sig.toByteArray()
+            if (bytes.isEmpty()) return@mapNotNull null
+            md.digest(bytes).joinToString("") { "%02x".format(it) }
         }.toSet()
     }
 

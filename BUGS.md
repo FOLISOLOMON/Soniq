@@ -1,6 +1,6 @@
 # SONIQ — Defect & Technical Debt Register
 
-**Last Updated**: 2026-11-20 (Private Update System)  
+**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening)  
 **Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
 
 ---
@@ -18,6 +18,7 @@
 
 | ID | Severity | Area | Description | Status | Resolution & Verification |
 |---|---|---|---|---|---|
+| **BUG-016** | High | Updater / Signing | During `v0.2.0 → v0.3.0` OTA testing, `v0.2.0` (`4260538`) read only `signingInfo.signingCertificateHistory` on API 28+ uninstalled v2-only APKs (`null`), producing an empty signer set and misreporting `"APK signing certificate does not match the installed SONIQ signature."` | **RESOLVED** (`8845af2`, hardened in `v0.3.1`) | Hardened `AndroidApkVerifier.extractSignerDigests` to prefer `signingInfo.apkContentsSigners` (non-null and non-empty), fall back to `signingCertificateHistory` only when needed, preserve `< API 28` `signatures` support, and separate `"Unable to read the APK signing certificate."` / `"Unable to read the installed SONIQ signing certificate."` from genuine certificate mismatches. Verified by `AndroidApkVerifierTest` (`4` tests PASS). |
 | **DEBT-009** | Low | Roadmap / Deferred | Optional Stage 6 features (**Sleep Timer** and **Picture-in-Picture (PiP)**) were deferred in Session 4. | **RESOLVED** (Session 5 / Stage 9 / `c1c710d`) | Implemented `SoniqSleepTimerManager` (service-coordinated countdown + `AudioEffectsSheet` UI) and Android PiP (`MainActivity` `PictureInPictureParams` + `setAutoEnterEnabled` + `setSourceRectHint` + `VideoPlayerScreen` PiP button & control hiding). Verified by `SoniqSleepTimerManagerTest`, `PlayerScreensUiTest`, and `lintDebug` (0 code/manifest warnings). |
 | **BUG-015** | Medium | UI / Layout | Adding the PiP button to `VideoPlayerScreen`'s single-row top bar squeezed the video title `Text(..., weight(1f))` to `0dp` width on narrow portrait screens (`PlayerScreensUiTest > videoPlayerDisplaysTitleAndSeekControls` failed). | **RESOLVED** (Session 5 / Stage 9 / `c1c710d`) | Moved secondary video actions (`PiP`, `Audio & Subtitles`, `Aspect ratio`, `Toggle landscape`) into a horizontally scrollable second row below the title bar. Verified by `PlayerScreensUiTest` (6/6 PASS). |
 |---|---|---|---|---|---|

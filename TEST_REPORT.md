@@ -1,7 +1,7 @@
 # SONIQ — Test & Verification Report
 
-**Last Updated**: 2026-11-20 (Private Update System Implementation)  
-**Latest Verified Build Commit**: `ffcbc12` (`main` — Private User-Initiated Updater Complete)
+**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening)  
+**Latest Verified Build Commit**: Pending `v0.3.1` commit (`main` — OTA Verification Hardening)
 
 ---
 
@@ -10,7 +10,7 @@
 - **Build Environment**: Windows 11 (`10.0.26200`), Eclipse Temurin JDK `21.0.13+9-LTS`, Gradle `9.9.1`, AGP `9.5.1`, Kotlin `2.4.21`, Android SDK `compileSdk = 37`, `build-tools 37.0.0`, `adb 37.0.1`.
 - **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **17.91 MB** / `18,776,667` bytes).
 - **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`).
-- **Release APK (`./gradlew assembleRelease`)**: **PASS (SIGNED v0.3.0)** (R8 minification, resource shrinking, `lintVitalRelease` clean, `versionName=0.3.0`, `versionCode=3`, embedded `https://soniq-update-server.vercel.app/manifest.json` verified in `classes.dex`, v2 RSA-4096 signature verified via `apksigner` matching `soniq-release` keystore SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`; `app/build/outputs/apk/release/app-release.apk`, **2.98 MB** / `3,126,238` bytes, APK SHA-256 `f2d1e7aa99dd1de768cc780c8dd19be8efce250ed248cb93c87a388ee4dec089`).
+- **Release APK (`./gradlew assembleRelease`)**: **PASS (SIGNED v0.3.1)** (R8 minification, resource shrinking, `lintVitalRelease` clean, `versionName=0.3.1`, `versionCode=4`, embedded `https://soniq-update-server.vercel.app/manifest.json`, v2 RSA-4096 signature verified via `apksigner` matching `soniq-release` keystore SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`; `app/build/outputs/apk/release/app-release.apk`, **2.98 MB** / `3,126,238` bytes, APK SHA-256 `f560f40b3d9a7afb9107d9b6ef847a9352690e0f3b5b55155c83cefe15f285b6`).
 - **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors** (`3` `GradleDependency`, `2` `UnusedResources`, `1` `UsableSpace`, `1` `UseKtx` notices in `app/build/reports/lint-results-debug.sarif`).
 - **Room Schema Exports**: Verified `SoniqMediaDatabase/1.json` and `SoniqDatabase/1.json`, `2.json`, `3.json`.
 - **Merged Release Manifest Check**: **PASS** — `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`, and `androidx.core.content.FileProvider` present; zero ad/tracking permissions.
@@ -19,7 +19,7 @@
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **67 / 67 PASSED** across **32 test suites** (0 failures, 0 errors, 0 skipped) — including new `DefaultUpdateRepositoryTest` (`2` tests), `UpdateViewModelTest` (`1` test), `AndroidApkVerifierTest` (`1` test), and `settingsAboutSoniqCheckForUpdatesTriggersExplicitCallback` in `SoniqAppNavigationUiTest` (`5` tests).
+**Result**: **70 / 70 PASSED** across **32 test suites** (0 failures, 0 errors, 0 skipped) — including `DefaultUpdateRepositoryTest` (`2` tests), `UpdateViewModelTest` (`1` test), `AndroidApkVerifierTest` (`4` tests covering v2-only signer extraction, empty history with populated `apkContentsSigners`, fallback to `signingCertificateHistory`, empty/unavailable signers, legacy `< API 28`, unreadable vs mismatch vs matching certificates, and size/checksum/corrupt rejection), and `SoniqAppNavigationUiTest` (`5` tests).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -97,4 +97,5 @@
 | 2026-11-20 | Private Update System (`ffcbc12`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.97 MB unsigned APK) |
 | 2026-11-20 | Signed Release Verification (`9f82d18`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed APK, v2 RSA-4096) |
 | 2026-11-20 | Bootstrap Update Build v0.2.0 (`4260538`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed v0.2.0 APK, URL embedded) |
-| 2026-11-20 | **First OTA Release Prep v0.3.0 (`versionCode=3`)** | **67 / 67 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.98 MB signed v0.3.0 APK, updater hardened)** |
+| 2026-11-20 | First OTA Release Prep v0.3.0 (`8845af2`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed v0.3.0 APK, updater hardened) |
+| 2026-11-20 | **OTA Verification Hardening v0.3.1 (`versionCode=4`)** | **70 / 70 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.98 MB signed v0.3.1 RC APK, `ApkVerifier` hardened)** |

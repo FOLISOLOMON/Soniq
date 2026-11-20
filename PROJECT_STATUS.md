@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (First Production OTA Publication v0.3.0)  
-**Current Stage**: **SONIQ v0.3.0 (`versionCode = 3`) Published to Vercel Blob & `soniq-update-server`** (`https://soniq-update-server.vercel.app/manifest.json`) → Ready for phone-side OTA verification from v0.2.0  
-**Latest Verified Code Commit**: `8845af2` (`main`)
+**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening Release Candidate)  
+**Current Stage**: **SONIQ v0.3.1 (`versionCode = 4`) Release Candidate Verified Locally** (hardened `AndroidApkVerifier` following v0.2.0 → v0.3.0 OTA investigation; live `soniq-update-server` manifest remains at `v0.3.0` awaiting explicit publication approval)  
+**Latest Verified Code Commit**: Pending `v0.3.1` commit (`main`)
 
 ---
 
@@ -61,7 +61,7 @@
 | Check | Status | Details |
 |---|---|---|
 | Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **17.91 MB** / `18,776,667` B) |
-| Release APK (`assembleRelease`) | **PASS (SIGNED v0.3.0)** | R8 minified + shrunk, v2 RSA-4096 signed, manifest URL embedded (`app-release.apk`, **2.98 MB** / `3,126,238` B) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **67 / 67 passed** across **32 suites** (0 failures, 0 errors, 0 skipped) |
+| Release APK (`assembleRelease`) | **PASS (SIGNED v0.3.1)** | R8 minified + shrunk, v2 RSA-4096 signed, manifest URL embedded (`app-release.apk`, **2.98 MB** / `3,126,238` B, `versionCode = 4`) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **70 / 70 passed** across **32 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors** (3 `GradleDependency`, 2 `UnusedResources`, 1 `UsableSpace`, 1 `UseKtx` notices) |
 | Instrumented Tests (`connectedDebugAndroidTest`) | **PASS at `aeb1db6` (`emulator-5554`)** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 at `aeb1db6`; `Infinix_X6528` physical-device QA remains open (`DEBT-005`) |
