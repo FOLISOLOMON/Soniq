@@ -189,9 +189,9 @@ fun HomeScreen(
                         .background(
                             Brush.linearGradient(
                                 listOf(
-                                    glass.activePillStart.copy(alpha = 0.72f),
-                                    glass.ambientMid.copy(alpha = 0.85f),
-                                    glass.activePillEnd.copy(alpha = 0.55f),
+                                    Color(0xFF3E3184).copy(alpha = 0.88f),
+                                    Color(0xFF282060).copy(alpha = 0.90f),
+                                    glass.activePillEnd.copy(alpha = 0.65f),
                                 ),
                             ),
                         )

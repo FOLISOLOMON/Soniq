@@ -182,7 +182,6 @@
     <string name="audio_effects_crossfade_desc">Smoothly fades out the ending track and fades in the next track</string>
     <string name="audio_effects_crossfade_off">Off</string>
     <string name="audio_effects_crossfade_sec">%1$ds</string>
-    <string name="audio_effects_band_db">%1$+d dB</string>
     <string name="audio_effects_band_hz">%1$d Hz</string>
     <string name="audio_effects_band_khz">%1$.1f kHz</string>
 

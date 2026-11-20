@@ -176,14 +176,18 @@ fun EqualizerFrequencyGraph(
                     Text(
                         text = badgeText,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (activeBandIndex >= 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (activeBandIndex >= 0) {
+                            MaterialTheme.colorScheme.onBackground
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     )
                 }
             }
 
             // Interactive Canvas graph
-            val gridColor = glass.borderSubtle
-            val zeroLineColor = glass.borderHighlight
+            val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
+            val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
             val curveStart = glass.scrubberStart
             val curveEnd = glass.scrubberEnd
             val graphDesc = stringResource(R.string.audio_effects_graph_title)

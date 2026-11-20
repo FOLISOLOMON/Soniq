@@ -192,4 +192,34 @@ class SoniqAppNavigationUiTest {
         composeRule.waitForIdle()
         assertThat(openedTab).isEqualTo(com.soniq.player.feature.music.MusicLibraryTab.PLAYLISTS)
     }
+
+    @Test
+    fun lightDarkAndAmoledThemesRenderHomeScreenCleanly() {
+        val configs = listOf(
+            AppearanceConfig(themeMode = ThemeMode.LIGHT),
+            AppearanceConfig(themeMode = ThemeMode.DARK, useAmoledBlack = false),
+            AppearanceConfig(themeMode = ThemeMode.DARK, useAmoledBlack = true),
+        )
+        var currentConfig by mutableStateOf(configs[0])
+
+        composeRule.setContent {
+            SoniqTheme(appearance = currentConfig) {
+                HomeScreen(
+                    uiState = HomeUiState(totalTracks = 5),
+                    onSearchQueryChanged = {},
+                    onPlayTracks = { _, _ -> },
+                    onOpenMusicTab = {},
+                    onOpenVideo = {},
+                    onOpenSettings = {},
+                )
+            }
+        }
+
+        configs.forEach { cfg ->
+            currentConfig = cfg
+            composeRule.waitForIdle()
+            composeRule.onNodeWithText("SONIQ").assertIsDisplayed()
+            composeRule.onNodeWithText("Quick Access").performScrollTo().assertIsDisplayed()
+        }
+    }
 }

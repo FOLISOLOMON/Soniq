@@ -333,13 +333,17 @@ private fun EqualizerPresetRow(
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             ),
-            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onBackground
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
         )
         if (selected) {
             Icon(
                 painter = painterResource(R.drawable.ic_check),
                 contentDescription = stringResource(R.string.cd_selected),
-                tint = glass.scrubberEnd,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(SoniqTheme.tokens.sizes.iconSmall),
             )
         }
