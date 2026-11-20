@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-20 (Commit `aeb1db6`, Stages 1–9 Complete + Liquid Glass UI/UX Redesign & QA Complete)  
+**Last Updated**: 2026-11-20 (Commit `ffcbc12`, Private Update System Implemented)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 
@@ -93,13 +93,14 @@ com.soniq.player
 │   │   ├── SoniqPlaybackService.kt         # MediaSessionService: ExoPlayer, AudioEffects attachment, Crossfade, dynamic AudioAttributes, MediaSession
 │   │   ├── Media3PlaybackController.kt     # Application-scoped MediaController: cold-start queue + paused restoration, track/subtitle/cue/error state
 │   │   └── di/PlaybackModule.kt            # ServiceScoped ExoPlayer + Singleton PlaybackController + AudioEffectsBackend
+│   ├── update/                             # UpdateModels, HttpsUpdateRemoteDataSource, AndroidApkVerifier (SHA-256 + cert), AndroidApkInstaller (FileProvider), UpdateRepository, UpdateModule
 │   └── permissions/                        # API 26-37 MediaPermissions (incl. Android 14+ partial access), NotificationPermissions (API 33+), AndroidPermissionChecker, DI
 └── feature/
     ├── home/                               # HomeViewModel, HomeRoute, HomeScreen (greeting, live offline search, Continue Listening hero, Quick Access, Recently Played)
     ├── music/                              # MusicViewModel, MusicRoute, MusicScreen ("My Library", pill tabs, Create New Playlist card, Songs/Albums/Artists/Folders/Playlists/Favorites)
     ├── video/                              # VideoViewModel, VideoRoute, VideoScreen (Videos/Folders, thumbnails, saved resume progress overlay, partial-access banner)
     ├── player/                             # PlaybackViewModel, MiniPlayerBar, NowPlayingScreen, AudioEffectsSheet, EqualizerFrequencyGraph, VideoPlayerScreen (Fit/Fill/Zoom, subtitles, tracks, gestures, orientation)
-    └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (custom HSL accent picker, broken-URI recovery, preset rename/duplicate/delete, Playback card)
+    └── settings/                           # SettingsViewModel, SettingsRoute, SettingsScreen (custom HSL accent, background scrim/blur, presets, Privacy & About SONIQ), UpdateViewModel
 ```
 
 ---
@@ -135,6 +136,6 @@ com.soniq.player
 
 ## 6. Offline-First & Privacy Architecture
 
-- **Merged Release Manifest Permissions**: `READ_MEDIA_AUDIO`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE` (`maxSdkVersion="32"`), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`, `WAKE_LOCK`.
-- **Network Stripping**: `INTERNET` and `ACCESS_NETWORK_STATE` are stripped via `tools:node="remove"` and verified absent in the merged release manifest.
+- **Merged Release Manifest Permissions**: `READ_MEDIA_AUDIO`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE` (`maxSdkVersion="32"`), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`, `WAKE_LOCK`, `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`.
+- **Update-Only Network Policy**: `INTERNET` and `ACCESS_NETWORK_STATE` are used exclusively by `HttpsUpdateRemoteDataSource` after explicit user taps in **Settings → About SONIQ** (zero background checks, zero analytics/ads, zero media uploads).
 - **Images & Artwork**: Both Coil 3 (`coil-compose` + `coil-video`) and `SoniqOfflineBitmapLoader` operate strictly offline; `SoniqOfflineBitmapLoader` explicitly throws `SecurityException` on `http`/`https` URIs.

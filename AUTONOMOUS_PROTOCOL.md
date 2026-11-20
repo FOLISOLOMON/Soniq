@@ -22,7 +22,7 @@ Autonomous engineering sessions exist to evolve **SONIQ** into a polished, relia
 ### Prohibited Actions Without Explicit User Approval
 - Publishing, uploading, or distributing builds to Google Play, GitHub Releases, or any external channel.
 - Replacing or generating production signing credentials or committing secrets (`*.keystore`, `*.jks`, `keystore.properties`, `secrets.properties`, `local.properties`).
-- Introducing advertisements, ad SDKs, analytics/telemetry trackers, or unnecessary network dependencies (`INTERNET` and `ACCESS_NETWORK_STATE` remain stripped via `tools:node="remove"`).
+- Introducing advertisements, ad SDKs, analytics/telemetry trackers, or unnecessary network dependencies (only user-initiated HTTPS update checks in Settings → About SONIQ may use `INTERNET` / `ACCESS_NETWORK_STATE`).
 - Running irreversible remote Git operations (force pushes, history rewrites on shared branches, deleting user work).
 - Claiming a build, test, or device check passed unless it was actually executed and verified in the current state.
 
@@ -57,7 +57,7 @@ PLAN → IMPLEMENT → BUILD → TEST → DEBUG → RETEST → REGRESSION CHECK 
 
 ## 3. Data, Privacy & Secret Protection
 
-- Local-only operation: zero `INTERNET` or `ACCESS_NETWORK_STATE` permissions; Coil configured without network fetchers.
+- Offline-first for all media playback, indexing, playlists, and themes; Coil configured without network fetchers; `INTERNET` and `ACCESS_NETWORK_STATE` are used exclusively for explicit user-initiated update checks and APK downloads in Settings → About SONIQ.
 - Never commit `local.properties`, keystores, signing configs, or user media fixtures.
 - Never use destructive Room migrations (`fallbackToDestructiveMigration`) for user-authored data (`soniq.db`). Export schemas and test migrations explicitly.
 - Separate rebuildable local media index caches from cloud-backed-up user data.

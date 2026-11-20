@@ -217,4 +217,22 @@
   - Physical device (`Infinix_X6528`, `112173741O045288`): Disconnected during Session 8 (`DEBT-005`).
 - **Git Checkpoints Created in Session 8**:
   - `aeb1db6` — `fix(qa): resolve cross-theme Light/Dark/AMOLED contrast defects and add theme QA test`
-  - *(Final Session 8 documentation sync commit follows immediately.)*
+  - `6c654df` — `docs(control): update all 8 control documents after Session 8 QA`
+  - `e3fcdc2` — `fix(player): refine Now Playing slim scrubber and delicate typography`
+
+---
+
+## Session 9 — Private User-Initiated Update System & Vercel Blob Hosting Config (2026-11-20)
+
+- **Starting State**: Clean `main` at `e3fcdc2`.
+- **Objectives Executed (`ffcbc12`)**:
+  1. **Signing & BuildConfig (`app/build.gradle.kts`)**: Added environment-variable signing fallback (`SONIQ_KEYSTORE_*`) alongside `keystore.properties`, keystore existence validation, `buildConfig = true`, and `BuildConfig.UPDATE_MANIFEST_URL` (`-Psoniq.updateManifestUrl` / `SONIQ_UPDATE_MANIFEST_URL`).
+  2. **Permissions & FileProvider (`AndroidManifest.xml`, `update_file_paths.xml`)**: Added `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`, and `FileProvider` (`${applicationId}.updateprovider`), and updated Settings privacy wording honestly.
+  3. **Update Client (`core/update/`)**: Implemented `UpdateModels`, `HttpsUpdateRemoteDataSource` (strict HTTPS-only, `ConnectivityManager` check, `usableSpace` check, cancel cleanup), `AndroidApkVerifier` (size, SHA-256, package ID, versionCode, signing certificate compatibility), `AndroidApkInstaller` (`canRequestPackageInstalls()` + `ACTION_VIEW`), `DefaultUpdateRepository`, and `UpdateModule`.
+  4. **Settings UI (`UpdateViewModel`, `SettingsScreen`)**: Added **Settings → About SONIQ** with installed version, **Check for updates**, Checking, Up-to-date, Update Available, Downloading + Cancel, Verifying, Ready to Install, Install Requested, and Error states.
+  5. **Vercel + Vercel Blob Templates**: Added `update-server/manifest.sample.json`, `update-server/vercel.json`, and `docs/UPDATE_HOSTING_AND_RELEASES.md`.
+- **Verification Results**:
+  - `assembleDebug testDebugUnitTest lintDebug assembleRelease`: **PASS** (**67 / 67** unit & Robolectric tests PASS across 32 suites; **0** Lint errors; `app-debug.apk` `18.64 MB`, `app-release-unsigned.apk` `2.97 MB`).
+- **Git Checkpoints**:
+  - `ffcbc12` — `feat(update): add private user-initiated HTTPS updater, About SONIQ UI, and Vercel Blob config`
+  - *(Final documentation sync commit follows immediately.)*

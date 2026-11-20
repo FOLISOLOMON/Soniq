@@ -1,25 +1,25 @@
 # SONIQ — Test & Verification Report
 
-**Last Updated**: 2026-11-20 (End of Session 8 — Final Visual QA & Cross-Theme Verification)  
-**Latest Verified Build Commit**: `aeb1db6` (`main` — Cross-Theme QA Fixes & Verification Complete)
+**Last Updated**: 2026-11-20 (Private Update System Implementation)  
+**Latest Verified Build Commit**: `ffcbc12` (`main` — Private User-Initiated Updater Complete)
 
 ---
 
-## 1. Latest Verified Build Summary (Commit `aeb1db6`)
+## 1. Latest Verified Build Summary (Commit `ffcbc12`)
 
 - **Build Environment**: Windows 11 (`10.0.26200`), Eclipse Temurin JDK `21.0.13+9-LTS`, Gradle `9.9.1`, AGP `9.5.1`, Kotlin `2.4.21`, Android SDK `compileSdk = 37`, `build-tools 37.0.0`, `adb 37.0.1`.
-- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.45 MB** / `19,348,892` bytes).
+- **Debug APK (`./gradlew assembleDebug`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/debug/app-debug.apk`, **18.64 MB** / `19,550,957` bytes).
 - **Instrumented Test APK (`./gradlew assembleDebugAndroidTest`)**: **PASS** (0 compiler warnings; `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`).
-- **Release APK (`./gradlew assembleRelease`)**: **PASS** (R8 minification, resource shrinking, and `lintVitalRelease` all passed; `app/build/outputs/apk/release/app-release-unsigned.apk`, **2.91 MB** / `3,052,618` bytes).
-- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors, 0 code/manifest/resource warnings** (only 3 informational `GradleDependency` notices in `app/build/reports/lint-results-debug.sarif`).
+- **Release APK (`./gradlew assembleRelease`)**: **PASS** (R8 minification, resource shrinking, and `lintVitalRelease` all passed; `app/build/outputs/apk/release/app-release-unsigned.apk`, **2.97 MB** / `3,109,850` bytes).
+- **Android Lint (`./gradlew lintDebug`)**: **PASS — 0 errors** (`3` `GradleDependency`, `2` `UnusedResources`, `1` `UsableSpace`, `1` `UseKtx` notices in `app/build/reports/lint-results-debug.sarif`).
 - **Room Schema Exports**: Verified `SoniqMediaDatabase/1.json` and `SoniqDatabase/1.json`, `2.json`, `3.json`.
-- **Merged Release Manifest Privacy Check**: **PASS** — `POST_NOTIFICATIONS` present; zero `INTERNET`, `ACCESS_NETWORK_STATE`, or `ACCESS_WIFI_STATE` permissions present.
+- **Merged Release Manifest Check**: **PASS** — `INTERNET`, `ACCESS_NETWORK_STATE`, `REQUEST_INSTALL_PACKAGES`, and `androidx.core.content.FileProvider` present; zero ad/tracking permissions.
 
 ---
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **62 / 62 PASSED** across **29 test suites** (0 failures, 0 errors, 0 skipped) — including `lightDarkAndAmoledThemesRenderHomeScreenCleanly` in `SoniqAppNavigationUiTest` (`4` tests).
+**Result**: **67 / 67 PASSED** across **32 test suites** (0 failures, 0 errors, 0 skipped) — including new `DefaultUpdateRepositoryTest` (`2` tests), `UpdateViewModelTest` (`1` test), `AndroidApkVerifierTest` (`1` test), and `settingsAboutSoniqCheckForUpdatesTriggersExplicitCallback` in `SoniqAppNavigationUiTest` (`5` tests).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -93,4 +93,5 @@
 | 2026-11-20 | Stage 9 Engineering Complete (`c1c710d`) | 56 / 56 PASS | 0 errors, 0 code warnings | Pending hypervisor / device (`DEBT-005`) | PASS (2.92 MB APK / 7.10 MB AAB) |
 | 2026-11-20 | UI/UX Redesign Phase 1 (`47dc1a3`) | 57 / 57 PASS | 0 errors, 0 code/resource warnings | XOS install blocked (`DEBT-005`) | PASS (2.91 MB unsigned APK) |
 | 2026-11-20 | UI/UX Redesign Phase 2 (`473241e`) | 58 / 58 PASS | 0 errors, 0 code/resource warnings | 3 / 3 PASS (`emulator-5554`) | PASS (2.90 MB unsigned APK) |
-| 2026-11-20 | **Session 8 Visual QA (`aeb1db6`)** | **62 / 62 PASS** | **0 errors, 0 code/resource warnings** | **3 / 3 PASS (`emulator-5554`)** | **PASS (2.91 MB unsigned APK)** |
+| 2026-11-20 | Session 8 Visual QA (`aeb1db6`) | 62 / 62 PASS | 0 errors, 0 code/resource warnings | 3 / 3 PASS (`emulator-5554`) | PASS (2.91 MB unsigned APK) |
+| 2026-11-20 | **Private Update System (`ffcbc12`)** | **67 / 67 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.97 MB unsigned APK)** |
