@@ -75,6 +75,7 @@ class PlayerScreensUiTest {
     fun nowPlayingRendersCompactLayoutAndDispatchesTransportActions() {
         var speedClicked = false
         var pauseClicked = false
+        var soughtToMs = -1L
 
         composeRule.setContent {
             SoniqTheme(appearance = AppearanceConfig(playerLayout = PlayerLayout.COMPACT)) {
@@ -84,7 +85,7 @@ class PlayerScreensUiTest {
                     onTogglePlayPause = { pauseClicked = true },
                     onSkipNext = {},
                     onSkipPrevious = {},
-                    onSeekTo = {},
+                    onSeekTo = { soughtToMs = it },
                     onToggleShuffle = {},
                     onCycleRepeatMode = {},
                     onCycleSpeed = { speedClicked = true },
@@ -94,6 +95,10 @@ class PlayerScreensUiTest {
 
         composeRule.onNodeWithText("Kiasmos").assertIsDisplayed()
         composeRule.onNodeWithText("1 / 3").assertIsDisplayed()
+        composeRule.onNodeWithTag("playback_scrubber").assertIsDisplayed().performTouchInput {
+            click(center)
+        }
+        assertThat(soughtToMs).isGreaterThan(0L)
         composeRule.onNodeWithText("1x").performClick()
         composeRule.onNodeWithContentDescription("Pause").performClick()
 

@@ -1,8 +1,11 @@
 package com.soniq.player.feature.player
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,26 +29,32 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -129,7 +138,7 @@ fun NowPlayingScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.player_now_playing),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 1,
                     )
@@ -548,14 +557,14 @@ private fun CompactAudioPlayerBody(
             ) {
                 Text(
                     text = playbackState.title ?: stringResource(R.string.player_now_playing),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (!playbackState.subtitle.isNullOrBlank()) {
                     Text(
                         text = playbackState.subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -607,7 +616,7 @@ private fun PlayerTitleAndFavoriteRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title ?: stringResource(R.string.player_now_playing),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -615,7 +624,7 @@ private fun PlayerTitleAndFavoriteRow(
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -705,38 +714,126 @@ internal fun PlaybackScrubber(
         clampedPosition
     }
     val glass = SoniqTheme.glass
+    val enabled = safeDuration > 0L
+    val currentOnSeekTo by rememberUpdatedState(onSeekTo)
+    val trackHeightDp = 4.dp
+    val handleRadiusDp = if (isDragging) 7.dp else 5.5.dp
+    val fraction = currentFraction.coerceIn(0f, 1f)
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Slider(
-            value = currentFraction.coerceIn(0f, 1f),
-            onValueChange = { value ->
-                isDragging = true
-                dragFraction = value
-            },
-            onValueChangeFinished = {
-                val target = (dragFraction * safeDuration).toLong()
-                isDragging = false
-                onSeekTo(target)
-            },
-            enabled = safeDuration > 0L,
-            colors = SliderDefaults.colors(
-                thumbColor = glass.scrubberStart,
-                activeTrackColor = glass.scrubberStart,
-                inactiveTrackColor = glass.borderSubtle,
-            ),
-        )
+        // 48dp invisible interaction container around a delicate 4dp rounded track + small circular handle
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag("playback_scrubber")
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = fraction,
+                        range = 0f..1f,
+                    )
+                    if (enabled) {
+                        setProgress { targetFraction ->
+                            val clamped = targetFraction.coerceIn(0f, 1f)
+                            currentOnSeekTo((clamped * safeDuration).toLong())
+                            true
+                        }
+                    }
+                }
+                .pointerInput(enabled, safeDuration) {
+                    if (!enabled) return@pointerInput
+                    detectTapGestures { offset ->
+                        val w = size.width.toFloat().coerceAtLeast(1f)
+                        val tapped = (offset.x / w).coerceIn(0f, 1f)
+                        currentOnSeekTo((tapped * safeDuration).toLong())
+                    }
+                }
+                .pointerInput(enabled, safeDuration) {
+                    if (!enabled) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onDragStart = { startOffset ->
+                            isDragging = true
+                            val w = size.width.toFloat().coerceAtLeast(1f)
+                            dragFraction = (startOffset.x / w).coerceIn(0f, 1f)
+                        },
+                        onHorizontalDrag = { change, _ ->
+                            change.consume()
+                            val w = size.width.toFloat().coerceAtLeast(1f)
+                            dragFraction = (change.position.x / w).coerceIn(0f, 1f)
+                        },
+                        onDragEnd = {
+                            val target = (dragFraction * safeDuration).toLong()
+                            isDragging = false
+                            currentOnSeekTo(target)
+                        },
+                        onDragCancel = { isDragging = false },
+                    )
+                },
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val trackH = trackHeightDp.toPx()
+                val radius = trackH / 2f
+                val handleR = handleRadiusDp.toPx()
+                val padX = handleR
+                val usableW = (size.width - padX * 2f).coerceAtLeast(1f)
+                val centerY = size.height / 2f
+                val trackTop = centerY - trackH / 2f
+                val activeW = usableW * fraction
+
+                // Inactive slim rounded track
+                drawRoundRect(
+                    color = glass.borderSubtle,
+                    topLeft = Offset(padX, trackTop),
+                    size = Size(usableW, trackH),
+                    cornerRadius = CornerRadius(radius, radius),
+                )
+
+                // Pink-to-cyan gradient active track
+                if (activeW > 0f) {
+                    drawRoundRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(glass.scrubberStart, glass.scrubberEnd),
+                            startX = padX,
+                            endX = padX + usableW,
+                        ),
+                        topLeft = Offset(padX, trackTop),
+                        size = Size(activeW, trackH),
+                        cornerRadius = CornerRadius(radius, radius),
+                    )
+                }
+
+                // Small circular indicator handle (replaces oversized vertical bar)
+                val handleCenter = Offset(padX + activeW, centerY)
+                drawCircle(
+                    color = glass.scrubberStart.copy(alpha = if (isDragging) 0.34f else 0.20f),
+                    radius = handleR * 1.9f,
+                    center = handleCenter,
+                )
+                drawCircle(
+                    color = glass.scrubberStart,
+                    radius = handleR,
+                    center = handleCenter,
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = handleR * 0.48f,
+                    center = handleCenter,
+                )
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = MediaFormatters.formatDuration(displayedPositionMs),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = MediaFormatters.formatDuration(safeDuration),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
