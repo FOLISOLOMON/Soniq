@@ -30,9 +30,9 @@ keytool -genkeypair -v `
 
 Option A — Copy `keystore.properties.example` to `keystore.properties` at the repo root:
 ```properties
-storeFile=path/to/soniq-release.jks
+storeFile=C:/Users/Foli Solomon/SONIQ-Signing/soniq-release.jks
 storePassword=YOUR_STORE_PASSWORD
-keyAlias=soniq_release
+keyAlias=soniq-release
 keyPassword=YOUR_KEY_PASSWORD
 ```
 
