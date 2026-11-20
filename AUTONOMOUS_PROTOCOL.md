@@ -2,7 +2,7 @@
 
 **Status**: Active Permanent Governance Document  
 **Repository Root**: `D:\Projects\Soniq`  
-**Last Updated**: 2026-11-18
+**Last Updated**: 2026-11-20
 
 ---
 

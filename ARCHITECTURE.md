@@ -1,6 +1,6 @@
 # SONIQ — Architecture (As Implemented)
 
-**Last Updated**: 2026-11-20 (Commit `473241e`, Stages 1–9 Complete + UI/UX Redesign Phases 1 & 2)  
+**Last Updated**: 2026-11-20 (Commit `aeb1db6`, Stages 1–9 Complete + Liquid Glass UI/UX Redesign & QA Complete)  
 **Source of Truth**: Actual repository files under `D:\Projects\Soniq`  
 *(This document describes only what is currently implemented in the repository; planned stages are tracked in `ROADMAP.md`.)*
 

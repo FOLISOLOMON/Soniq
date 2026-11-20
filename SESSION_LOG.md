@@ -198,4 +198,23 @@
   - `473241e` — `feat(ui): complete Liquid Glass Phase 2 across Settings, VideoPlayer, AudioEffects, dialogs, and Home deep linking`
   - `d046a8a` — `docs(control): update project memory after Session 7 (UI/UX Redesign Phase 2)`
   - `b77c5c3` — `feat(eq): redesign Equalizer with interactive Liquid Glass frequency response graph and preset list`
-  - *(Documentation sync commit for Equalizer redesign follows immediately.)*
+  - `a2d4731` — `docs(control): update documentation after Equalizer interactive graph redesign`
+
+---
+
+## Session 8 — Final Visual QA, Cross-Theme Testing & Device Verification (2026-11-20)
+
+- **Starting State**: Clean `main` at `a2d4731` (Liquid Glass Phases 1 & 2 + Equalizer Frequency Graph complete).
+- **Objectives Executed (`aeb1db6`)**:
+  1. **Cross-Theme Visual QA (Light / Dark / AMOLED / Custom Image / Custom Accent)**:
+     - Fixed Light-theme grid-line visibility (`onSurface.copy(alpha = 0.14f / 0.28f)`) and active dB readout pill text (`onBackground`) in `EqualizerFrequencyGraph.kt`.
+     - Fixed Light-theme selected preset text & check tint (`onBackground` / `primary`) in `AudioEffectsSheet.kt` (`EqualizerPresetRow`).
+     - Added consistent deep indigo/violet hero scrim in `HomeScreen.kt` so `Color.White` hero text stays legible across Light, Dark, AMOLED, and Custom Image modes.
+     - Removed unused `audio_effects_band_db` string resource and added `lightDarkAndAmoledThemesRenderHomeScreenCleanly` in `SoniqAppNavigationUiTest.kt`.
+- **Verification Results**:
+  - `assembleDebug testDebugUnitTest lintDebug assembleRelease`: **PASS** (**62 / 62** unit & Robolectric tests PASS across 29 suites; **0** errors / **0** code-manifest-resource Lint warnings; `app-debug.apk` `18.45 MB`, `app-release-unsigned.apk` `2.91 MB`).
+  - `connectedDebugAndroidTest` on `emulator-5554` (`Small_Phone(AVD)`, Android 17): **3 / 3 PASSED** (`SoniqDatabaseMigrationTest` `0.383s`, `SoniqInstrumentedSmokeTest` `10.575s`, `SoniqPlaybackServiceInstrumentedTest` `0.538s`); `app-debug.apk` installed & launched cleanly.
+  - Physical device (`Infinix_X6528`, `112173741O045288`): Disconnected during Session 8 (`DEBT-005`).
+- **Git Checkpoints Created in Session 8**:
+  - `aeb1db6` — `fix(qa): resolve cross-theme Light/Dark/AMOLED contrast defects and add theme QA test`
+  - *(Final Session 8 documentation sync commit follows immediately.)*

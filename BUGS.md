@@ -1,6 +1,6 @@
 # SONIQ — Defect & Technical Debt Register
 
-**Last Updated**: 2026-11-20 (End of Session 7)  
+**Last Updated**: 2026-11-20 (End of Session 8)  
 **Policy**: Never silently delete resolved items. Every resolved entry stays logged with its fixing commit and verification summary.
 
 ---

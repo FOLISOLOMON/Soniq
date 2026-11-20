@@ -1,7 +1,7 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-20 (End of Session 7)  
-**Release Readiness Status**: **UI/UX REDESIGN PHASES 1 & 2 COMPLETE (Pending Physical-Device QA & Production Signing)**  
+**Last Updated**: 2026-11-20 (End of Session 8)  
+**Release Readiness Status**: **UI/UX REDESIGN & CROSS-THEME QA COMPLETE (Pending Physical-Device QA & Production Signing)**  
 **User Release Approval Status**: **UNAPPROVED** *(Release remains unapproved until explicitly approved by the user.)*
 
 ---
@@ -21,13 +21,13 @@
 
 ---
 
-## 2. APK & Bundle Outputs (Commit `b77c5c3`)
+## 2. APK & Bundle Outputs (Commit `aeb1db6`)
 
 | Variant | Output Path | Verified Commit | Size | Install Verification |
 |---|---|---|---|---|
-| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `b77c5c3` (2026-11-20) | 18.26 MB (`19,148,540` B) | Installed & launched on `emulator-5554`; **61 / 61** unit/Robolectric tests PASS |
-| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `473241e` (2026-11-20) | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
-| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `b77c5c3` (2026-11-20) | 2.91 MB (`3,052,966` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
+| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `aeb1db6` (2026-11-20) | 18.45 MB (`19,348,892` B) | Installed & launched on `emulator-5554` (`Status: ok`); **62 / 62** unit/Robolectric tests PASS |
+| Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | `aeb1db6` (2026-11-20) | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
+| Release APK (Unsigned) | `app/build/outputs/apk/release/app-release-unsigned.apk` | `aeb1db6` (2026-11-20) | 2.91 MB (`3,052,618` B) | R8 minified, resource shrunk, `lintVitalRelease` clean (not installed; unsigned) |
 
 ---
 

@@ -1,7 +1,7 @@
 # SONIQ — Development Roadmap
 
-**Last Updated**: 2026-11-20 (End of Session 7)  
-**Active Stage**: Stages 1–9 Engineering **COMPLETED** (`c1c710d`) + **UI/UX Visual Redesign Phases 1 & 2 COMPLETED** (`47dc1a3`, `522a407`, `473241e`) → Next: **Final Visual/Theme QA, Physical-Device Verification & Production Signing**  
+**Last Updated**: 2026-11-20 (End of Session 8)  
+**Active Stage**: Stages 1–9 Engineering **COMPLETED** + **Liquid Glass UI/UX Redesign & Session 8 Cross-Theme QA COMPLETED** (`aeb1db6`) → Next: **Physical-Device Verification (`Infinix_X6528`) & Production Signing Approval**  
 
 ---
 
@@ -52,4 +52,5 @@
   2. **Shared Glass Primitives**: Added `SoniqGlassModalSheet` & `SoniqGlassDialog`, upgraded `SoniqSegmentedChoice`, `SoniqEmptyState`, and `SoniqSectionHeader`.
   3. **Home Quick Access Deep Linking**: Wired `pendingMusicTab` in `SoniqApp` and `requestedTab` in `MusicRoute` so every Home category bubble opens its exact `MusicLibraryTab`.
   4. **Screens & Overlays**: Redesigned `VideoPlayerScreen` (auto-hiding minimal glass top/bottom panels, edge scrims, `SoniqGlassModalSheet` tracks sheet), `AudioEffectsSheet`, `SettingsScreen` (plus Privacy & Offline Guarantee card), and `MusicScreen` / `NowPlayingScreen` dialogs & sheets.
-- **Session 8 Priorities (Optional Polish)**: Cross-theme visual QA (Light/Dark/AMOLED/Custom Image), physical-device media & Bluetooth hardware QA (`Infinix_X6528`).
+- **Session 8 — Cross-Theme Visual QA & Stabilization — COMPLETED (`aeb1db6`)**: Resolved Light/Dark/AMOLED contrast defects on `EqualizerFrequencyGraph` grid lines & active pill, `EqualizerPresetRow` selection text, and `HomeScreen` hero card scrim; removed unused `audio_effects_band_db` resource; verified `62 / 62` unit/Robolectric tests, `3 / 3` emulator instrumented tests, and `0` code/manifest/resource Lint warnings.
+- **Next (Session 9 / Release Gate)**: Physical-device & Bluetooth/headset QA on `Infinix_X6528` once `Install via USB` is enabled, plus production signing `keystore.properties` and explicit user release approval.

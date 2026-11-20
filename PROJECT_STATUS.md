@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (End of Session 7 — UI/UX Visual Redesign Phase 2)  
-**Current Stage**: **Stages 1–9 Engineering Complete + UI/UX Visual Redesign Phases 1 & 2 Complete** (Full-app Liquid Glass Design System across Home, Navigation, Now Playing, MiniPlayer, My Library, Video, VideoPlayer, AudioEffects, Settings, Dialogs & Sheets) → Ready for **Physical-Device QA & Final Visual Polish (Session 8)**  
-**Latest Verified Code Commit**: `473241e` (`main`)
+**Last Updated**: 2026-11-20 (End of Session 8 — Final Visual QA, Cross-Theme Testing & Device Verification)  
+**Current Stage**: **Stages 1–9 Engineering Complete + Liquid Glass UI/UX Redesign (Phases 1–2, Equalizer Graph, Session 8 QA) Complete** → Ready for **Final Release Signing & Physical-Device QA**  
+**Latest Verified Code Commit**: `aeb1db6` (`main`)
 
 ---
 
@@ -60,8 +60,8 @@
 
 | Check | Status | Details |
 |---|---|---|
-| Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.07 MB**) |
-| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.90 MB**) |
-| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **61 / 61 passed** across **29 suites** (0 failures, 0 errors, 0 skipped) |
+| Debug Build (`assembleDebug`) | **PASS** | `0` compiler warnings (`app-debug.apk`, **18.45 MB**) |
+| Release APK (`assembleRelease`) | **PASS** | R8 minified + shrunk, `lintVitalRelease` clean (`app-release-unsigned.apk`, **2.91 MB**) |
+| Unit & Robolectric Tests (`testDebugUnitTest`) | **PASS** | **62 / 62 passed** across **29 suites** (0 failures, 0 errors, 0 skipped) |
 | Android Lint (`lintDebug`) | **PASS** | **0 errors, 0 code/manifest/resource warnings** (3 informational `GradleDependency` notices only) |
-| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS on `emulator-5554`** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 (`SoniqDatabaseMigrationTest`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); `Infinix_X6528` blocked by XOS USB-install restriction (`DEBT-005`) |
+| Instrumented Tests (`connectedDebugAndroidTest`) | **PASS on `emulator-5554`** | **3 / 3 passed** on `Small_Phone(AVD)` Android 17 (`SoniqDatabaseMigrationTest`, `SoniqInstrumentedSmokeTest`, `SoniqPlaybackServiceInstrumentedTest`); `Infinix_X6528` not attached in Session 8 (`DEBT-005`) |
