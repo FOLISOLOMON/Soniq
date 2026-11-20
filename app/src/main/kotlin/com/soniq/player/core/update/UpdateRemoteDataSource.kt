@@ -119,12 +119,19 @@ class HttpsUpdateRemoteDataSource @Inject constructor(
                     FileOutputStream(tempFile).use { output ->
                         val buffer = ByteArray(BUFFER_SIZE)
                         var totalRead = 0L
+                        var lastReportedBytes = 0L
                         while (true) {
                             coroutineContext.ensureActive()
                             val read = input.read(buffer)
                             if (read < 0) break
                             output.write(buffer, 0, read)
                             totalRead += read
+                            if (totalRead - lastReportedBytes >= PROGRESS_STEP_BYTES || totalRead == totalBytes) {
+                                lastReportedBytes = totalRead
+                                onProgress(totalRead, totalBytes)
+                            }
+                        }
+                        if (totalRead != lastReportedBytes) {
                             onProgress(totalRead, totalBytes)
                         }
                         output.flush()
@@ -172,6 +179,7 @@ class HttpsUpdateRemoteDataSource @Inject constructor(
         private const val READ_TIMEOUT_MS = 15_000
         private const val DOWNLOAD_READ_TIMEOUT_MS = 30_000
         private const val BUFFER_SIZE = 8192
+        private const val PROGRESS_STEP_BYTES = 64L * 1024L
         private const val STORAGE_HEADROOM_BYTES = 10L * 1024L * 1024L
         private const val DEFAULT_MIN_STORAGE_BYTES = 32L * 1024L * 1024L
     }

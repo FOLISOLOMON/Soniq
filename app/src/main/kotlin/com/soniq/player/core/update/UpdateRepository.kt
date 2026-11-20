@@ -88,6 +88,12 @@ class DefaultUpdateRepository @Inject constructor(
         val updatesDir = File(context.cacheDir, "updates")
         if (!updatesDir.exists()) {
             updatesDir.mkdirs()
+        } else {
+            updatesDir.listFiles()?.forEach { existing ->
+                if (existing.isFile && (existing.name.endsWith(".apk") || existing.name.endsWith(".part"))) {
+                    existing.delete()
+                }
+            }
         }
         val targetApk = File(updatesDir, "soniq-${release.versionCode}.apk")
 

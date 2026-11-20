@@ -239,4 +239,5 @@
   - `9f82d18` — `chore(signing): align release signing template with permanent keystore path and alias`
   - `0ce664d` — `docs(release): record first verified RSA-4096 signed release APK`
   - `ee2ce04` — `docs(signing): align keytool alias example with soniq-release`
-  - *(Bootstrap Update Build v0.2.0 commit follows immediately.)*
+  - `4260538` — `chore(release): prepare signed bootstrap build v0.2.0 with Vercel manifest URL`
+  - *(First OTA release prep v0.3.0 commit follows immediately.)*

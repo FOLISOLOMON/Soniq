@@ -114,7 +114,7 @@ class AndroidApkVerifier @Inject constructor(
             if (signingInfo.hasMultipleSigners()) {
                 signingInfo.apkContentsSigners
             } else {
-                signingInfo.signingCertificateHistory
+                signingInfo.signingCertificateHistory ?: signingInfo.apkContentsSigners
             }
         } else {
             info.signatures

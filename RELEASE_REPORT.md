@@ -1,7 +1,7 @@
 # SONIQ — Release Readiness Report
 
-**Last Updated**: 2026-11-20 (Bootstrap Update Build v0.2.0 Verified)  
-**Release Readiness Status**: **SIGNED v0.2.0 BOOTSTRAP APK VERIFIED (Ready for Manual Install; Pending User Approval for Vercel Blob Upload & Publication)**  
+**Last Updated**: 2026-11-20 (First OTA Release Prep v0.3.0 Verified)  
+**Release Readiness Status**: **SIGNED v0.3.0 OTA APK VERIFIED (Awaiting Explicit User Approval for Vercel Blob Upload & `manifest.json` Publication)**  
 **User Release Approval Status**: **UNAPPROVED** *(Release remains unapproved until explicitly approved by the user.)*
 
 ---
@@ -14,20 +14,20 @@
 | Namespace | `com.soniq.player` |
 | Application ID (Release) | `com.soniq.player` (configurable via `-Psoniq.applicationId=...`) |
 | Application ID (Debug) | `com.soniq.player.debug` |
-| Version Code / Name | `2` / `0.2.0` (`0.2.0-debug` for debug) |
+| Version Code / Name | `3` / `0.3.0` (`0.3.0-debug` for debug) |
 | SDK Levels | `minSdk = 26`, `targetSdk = 37`, `compileSdk = 37` |
 | Release Optimization | `isMinifyEnabled = true`, `isShrinkResources = true`, `app/proguard-rules.pro` |
 | Signing | Debug keystore for debug builds; permanent RSA-4096 release keystore (`soniq-release`, SHA-256 `e49a06da7188a9ab5ec432883a0a0d15d0659d7fcd9fd82c762d13c82efe2d95`) configured via gitignored `keystore.properties` |
 
 ---
 
-## 2. APK & Bundle Outputs (Bootstrap v0.2.0, `versionCode = 2`)
+## 2. APK & Bundle Outputs (First OTA Release v0.3.0, `versionCode = 3`)
 
 | Variant | Output Path | Version | Size & SHA-256 | Verification |
 |---|---|---|---|---|
-| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `0.1.0-debug` (`1`) | 18.64 MB (`19,550,957` B) | Built & verified against **67 / 67** unit/Robolectric tests |
+| Debug APK | `app/build/outputs/apk/debug/app-debug.apk` | `0.3.0-debug` (`3`) | 17.91 MB (`18,776,667` B) | Built & verified against **67 / 67** unit/Robolectric tests |
 | Debug AndroidTest | `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk` | — | — | **3 / 3 passed** on `emulator-5554` (`Small_Phone(AVD)`, Android 17) |
-| Release APK (Signed) | `app/build/outputs/apk/release/app-release.apk` | `0.2.0` (`2`) | 2.98 MB (`3,126,238` B) / SHA-256 `3917ac0774b18d56f9682be6d66603b1b330acad329ac409b67ac05833c07450` | R8 minified, v2 RSA-4096 signed (`e49a06da...`), embedded `https://soniq-update-server.vercel.app/manifest.json` verified in `classes.dex` |
+| Release APK (Signed) | `app/build/outputs/apk/release/app-release.apk` | `0.3.0` (`3`) | 2.98 MB (`3,126,238` B) / SHA-256 `f2d1e7aa99dd1de768cc780c8dd19be8efce250ed248cb93c87a388ee4dec089` | R8 minified, v2 RSA-4096 signed (`e49a06da...`), embedded `https://soniq-update-server.vercel.app/manifest.json` verified in `classes.dex` |
 
 ---
 
