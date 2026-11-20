@@ -1,6 +1,7 @@
 package com.soniq.player.feature.player
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,20 +13,22 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,18 +39,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqEmptyState
+import com.soniq.player.core.designsystem.component.SoniqGlassCard
+import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
 import com.soniq.player.core.designsystem.component.SoniqScaffold
-import com.soniq.player.core.designsystem.component.SoniqTopAppBar
 import com.soniq.player.core.designsystem.theme.SoniqTheme
 import com.soniq.player.core.model.appearance.PlayerLayout
 import com.soniq.player.core.playback.AudioEffectsState
@@ -56,9 +67,9 @@ import com.soniq.player.core.playback.PlaybackState
 import com.soniq.player.core.playback.QueueItem
 
 /**
- * Full-screen Audio Now Playing experience.
- * Adapts dynamically to the user's persisted [PlayerLayout] preference (`CLASSIC`, `ARTWORK_FOCUS`,
- * `COMPACT`) while keeping all styling driven by [SoniqTheme.tokens].
+ * Full-screen Liquid Glass Audio Now Playing experience.
+ * Adapts to the user's persisted [PlayerLayout] preference (`CLASSIC`, `ARTWORK_FOCUS`, `COMPACT`)
+ * while surfacing Favorite, Scrubber, Transport, Queue, Audio Effects, Sleep Timer, and Speed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,62 +104,59 @@ fun NowPlayingScreen(
 ) {
     var showQueueSheet by remember { mutableStateOf(false) }
     var showEffectsSheet by remember { mutableStateOf(false) }
+    val spacing = SoniqTheme.tokens.spacing
 
     SoniqScaffold(
         modifier = modifier,
         topBar = {
-            SoniqTopAppBar(
-                title = stringResource(R.string.player_now_playing),
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.player_action_close),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = spacing.lg, vertical = spacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                SoniqGlassIconButton(
+                    onClick = onNavigateBack,
+                    painter = painterResource(R.drawable.ic_arrow_back),
+                    contentDescription = stringResource(R.string.player_action_close),
+                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f).padding(horizontal = spacing.sm),
+                ) {
+                    Text(
+                        text = stringResource(R.string.player_now_playing),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                    )
+                    if (playbackState.queueCount > 1) {
+                        Text(
+                            text = stringResource(
+                                R.string.player_queue_position,
+                                playbackState.currentQueueIndex + 1,
+                                playbackState.queueCount,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                },
-                actions = {
-                    if (playbackState.hasActiveItem) {
-                        IconButton(onClick = onToggleFavorite) {
-                            Icon(
-                                painter = painterResource(
-                                    if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border,
-                                ),
-                                contentDescription = stringResource(
-                                    if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
-                                ),
-                                tint = if (isFavorite) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onBackground
-                                },
-                            )
-                        }
-                        if (playbackState.queue.isNotEmpty()) {
-                            IconButton(onClick = { showQueueSheet = true }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_queue_music),
-                                    contentDescription = stringResource(R.string.player_action_queue),
-                                )
-                            }
-                        }
-                        IconButton(onClick = { showEffectsSheet = true }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_equalizer),
-                                contentDescription = stringResource(R.string.audio_effects_title),
-                            )
-                        }
-                        FilledTonalButton(onClick = onCycleSpeed) {
-                            Text(
-                                text = stringResource(
-                                    R.string.player_speed_label,
-                                    PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
-                                ),
-                            )
-                        }
-                    }
-                },
-            )
+                }
+                if (playbackState.hasActiveItem) {
+                    SoniqGlassPillChip(
+                        label = stringResource(
+                            R.string.player_speed_label,
+                            PlaybackViewModel.formatSpeed(playbackState.playbackSpeed),
+                        ),
+                        selected = false,
+                        onClick = onCycleSpeed,
+                    )
+                } else {
+                    Spacer(modifier = Modifier.size(SoniqTheme.tokens.sizes.minTouchTarget))
+                }
+            }
         },
     ) { innerPadding ->
         if (!playbackState.hasActiveItem) {
@@ -161,44 +169,118 @@ fun NowPlayingScreen(
             return@SoniqScaffold
         }
 
-        val contentModifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .padding(horizontal = SoniqTheme.tokens.spacing.xl)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .navigationBarsPadding()
+                .padding(horizontal = spacing.lg, vertical = spacing.sm),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .widthIn(max = SoniqTheme.tokens.sizes.contentMaxWidth),
+            ) {
+                when (playerLayout) {
+                    PlayerLayout.CLASSIC -> ClassicAudioPlayerBody(
+                        playbackState = playbackState,
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite,
+                        onTogglePlayPause = onTogglePlayPause,
+                        onSkipNext = onSkipNext,
+                        onSkipPrevious = onSkipPrevious,
+                        onSeekTo = onSeekTo,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeatMode = onCycleRepeatMode,
+                        modifier = Modifier.fillMaxSize(),
+                    )
 
-        when (playerLayout) {
-            PlayerLayout.CLASSIC -> ClassicAudioPlayerBody(
-                playbackState = playbackState,
-                onTogglePlayPause = onTogglePlayPause,
-                onSkipNext = onSkipNext,
-                onSkipPrevious = onSkipPrevious,
-                onSeekTo = onSeekTo,
-                onToggleShuffle = onToggleShuffle,
-                onCycleRepeatMode = onCycleRepeatMode,
-                modifier = contentModifier,
-            )
+                    PlayerLayout.ARTWORK_FOCUS -> ArtworkFocusAudioPlayerBody(
+                        playbackState = playbackState,
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite,
+                        onTogglePlayPause = onTogglePlayPause,
+                        onSkipNext = onSkipNext,
+                        onSkipPrevious = onSkipPrevious,
+                        onSeekTo = onSeekTo,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeatMode = onCycleRepeatMode,
+                        modifier = Modifier.fillMaxSize(),
+                    )
 
-            PlayerLayout.ARTWORK_FOCUS -> ArtworkFocusAudioPlayerBody(
-                playbackState = playbackState,
-                onTogglePlayPause = onTogglePlayPause,
-                onSkipNext = onSkipNext,
-                onSkipPrevious = onSkipPrevious,
-                onSeekTo = onSeekTo,
-                onToggleShuffle = onToggleShuffle,
-                onCycleRepeatMode = onCycleRepeatMode,
-                modifier = contentModifier,
-            )
+                    PlayerLayout.COMPACT -> CompactAudioPlayerBody(
+                        playbackState = playbackState,
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite,
+                        onTogglePlayPause = onTogglePlayPause,
+                        onSkipNext = onSkipNext,
+                        onSkipPrevious = onSkipPrevious,
+                        onSeekTo = onSeekTo,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeatMode = onCycleRepeatMode,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
 
-            PlayerLayout.COMPACT -> CompactAudioPlayerBody(
-                playbackState = playbackState,
-                onTogglePlayPause = onTogglePlayPause,
-                onSkipNext = onSkipNext,
-                onSkipPrevious = onSkipPrevious,
-                onSeekTo = onSeekTo,
-                onToggleShuffle = onToggleShuffle,
-                onCycleRepeatMode = onCycleRepeatMode,
-                modifier = contentModifier,
-            )
+            // Bottom Frosted-Glass Utility Dock (Queue, Audio Effects, Sleep Timer)
+            Spacer(modifier = Modifier.height(spacing.sm))
+            SoniqGlassCard(
+                modifier = Modifier.widthIn(max = SoniqTheme.tokens.sizes.contentMaxWidth),
+                cornerRadius = SoniqTheme.glassMetrics.cardRadius,
+                elevated = true,
+                contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.xs),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(
+                        onClick = { showQueueSheet = true },
+                        enabled = playbackState.queue.isNotEmpty(),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_queue_music),
+                            contentDescription = stringResource(R.string.player_action_queue),
+                        )
+                    }
+                    IconButton(onClick = { showEffectsSheet = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_equalizer),
+                            contentDescription = stringResource(R.string.audio_effects_title),
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(spacing.xxs),
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable { showEffectsSheet = true }
+                            .padding(horizontal = spacing.sm, vertical = spacing.xs),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_timer),
+                            contentDescription = stringResource(R.string.sleep_timer_title),
+                            tint = if (sleepTimerRemainingMs != null) {
+                                SoniqTheme.glass.scrubberStart
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                        if (sleepTimerRemainingMs != null) {
+                            Text(
+                                text = MediaFormatters.formatDuration(sleepTimerRemainingMs),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SoniqTheme.glass.scrubberStart,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -250,76 +332,83 @@ private fun QueueSheetContent(
         Text(
             text = stringResource(R.string.player_queue_title),
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = spacing.xl, vertical = spacing.md),
+            modifier = Modifier
+                .semantics { heading() }
+                .padding(horizontal = spacing.lg, vertical = spacing.sm),
         )
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(spacing.xs),
-        ) {
-            items(items = queue, key = { "${it.index}_${it.mediaId}" }) { item ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(
-                            if (item.isCurrent) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainerLow
-                            },
-                        )
-                        .clickable { onSelect(item.index) }
-                        .padding(horizontal = spacing.md, vertical = spacing.sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = item.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = if (item.isCurrent) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        if (!item.subtitle.isNullOrBlank()) {
-                            Text(
-                                text = item.subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (item.isCurrent) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+        if (queue.isEmpty()) {
+            Text(
+                text = stringResource(R.string.player_queue_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.md),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = spacing.md),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            ) {
+                items(
+                    items = queue,
+                    key = { item -> "${item.index}_${item.mediaId}" },
+                ) { item ->
+                    SoniqGlassCard(
+                        cornerRadius = SoniqTheme.glassMetrics.thumbnailRadius,
+                        elevated = item.isCurrent,
+                        onClick = { onSelect(item.index) },
+                        contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.sm),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = item.title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (item.isCurrent) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (!item.subtitle.isNullOrBlank()) {
+                                    Text(
+                                        text = item.subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                            if (item.index > 0) {
+                                IconButton(onClick = { onMove(item.index, item.index - 1) }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_arrow_upward),
+                                        contentDescription = stringResource(R.string.player_queue_move_up),
+                                    )
+                                }
+                            }
+                            if (item.index < queue.lastIndex) {
+                                IconButton(onClick = { onMove(item.index, item.index + 1) }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_arrow_downward),
+                                        contentDescription = stringResource(R.string.player_queue_move_down),
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { onRemove(item.index) }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_close),
+                                    contentDescription = stringResource(R.string.player_queue_remove),
+                                )
+                            }
                         }
-                    }
-                    if (item.index > 0) {
-                        IconButton(onClick = { onMove(item.index, item.index - 1) }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_upward),
-                                contentDescription = stringResource(R.string.player_queue_move_up),
-                            )
-                        }
-                    }
-                    if (item.index < queue.lastIndex) {
-                        IconButton(onClick = { onMove(item.index, item.index + 1) }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_downward),
-                                contentDescription = stringResource(R.string.player_queue_move_down),
-                            )
-                        }
-                    }
-                    IconButton(onClick = { onRemove(item.index) }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_close),
-                            contentDescription = stringResource(R.string.player_queue_remove),
-                        )
                     }
                 }
             }
@@ -330,6 +419,8 @@ private fun QueueSheetContent(
 @Composable
 private fun ClassicAudioPlayerBody(
     playbackState: PlaybackState,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSkipNext: () -> Unit,
     onSkipPrevious: () -> Unit,
@@ -345,14 +436,19 @@ private fun ClassicAudioPlayerBody(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
-        PlayerArtworkCard(
+        GlowingPlayerArtwork(
             artworkUri = playbackState.artworkUri,
             modifier = Modifier
+                .weight(1f, fill = false)
                 .widthIn(max = sizes.classicPlayerArtworkMax)
-                .fillMaxWidth()
-                .aspectRatio(1f),
+                .aspectRatio(1f, matchHeightConstraintsFirst = true),
         )
-        TrackTitleBlock(playbackState = playbackState, centered = true)
+        PlayerTitleAndFavoriteRow(
+            title = playbackState.title,
+            subtitle = playbackState.subtitle,
+            isFavorite = isFavorite,
+            onToggleFavorite = onToggleFavorite,
+        )
         PlaybackScrubber(
             positionMs = playbackState.positionMs,
             durationMs = playbackState.durationMs,
@@ -366,13 +462,14 @@ private fun ClassicAudioPlayerBody(
             onToggleShuffle = onToggleShuffle,
             onCycleRepeatMode = onCycleRepeatMode,
         )
-        Spacer(modifier = Modifier.height(spacing.md))
     }
 }
 
 @Composable
 private fun ArtworkFocusAudioPlayerBody(
     playbackState: PlaybackState,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSkipNext: () -> Unit,
     onSkipPrevious: () -> Unit,
@@ -383,17 +480,22 @@ private fun ArtworkFocusAudioPlayerBody(
 ) {
     val spacing = SoniqTheme.tokens.spacing
     Column(
-        modifier = modifier.padding(bottom = spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(spacing.lg),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
-        PlayerArtworkCard(
+        GlowingPlayerArtwork(
             artworkUri = playbackState.artworkUri,
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .aspectRatio(1f, matchHeightConstraintsFirst = true),
         )
-        TrackTitleBlock(playbackState = playbackState, centered = false)
+        PlayerTitleAndFavoriteRow(
+            title = playbackState.title,
+            subtitle = playbackState.subtitle,
+            isFavorite = isFavorite,
+            onToggleFavorite = onToggleFavorite,
+        )
         PlaybackScrubber(
             positionMs = playbackState.positionMs,
             durationMs = playbackState.durationMs,
@@ -413,6 +515,8 @@ private fun ArtworkFocusAudioPlayerBody(
 @Composable
 private fun CompactAudioPlayerBody(
     playbackState: PlaybackState,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSkipNext: () -> Unit,
     onSkipPrevious: () -> Unit,
@@ -425,31 +529,56 @@ private fun CompactAudioPlayerBody(
     val sizes = SoniqTheme.tokens.sizes
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PlayerArtworkCard(
+            GlowingPlayerArtwork(
                 artworkUri = playbackState.artworkUri,
                 modifier = Modifier.size(sizes.compactPlayerArtwork),
             )
-            TrackTitleBlock(
-                playbackState = playbackState,
-                centered = false,
+            Column(
                 modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            ) {
+                Text(
+                    text = playbackState.title ?: stringResource(R.string.player_now_playing),
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (!playbackState.subtitle.isNullOrBlank()) {
+                    Text(
+                        text = playbackState.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            SoniqGlassIconButton(
+                onClick = onToggleFavorite,
+                painter = painterResource(
+                    if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border,
+                ),
+                contentDescription = stringResource(
+                    if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
+                ),
+                highlighted = isFavorite,
             )
         }
-        Spacer(modifier = Modifier.height(spacing.xl))
+
         PlaybackScrubber(
             positionMs = playbackState.positionMs,
             durationMs = playbackState.durationMs,
             onSeekTo = onSeekTo,
         )
-        Spacer(modifier = Modifier.height(spacing.lg))
+
         TransportControlsRow(
             playbackState = playbackState,
             onTogglePlayPause = onTogglePlayPause,
@@ -462,77 +591,90 @@ private fun CompactAudioPlayerBody(
 }
 
 @Composable
-private fun PlayerArtworkCard(
-    artworkUri: String?,
-    modifier: Modifier = Modifier,
+private fun PlayerTitleAndFavoriteRow(
+    title: String?,
+    subtitle: String?,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
 ) {
-    val sizes = SoniqTheme.tokens.sizes
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraLarge)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+    val spacing = SoniqTheme.tokens.spacing
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_music_note),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(sizes.emptyStateIcon),
-        )
-        if (!artworkUri.isNullOrBlank()) {
-            AsyncImage(
-                model = artworkUri.toUri(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title ?: stringResource(R.string.player_now_playing),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
+        SoniqGlassIconButton(
+            onClick = onToggleFavorite,
+            painter = painterResource(
+                if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border,
+            ),
+            contentDescription = stringResource(
+                if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
+            ),
+            highlighted = isFavorite,
+        )
     }
 }
 
 @Composable
-private fun TrackTitleBlock(
-    playbackState: PlaybackState,
-    centered: Boolean,
+private fun GlowingPlayerArtwork(
+    artworkUri: String?,
     modifier: Modifier = Modifier,
 ) {
-    val spacing = SoniqTheme.tokens.spacing
-    val align = if (centered) Alignment.CenterHorizontally else Alignment.Start
-    val textAlign = if (centered) TextAlign.Center else TextAlign.Start
+    val glass = SoniqTheme.glass
+    val metrics = SoniqTheme.glassMetrics
+    val shape = RoundedCornerShape(metrics.artworkRadius)
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = align,
-        verticalArrangement = Arrangement.spacedBy(spacing.xs),
-    ) {
-        Text(
-            text = playbackState.title ?: stringResource(R.string.player_now_playing),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = textAlign,
-        )
-        if (!playbackState.subtitle.isNullOrBlank()) {
-            Text(
-                text = playbackState.subtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = textAlign,
-            )
-        }
-        if (playbackState.queueCount > 1) {
-            Text(
-                text = stringResource(
-                    R.string.player_queue_position,
-                    playbackState.currentQueueIndex + 1,
-                    playbackState.queueCount,
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(glass.glowPrimary, glass.glowSecondary.copy(alpha = 0.14f), Color.Transparent),
                 ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            .padding(6.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape)
+                .background(Brush.linearGradient(listOf(glass.surfaceElevated, glass.surfaceBottom)))
+                .border(metrics.borderWidth, glass.borderHighlight, shape),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_music_note),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(SoniqTheme.tokens.sizes.emptyStateIcon),
+            )
+            if (!artworkUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = artworkUri.toUri(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }
@@ -544,33 +686,43 @@ internal fun PlaybackScrubber(
     onSeekTo: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val safeDuration = durationMs.coerceAtLeast(1L)
+    val safeDuration = durationMs.coerceAtLeast(0L)
+    val clampedPosition = positionMs.coerceIn(0L, safeDuration.coerceAtLeast(1L))
     var isDragging by remember { mutableStateOf(false) }
-    var dragValue by remember { mutableFloatStateOf(0f) }
+    var dragFraction by remember { mutableFloatStateOf(0f) }
 
-    val sliderValue = if (isDragging) {
-        dragValue
+    val currentFraction = if (isDragging) {
+        dragFraction
+    } else if (safeDuration > 0L) {
+        clampedPosition.toFloat() / safeDuration.toFloat()
     } else {
-        (positionMs.toFloat() / safeDuration.toFloat()).coerceIn(0f, 1f)
+        0f
     }
     val displayedPositionMs = if (isDragging) {
-        (dragValue * safeDuration).toLong()
+        (dragFraction * safeDuration).toLong()
     } else {
-        positionMs
+        clampedPosition
     }
+    val glass = SoniqTheme.glass
 
     Column(modifier = modifier.fillMaxWidth()) {
         Slider(
-            value = sliderValue,
-            onValueChange = { fraction ->
+            value = currentFraction.coerceIn(0f, 1f),
+            onValueChange = { value ->
                 isDragging = true
-                dragValue = fraction
+                dragFraction = value
             },
             onValueChangeFinished = {
+                val target = (dragFraction * safeDuration).toLong()
                 isDragging = false
-                onSeekTo((dragValue * safeDuration).toLong())
+                onSeekTo(target)
             },
-            enabled = durationMs > 0L,
+            enabled = safeDuration > 0L,
+            colors = SliderDefaults.colors(
+                thumbColor = glass.scrubberStart,
+                activeTrackColor = glass.scrubberStart,
+                inactiveTrackColor = glass.borderSubtle,
+            ),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -582,7 +734,7 @@ internal fun PlaybackScrubber(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = MediaFormatters.formatDuration(durationMs),
+                text = MediaFormatters.formatDuration(safeDuration),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -600,6 +752,9 @@ private fun TransportControlsRow(
     onCycleRepeatMode: () -> Unit,
 ) {
     val sizes = SoniqTheme.tokens.sizes
+    val glass = SoniqTheme.glass
+    val inactiveTint = MaterialTheme.colorScheme.onSurfaceVariant
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -609,13 +764,10 @@ private fun TransportControlsRow(
             Icon(
                 painter = painterResource(R.drawable.ic_shuffle),
                 contentDescription = stringResource(R.string.player_action_shuffle),
-                tint = if (playbackState.shuffleEnabled) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                tint = if (playbackState.shuffleEnabled) glass.scrubberStart else inactiveTint,
             )
         }
+
         IconButton(onClick = onSkipPrevious) {
             Icon(
                 painter = painterResource(R.drawable.ic_skip_previous),
@@ -623,42 +775,41 @@ private fun TransportControlsRow(
                 modifier = Modifier.size(sizes.iconMedium),
             )
         }
-        FilledIconButton(
+
+        SoniqGlassIconButton(
             onClick = onTogglePlayPause,
-            shape = CircleShape,
-            modifier = Modifier.size(sizes.primaryTransportButton),
+            painter = painterResource(
+                if (playbackState.isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
+            ),
+            contentDescription = stringResource(
+                if (playbackState.isPlaying) R.string.player_action_pause else R.string.player_action_play,
+            ),
+            highlighted = true,
+            size = sizes.primaryTransportButton + 4.dp,
+            iconSize = sizes.iconMedium,
+        )
+
+        IconButton(
+            onClick = onSkipNext,
+            enabled = playbackState.hasNext,
         ) {
-            Icon(
-                painter = painterResource(
-                    if (playbackState.isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
-                ),
-                contentDescription = stringResource(
-                    if (playbackState.isPlaying) R.string.player_action_pause else R.string.player_action_play,
-                ),
-                modifier = Modifier.size(sizes.iconMedium),
-            )
-        }
-        IconButton(onClick = onSkipNext, enabled = playbackState.hasNext) {
             Icon(
                 painter = painterResource(R.drawable.ic_skip_next),
                 contentDescription = stringResource(R.string.player_action_next),
                 modifier = Modifier.size(sizes.iconMedium),
             )
         }
+
         IconButton(onClick = onCycleRepeatMode) {
-            val repeatIcon = if (playbackState.repeatMode == PlaybackRepeatMode.ONE) {
-                R.drawable.ic_repeat_one
-            } else {
-                R.drawable.ic_repeat
+            val (iconRes, tint) = when (playbackState.repeatMode) {
+                PlaybackRepeatMode.OFF -> R.drawable.ic_repeat to inactiveTint
+                PlaybackRepeatMode.ALL -> R.drawable.ic_repeat to glass.scrubberEnd
+                PlaybackRepeatMode.ONE -> R.drawable.ic_repeat_one to glass.scrubberEnd
             }
             Icon(
-                painter = painterResource(repeatIcon),
+                painter = painterResource(iconRes),
                 contentDescription = stringResource(R.string.player_action_repeat),
-                tint = if (playbackState.repeatMode != PlaybackRepeatMode.OFF) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                tint = tint,
             )
         }
     }

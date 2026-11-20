@@ -1,6 +1,9 @@
 package com.soniq.player.core.designsystem.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,9 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +30,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.heading
@@ -109,20 +113,26 @@ fun SoniqSectionHeader(
     )
 }
 
-/** Tonal surface card that groups related controls or information using design tokens. */
+/** Frosted-glass surface card that groups related controls or information using design tokens. */
 @Composable
 fun SoniqSurfaceCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
+    val glass = SoniqTheme.glass
+    val metrics = SoniqTheme.glassMetrics
+    val shape = RoundedCornerShape(metrics.cardRadius)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom)))
+            .border(
+                width = metrics.borderWidth,
+                brush = Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle)),
+                shape = shape,
+            ),
     ) {
         Column(
             modifier = Modifier

@@ -15,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import com.soniq.player.core.designsystem.theme.SoniqColorSchemes.toAmoled
+import com.soniq.player.core.designsystem.token.SoniqGlassColors
+import com.soniq.player.core.designsystem.token.SoniqGlassMetrics
+import com.soniq.player.core.designsystem.token.SoniqGlassPalettes
 import com.soniq.player.core.designsystem.token.SoniqRadii
 import com.soniq.player.core.designsystem.token.SoniqTokens
 import com.soniq.player.core.model.appearance.AppearanceConfig
@@ -22,6 +25,12 @@ import com.soniq.player.core.model.appearance.ThemeMode
 
 /** SONIQ tokens that Material 3 has no slot for (spacing, sizes, motion, alpha...). */
 val LocalSoniqTokens = staticCompositionLocalOf { SoniqTokens() }
+
+/** Liquid Glass colors & metrics provided alongside Material 3 theme. */
+val LocalSoniqGlass = staticCompositionLocalOf {
+    SoniqGlassPalettes.dark(accent = androidx.compose.ui.graphics.Color(AppearanceConfig.DEFAULT_ACCENT_ARGB), amoled = false)
+}
+val LocalSoniqGlassMetrics = staticCompositionLocalOf { SoniqGlassMetrics() }
 
 /** The active appearance, for components that render user customizations (e.g. backgrounds). */
 val LocalAppearance = staticCompositionLocalOf { AppearanceConfig() }
@@ -70,10 +79,20 @@ fun SoniqTheme(
         soniqTypography(appearance.fontFamily, appearance.textScale)
     }
     val shapes = remember(tokens.radii) { tokens.radii.toShapes() }
+    val glassColors = remember(darkTheme, appearance.useAmoledBlack, colorScheme.primary) {
+        if (darkTheme) {
+            SoniqGlassPalettes.dark(accent = colorScheme.primary, amoled = appearance.useAmoledBlack)
+        } else {
+            SoniqGlassPalettes.light(accent = colorScheme.primary)
+        }
+    }
+    val glassMetrics = remember { SoniqGlassMetrics() }
 
     CompositionLocalProvider(
         LocalSoniqTokens provides tokens,
         LocalAppearance provides appearance,
+        LocalSoniqGlass provides glassColors,
+        LocalSoniqGlassMetrics provides glassMetrics,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -95,6 +114,16 @@ object SoniqTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalAppearance.current
+
+    val glass: SoniqGlassColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalSoniqGlass.current
+
+    val glassMetrics: SoniqGlassMetrics
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalSoniqGlassMetrics.current
 }
 
 internal fun SoniqRadii.toShapes(): Shapes = Shapes(

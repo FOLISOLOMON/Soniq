@@ -45,7 +45,8 @@ fun NavDestination?.isFullScreenPlayer(): Boolean =
 fun SoniqNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: SoniqRoute = SoniqRoute.Music,
+    startDestination: SoniqRoute = SoniqRoute.Home,
+    homeContent: @Composable () -> Unit = {},
     musicContent: @Composable () -> Unit = { MusicRoute() },
     videoContent: @Composable () -> Unit = { VideoRoute() },
     settingsContent: @Composable () -> Unit = { SettingsRoute() },
@@ -57,6 +58,7 @@ fun SoniqNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
+        composable<SoniqRoute.Home> { homeContent() }
         composable<SoniqRoute.Music> { musicContent() }
         composable<SoniqRoute.Video> { videoContent() }
         composable<SoniqRoute.Settings> { settingsContent() }

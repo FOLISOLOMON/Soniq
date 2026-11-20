@@ -8,6 +8,9 @@ import kotlinx.serialization.Serializable
 /** Type-safe Navigation Compose routes for SONIQ's top-level graphs. */
 sealed interface SoniqRoute {
     @Serializable
+    data object Home : SoniqRoute
+
+    @Serializable
     data object Music : SoniqRoute
 
     @Serializable
@@ -24,14 +27,19 @@ sealed interface SoniqRoute {
 }
 
 /**
- * Top-level navigation destinations displayed in the adaptive navigation shell.
- * Music and Video are intentionally separate top-level experiences.
+ * Top-level navigation destinations displayed in SONIQ's Liquid Glass navigation bar.
+ * Music and Video remain logically separate experiences.
  */
 enum class TopLevelDestination(
     val route: SoniqRoute,
     @param:StringRes val labelRes: Int,
     @param:DrawableRes val iconRes: Int,
 ) {
+    HOME(
+        route = SoniqRoute.Home,
+        labelRes = R.string.destination_home,
+        iconRes = R.drawable.ic_home,
+    ),
     MUSIC(
         route = SoniqRoute.Music,
         labelRes = R.string.destination_music,

@@ -1,18 +1,23 @@
 package com.soniq.player.feature.music
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -22,8 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,11 +37,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -47,6 +53,10 @@ import coil3.compose.AsyncImage
 import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqEmptyState
+import com.soniq.player.core.designsystem.component.SoniqGlassCard
+import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
+import com.soniq.player.core.designsystem.component.SoniqGlassSearchBar
 import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.component.SoniqSurfaceCard
 import com.soniq.player.core.designsystem.component.SoniqTopAppBar
@@ -147,21 +157,27 @@ fun MusicScreen(
         modifier = modifier,
         topBar = {
             SoniqTopAppBar(
-                title = uiState.activeFilter?.label ?: stringResource(R.string.destination_music),
+                title = uiState.activeFilter?.label ?: stringResource(R.string.library_title),
                 navigationIcon = {
                     if (uiState.activeFilter != null) {
-                        IconButton(onClick = onClearFilter) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.library_action_clear_filter),
-                            )
-                        }
+                        SoniqGlassIconButton(
+                            onClick = onClearFilter,
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.library_action_clear_filter),
+                            size = 40.dp,
+                            iconSize = SoniqTheme.tokens.sizes.iconSmall,
+                            modifier = Modifier.padding(start = SoniqTheme.tokens.spacing.sm),
+                        )
                     }
                 },
                 actions = {
                     if (hasAccess) {
-                        IconButton(onClick = { onToggleSearch(!uiState.isSearchActive) }) {
-                            Icon(
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(SoniqTheme.tokens.spacing.xs),
+                            modifier = Modifier.padding(end = SoniqTheme.tokens.spacing.sm),
+                        ) {
+                            SoniqGlassIconButton(
+                                onClick = { onToggleSearch(!uiState.isSearchActive) },
                                 painter = painterResource(
                                     if (uiState.isSearchActive) R.drawable.ic_close else R.drawable.ic_search,
                                 ),
@@ -172,42 +188,47 @@ fun MusicScreen(
                                         R.string.library_action_search
                                     },
                                 ),
+                                highlighted = uiState.isSearchActive,
+                                size = 40.dp,
+                                iconSize = SoniqTheme.tokens.sizes.iconSmall,
                             )
-                        }
-                        Box {
-                            IconButton(onClick = { sortMenuExpanded = true }) {
-                                Icon(
+                            Box {
+                                SoniqGlassIconButton(
+                                    onClick = { sortMenuExpanded = true },
                                     painter = painterResource(R.drawable.ic_sort),
                                     contentDescription = stringResource(R.string.library_action_sort),
+                                    size = 40.dp,
+                                    iconSize = SoniqTheme.tokens.sizes.iconSmall,
                                 )
-                            }
-                            DropdownMenu(
-                                expanded = sortMenuExpanded,
-                                onDismissRequest = { sortMenuExpanded = false },
-                            ) {
-                                MusicSortOrder.entries.forEach { order ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = stringResource(order.labelRes())) },
-                                        onClick = {
-                                            sortMenuExpanded = false
-                                            onSelectSortOrder(order)
-                                        },
-                                        trailingIcon = {
-                                            if (order == uiState.sortOrder) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_check),
-                                                    contentDescription = stringResource(R.string.cd_selected),
-                                                )
-                                            }
-                                        },
-                                    )
+                                DropdownMenu(
+                                    expanded = sortMenuExpanded,
+                                    onDismissRequest = { sortMenuExpanded = false },
+                                ) {
+                                    MusicSortOrder.entries.forEach { order ->
+                                        DropdownMenuItem(
+                                            text = { Text(text = stringResource(order.labelRes())) },
+                                            onClick = {
+                                                sortMenuExpanded = false
+                                                onSelectSortOrder(order)
+                                            },
+                                            trailingIcon = {
+                                                if (order == uiState.sortOrder) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_check),
+                                                        contentDescription = stringResource(R.string.cd_selected),
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        IconButton(onClick = onRefresh) {
-                            Icon(
+                            SoniqGlassIconButton(
+                                onClick = onRefresh,
                                 painter = painterResource(R.drawable.ic_refresh),
                                 contentDescription = stringResource(R.string.library_action_refresh),
+                                size = 40.dp,
+                                iconSize = SoniqTheme.tokens.sizes.iconSmall,
                             )
                         }
                     }
@@ -298,33 +319,25 @@ private fun MusicLibraryContent(
         }
 
         if (uiState.isSearchActive) {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = onSearchQueryChanged,
-                placeholder = { Text(text = stringResource(R.string.music_search_hint)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.screenHorizontal, vertical = spacing.sm),
+            SoniqGlassSearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = onSearchQueryChanged,
+                placeholder = stringResource(R.string.music_search_hint),
+                modifier = Modifier.padding(horizontal = spacing.screenHorizontal, vertical = spacing.sm),
             )
         }
 
         if (uiState.activeFilter == null) {
-            PrimaryScrollableTabRow(
-                selectedTabIndex = uiState.selectedTab.ordinal,
-                edgePadding = spacing.screenHorizontal,
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = spacing.screenHorizontal, vertical = spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                MusicLibraryTab.entries.forEach { tab ->
-                    Tab(
+                items(items = MusicLibraryTab.entries, key = { it.name }) { tab ->
+                    SoniqGlassPillChip(
+                        label = stringResource(tab.labelRes()),
                         selected = tab == uiState.selectedTab,
                         onClick = { onSelectTab(tab) },
-                        text = {
-                            Text(
-                                text = stringResource(tab.labelRes()),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
                     )
                 }
             }
@@ -460,13 +473,54 @@ private fun PlaylistsSection(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            horizontal = spacing.screenHorizontal,
-            vertical = spacing.md,
+            start = spacing.screenHorizontal,
+            end = spacing.screenHorizontal,
+            top = spacing.md,
+            bottom = spacing.xxxl + spacing.xl,
         ),
         verticalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         item(key = "create_playlist") {
-            SoniqSurfaceCard {
+            SoniqGlassCard(elevated = true) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(SoniqTheme.glassMetrics.thumbnailRadius))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        SoniqTheme.glass.activePillStart,
+                                        SoniqTheme.glass.activePillEnd,
+                                    ),
+                                ),
+                            ),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_add),
+                            contentDescription = null,
+                            tint = androidx.compose.ui.graphics.Color.White,
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.library_create_playlist_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = stringResource(R.string.library_create_playlist_subtitle),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(spacing.xs))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing.sm),
@@ -499,44 +553,44 @@ private fun PlaylistsSection(
             }
         } else {
             items(items = playlists, key = { it.id }) { playlist ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                        .clickable { onPlaylistClick(playlist) }
-                        .padding(spacing.md),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
-                    verticalAlignment = Alignment.CenterVertically,
+                SoniqGlassCard(
+                    onClick = { onPlaylistClick(playlist) },
+                    contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.sm + 2.dp),
                 ) {
-                    ArtworkThumbnail(artworkUri = null, placeholderIconRes = R.drawable.ic_queue_music)
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = playlist.name,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = trackCountLabel(playlist.trackCount),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    TextButton(
-                        onClick = {
-                            renamingPlaylist = playlist
-                            renameDraft = playlist.name
-                        },
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = stringResource(R.string.playlist_rename))
-                    }
-                    IconButton(onClick = { onDeletePlaylist(playlist.id) }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_delete),
-                            contentDescription = stringResource(R.string.playlist_delete, playlist.name),
-                        )
+                        ArtworkThumbnail(artworkUri = null, placeholderIconRes = R.drawable.ic_queue_music)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = playlist.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = trackCountLabel(playlist.trackCount),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                renamingPlaylist = playlist
+                                renameDraft = playlist.name
+                            },
+                        ) {
+                            Text(text = stringResource(R.string.playlist_rename))
+                        }
+                        IconButton(onClick = { onDeletePlaylist(playlist.id) }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_delete),
+                                contentDescription = stringResource(R.string.playlist_delete, playlist.name),
+                            )
+                        }
                     }
                 }
             }
@@ -736,96 +790,96 @@ private fun AudioTrackRow(
     val spacing = SoniqTheme.tokens.spacing
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .clickable(onClick = onClick)
-            .padding(start = spacing.md, top = spacing.sm, bottom = spacing.sm, end = spacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+    SoniqGlassCard(
+        onClick = onClick,
+        contentPadding = PaddingValues(start = spacing.md, top = spacing.sm + 2.dp, bottom = spacing.sm + 2.dp, end = spacing.xs),
     ) {
-        ArtworkThumbnail(
-            artworkUri = track.albumArtUri,
-            placeholderIconRes = R.drawable.ic_music_note,
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = track.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ArtworkThumbnail(
+                artworkUri = track.albumArtUri,
+                placeholderIconRes = R.drawable.ic_music_note,
             )
-            Text(
-                text = "${track.artist} • ${track.album}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Text(
-            text = MediaFormatters.formatDuration(track.durationMs),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Box {
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_more_vert),
-                    contentDescription = stringResource(R.string.track_action_more),
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = track.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "${track.artist} • ${track.album}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(R.string.track_action_play_next)) },
-                    onClick = {
-                        menuExpanded = false
-                        onPlayNext()
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(R.string.track_action_add_queue)) },
-                    onClick = {
-                        menuExpanded = false
-                        onAddToQueue()
-                    },
-                )
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = stringResource(
-                                if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
-                            ),
-                        )
-                    },
-                    onClick = {
-                        menuExpanded = false
-                        onToggleFavorite()
-                    },
-                )
-                if (hasPlaylists) {
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(R.string.playlist_add_to)) },
-                        onClick = {
-                            menuExpanded = false
-                            onRequestAddToPlaylist()
-                        },
+            Text(
+                text = MediaFormatters.formatDuration(track.durationMs),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_more_vert),
+                        contentDescription = stringResource(R.string.track_action_more),
                     )
                 }
-                if (isPlaylistDetail) {
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
                     DropdownMenuItem(
-                        text = { Text(text = stringResource(R.string.playlist_remove_track)) },
+                        text = { Text(text = stringResource(R.string.track_action_play_next)) },
                         onClick = {
                             menuExpanded = false
-                            onRemoveFromPlaylist()
+                            onPlayNext()
                         },
                     )
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(R.string.track_action_add_queue)) },
+                        onClick = {
+                            menuExpanded = false
+                            onAddToQueue()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(
+                                    if (isFavorite) R.string.track_action_unfavorite else R.string.track_action_favorite,
+                                ),
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onToggleFavorite()
+                        },
+                    )
+                    if (hasPlaylists) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(R.string.playlist_add_to)) },
+                            onClick = {
+                                menuExpanded = false
+                                onRequestAddToPlaylist()
+                            },
+                        )
+                    }
+                    if (isPlaylistDetail) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(R.string.playlist_remove_track)) },
+                            onClick = {
+                                menuExpanded = false
+                                onRemoveFromPlaylist()
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -842,39 +896,39 @@ private fun MediaCollectionRow(
     onClick: () -> Unit,
 ) {
     val spacing = SoniqTheme.tokens.spacing
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .clickable(onClick = onClick)
-            .padding(spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+    SoniqGlassCard(
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.sm + 2.dp),
     ) {
-        ArtworkThumbnail(artworkUri = artworkUri, placeholderIconRes = placeholderIconRes)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (trailing != null) {
-            Text(
-                text = trailing,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ArtworkThumbnail(artworkUri = artworkUri, placeholderIconRes = placeholderIconRes)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (trailing != null) {
+                Text(
+                    text = trailing,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -885,12 +939,16 @@ private fun ArtworkThumbnail(
     placeholderIconRes: Int,
 ) {
     val sizes = SoniqTheme.tokens.sizes
+    val glass = SoniqTheme.glass
+    val metrics = SoniqTheme.glassMetrics
+    val shape = RoundedCornerShape(metrics.thumbnailRadius)
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(sizes.trackArtwork)
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(glass.surfaceElevated, glass.surfaceBottom)))
+            .border(metrics.borderWidth, glass.borderSubtle, shape),
     ) {
         Icon(
             painter = painterResource(placeholderIconRes),

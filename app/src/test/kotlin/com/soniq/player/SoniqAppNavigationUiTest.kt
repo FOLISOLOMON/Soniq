@@ -16,6 +16,8 @@ import com.soniq.player.core.model.appearance.ThemeMode
 import com.soniq.player.core.model.media.AudioTrack
 import com.soniq.player.core.model.media.VideoItem
 import com.soniq.player.core.permissions.MediaAccessState
+import com.soniq.player.feature.home.HomeScreen
+import com.soniq.player.feature.home.HomeUiState
 import com.soniq.player.feature.music.MusicScreen
 import com.soniq.player.feature.music.MusicUiState
 import com.soniq.player.feature.settings.SettingsScreen
@@ -74,6 +76,20 @@ class SoniqAppNavigationUiTest {
         composeRule.setContent {
             SoniqTheme {
                 SoniqApp(
+                    homeContent = {
+                        HomeScreen(
+                            uiState = HomeUiState(
+                                featuredTrack = sampleTrack,
+                                recentlyPlayed = listOf(sampleTrack),
+                                totalTracks = 1,
+                            ),
+                            onSearchQueryChanged = {},
+                            onPlayTracks = { _, _ -> },
+                            onOpenMusicTab = {},
+                            onOpenVideo = {},
+                            onOpenSettings = {},
+                        )
+                    },
                     musicContent = {
                         MusicScreen(
                             uiState = MusicUiState(
@@ -118,7 +134,11 @@ class SoniqAppNavigationUiTest {
             }
         }
 
-        // Start destination is Music with indexed track visible.
+        // Start destination is Home with featured/recent track visible.
+        composeRule.onNodeWithText("Solaris").assertIsDisplayed()
+
+        // Navigate to Music and verify indexed track is displayed.
+        composeRule.onNodeWithText("Music").performClick()
         composeRule.onNodeWithText("Solaris").assertIsDisplayed()
 
         // Navigate to Video: partial-access banner and indexed video are both displayed.

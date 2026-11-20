@@ -1,6 +1,7 @@
 package com.soniq.player.feature.video
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,16 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,11 +31,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -45,6 +46,11 @@ import coil3.compose.AsyncImage
 import com.soniq.player.R
 import com.soniq.player.core.common.MediaFormatters
 import com.soniq.player.core.designsystem.component.SoniqEmptyState
+import com.soniq.player.core.designsystem.component.SoniqGlassCard
+import com.soniq.player.core.designsystem.component.SoniqGlassIconButton
+import com.soniq.player.core.designsystem.component.SoniqGlassLinearProgress
+import com.soniq.player.core.designsystem.component.SoniqGlassPillChip
+import com.soniq.player.core.designsystem.component.SoniqGlassSearchBar
 import com.soniq.player.core.designsystem.component.SoniqScaffold
 import com.soniq.player.core.designsystem.component.SoniqSurfaceCard
 import com.soniq.player.core.designsystem.component.SoniqTopAppBar
@@ -115,18 +121,24 @@ fun VideoScreen(
                 title = uiState.activeFolder?.folderName ?: stringResource(R.string.destination_video),
                 navigationIcon = {
                     if (uiState.activeFolder != null) {
-                        IconButton(onClick = onClearFilter) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.library_action_clear_filter),
-                            )
-                        }
+                        SoniqGlassIconButton(
+                            onClick = onClearFilter,
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.library_action_clear_filter),
+                            size = 40.dp,
+                            iconSize = SoniqTheme.tokens.sizes.iconSmall,
+                            modifier = Modifier.padding(start = SoniqTheme.tokens.spacing.sm),
+                        )
                     }
                 },
                 actions = {
                     if (hasAccess) {
-                        IconButton(onClick = { onToggleSearch(!uiState.isSearchActive) }) {
-                            Icon(
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(SoniqTheme.tokens.spacing.xs),
+                            modifier = Modifier.padding(end = SoniqTheme.tokens.spacing.sm),
+                        ) {
+                            SoniqGlassIconButton(
+                                onClick = { onToggleSearch(!uiState.isSearchActive) },
                                 painter = painterResource(
                                     if (uiState.isSearchActive) R.drawable.ic_close else R.drawable.ic_search,
                                 ),
@@ -137,42 +149,47 @@ fun VideoScreen(
                                         R.string.library_action_search
                                     },
                                 ),
+                                highlighted = uiState.isSearchActive,
+                                size = 40.dp,
+                                iconSize = SoniqTheme.tokens.sizes.iconSmall,
                             )
-                        }
-                        Box {
-                            IconButton(onClick = { sortMenuExpanded = true }) {
-                                Icon(
+                            Box {
+                                SoniqGlassIconButton(
+                                    onClick = { sortMenuExpanded = true },
                                     painter = painterResource(R.drawable.ic_sort),
                                     contentDescription = stringResource(R.string.library_action_sort),
+                                    size = 40.dp,
+                                    iconSize = SoniqTheme.tokens.sizes.iconSmall,
                                 )
-                            }
-                            DropdownMenu(
-                                expanded = sortMenuExpanded,
-                                onDismissRequest = { sortMenuExpanded = false },
-                            ) {
-                                VideoSortOrder.entries.forEach { order ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = stringResource(order.labelRes())) },
-                                        onClick = {
-                                            sortMenuExpanded = false
-                                            onSelectSortOrder(order)
-                                        },
-                                        trailingIcon = {
-                                            if (order == uiState.sortOrder) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_check),
-                                                    contentDescription = stringResource(R.string.cd_selected),
-                                                )
-                                            }
-                                        },
-                                    )
+                                DropdownMenu(
+                                    expanded = sortMenuExpanded,
+                                    onDismissRequest = { sortMenuExpanded = false },
+                                ) {
+                                    VideoSortOrder.entries.forEach { order ->
+                                        DropdownMenuItem(
+                                            text = { Text(text = stringResource(order.labelRes())) },
+                                            onClick = {
+                                                sortMenuExpanded = false
+                                                onSelectSortOrder(order)
+                                            },
+                                            trailingIcon = {
+                                                if (order == uiState.sortOrder) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_check),
+                                                        contentDescription = stringResource(R.string.cd_selected),
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        IconButton(onClick = onRefresh) {
-                            Icon(
+                            SoniqGlassIconButton(
+                                onClick = onRefresh,
                                 painter = painterResource(R.drawable.ic_refresh),
                                 contentDescription = stringResource(R.string.library_action_refresh),
+                                size = 40.dp,
+                                iconSize = SoniqTheme.tokens.sizes.iconSmall,
                             )
                         }
                     }
@@ -262,30 +279,25 @@ private fun VideoLibraryContent(
         }
 
         if (uiState.isSearchActive) {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = onSearchQueryChanged,
-                placeholder = { Text(text = stringResource(R.string.video_search_hint)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.screenHorizontal, vertical = spacing.sm),
+            SoniqGlassSearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = onSearchQueryChanged,
+                placeholder = stringResource(R.string.video_search_hint),
+                modifier = Modifier.padding(horizontal = spacing.screenHorizontal, vertical = spacing.sm),
             )
         }
 
         if (uiState.activeFolder == null) {
-            PrimaryTabRow(selectedTabIndex = uiState.selectedTab.ordinal) {
-                VideoLibraryTab.entries.forEach { tab ->
-                    Tab(
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = spacing.screenHorizontal, vertical = spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                items(items = VideoLibraryTab.entries, key = { it.name }) { tab ->
+                    SoniqGlassPillChip(
+                        label = stringResource(tab.labelRes()),
                         selected = tab == uiState.selectedTab,
                         onClick = { onSelectTab(tab) },
-                        text = {
-                            Text(
-                                text = stringResource(tab.labelRes()),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
                     )
                 }
             }
@@ -386,51 +398,60 @@ private fun VideoFolderListSection(
         verticalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         items(items = folders, key = { it.folderPath }) { folder ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                    .clickable { onFolderClick(folder) }
-                    .padding(spacing.md),
-                horizontalArrangement = Arrangement.spacedBy(spacing.md),
-                verticalAlignment = Alignment.CenterVertically,
+            SoniqGlassCard(
+                onClick = { onFolderClick(folder) },
+                contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.sm + 2.dp),
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(sizes.trackArtwork)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_folder),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(sizes.icon),
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
+                    val thumbShape = RoundedCornerShape(SoniqTheme.glassMetrics.thumbnailRadius)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(sizes.trackArtwork)
+                            .clip(thumbShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        SoniqTheme.glass.surfaceElevated,
+                                        SoniqTheme.glass.surfaceBottom,
+                                    ),
+                                ),
+                            )
+                            .border(SoniqTheme.glassMetrics.borderWidth, SoniqTheme.glass.borderSubtle, thumbShape),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_folder),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(sizes.icon),
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = folder.folderName,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = folder.folderPath.ifEmpty { folder.folderName },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                     Text(
-                        text = folder.folderName,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = folder.folderPath.ifEmpty { folder.folderName },
-                        style = MaterialTheme.typography.bodySmall,
+                        text = videoCountLabel(folder.itemCount),
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Text(
-                    text = videoCountLabel(folder.itemCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
@@ -452,55 +473,63 @@ private fun VideoItemRow(
         add(video.folderName)
     }.joinToString(separator = " • ")
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .clickable(onClick = onClick)
-            .padding(spacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+    SoniqGlassCard(
+        onClick = onClick,
+        contentPadding = PaddingValues(spacing.sm + 2.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(width = sizes.videoThumbnailWidth, height = sizes.videoThumbnailHeight)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_movie),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(sizes.icon),
-            )
-            AsyncImage(
-                model = video.contentUri.toUri(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-            Text(
-                text = MediaFormatters.formatDuration(video.durationMs),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
+            val thumbShape = RoundedCornerShape(SoniqTheme.glassMetrics.thumbnailRadius)
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(spacing.xs)
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = alpha.mediaBadgeScrim))
-                    .padding(horizontal = spacing.xs, vertical = spacing.xxs),
-            )
-            if (resumeProgress != null && resumeProgress > 0f) {
-                LinearProgressIndicator(
-                    progress = { resumeProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
+                    .size(width = sizes.videoThumbnailWidth, height = sizes.videoThumbnailHeight)
+                    .clip(thumbShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                SoniqTheme.glass.surfaceElevated,
+                                SoniqTheme.glass.surfaceBottom,
+                            ),
+                        ),
+                    )
+                    .border(SoniqTheme.glassMetrics.borderWidth, SoniqTheme.glass.borderSubtle, thumbShape),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_movie),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(sizes.icon),
                 )
+                AsyncImage(
+                    model = video.contentUri.toUri(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Text(
+                    text = MediaFormatters.formatDuration(video.durationMs),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(spacing.xs)
+                        .clip(MaterialTheme.shapes.extraSmall)
+                        .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = alpha.mediaBadgeScrim))
+                        .padding(horizontal = spacing.xs, vertical = spacing.xxs),
+                )
+                if (resumeProgress != null && resumeProgress > 0f) {
+                    SoniqGlassLinearProgress(
+                        progress = resumeProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                    )
+                }
             }
-        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = video.title,
@@ -516,6 +545,7 @@ private fun VideoItemRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
         }
     }
 }

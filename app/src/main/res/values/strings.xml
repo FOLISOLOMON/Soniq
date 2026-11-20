@@ -228,4 +228,23 @@
     <string name="sleep_timer_minutes">%1$d min</string>
     <string name="sleep_timer_remaining">Pausing in %1$s</string>
     <string name="video_pip_action">Picture-in-Picture</string>
+
+    <!-- Redesign Phase 1: Home & Liquid Glass UI -->
+    <string name="destination_home">Home</string>
+    <string name="home_greeting_morning">Good Morning</string>
+    <string name="home_greeting_afternoon">Good Afternoon</string>
+    <string name="home_greeting_evening">Good Evening</string>
+    <string name="home_search_hint">Search songs, artists, albums…</string>
+    <string name="home_featured_label">Continue Listening</string>
+    <string name="home_featured_empty_title">Your Offline Library</string>
+    <string name="home_featured_empty_subtitle">Tap below to browse local music</string>
+    <string name="home_categories">Quick Access</string>
+    <string name="home_recently_played">Recently Played</string>
+    <string name="home_recently_played_empty">Play any track to build your local history</string>
+    <string name="home_see_all">See All</string>
+    <string name="library_title">My Library</string>
+    <string name="library_create_playlist_title">Create New Playlist</string>
+    <string name="library_create_playlist_subtitle">Build your own collection</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="player_queue_empty">Queue is empty</string>
 </resources>
