@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -101,7 +102,10 @@ fun HomeScreen(
         }
     }
 
+    val listState = rememberLazyListState()
+
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding(),
@@ -279,6 +283,7 @@ fun HomeScreen(
                         Text(
                             text = stringResource(R.string.home_categories),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.semantics { heading() },
                         )
                         TextButton(onClick = { onOpenMusicTab(MusicLibraryTab.SONGS) }) {
@@ -321,6 +326,7 @@ fun HomeScreen(
                     Text(
                         text = stringResource(R.string.home_recently_played),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.semantics { heading() },
                     )
                     if (uiState.recentlyPlayed.isNotEmpty()) {

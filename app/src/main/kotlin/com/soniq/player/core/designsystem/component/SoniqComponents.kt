@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -122,15 +123,21 @@ fun SoniqSurfaceCard(
     val spacing = SoniqTheme.tokens.spacing
     val glass = SoniqTheme.glass
     val metrics = SoniqTheme.glassMetrics
-    val shape = RoundedCornerShape(metrics.cardRadius)
+    val shape = remember(metrics.cardRadius) { RoundedCornerShape(metrics.cardRadius) }
+    val fillBrush = remember(glass.surfaceTop, glass.surfaceBottom) {
+        Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom))
+    }
+    val borderBrush = remember(glass.borderHighlight, glass.borderSubtle) {
+        Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle))
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(glass.surfaceTop, glass.surfaceBottom)))
+            .background(fillBrush)
             .border(
                 width = metrics.borderWidth,
-                brush = Brush.linearGradient(listOf(glass.borderHighlight, glass.borderSubtle)),
+                brush = borderBrush,
                 shape = shape,
             ),
     ) {

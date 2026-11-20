@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,19 +64,23 @@ fun SoniqGlassCard(
 ) {
     val glass = SoniqTheme.glass
     val metrics = SoniqTheme.glassMetrics
-    val shape = RoundedCornerShape(cornerRadius)
-    val fillBrush = Brush.verticalGradient(
-        colors = listOf(
-            if (elevated) glass.surfaceElevated else glass.surfaceTop,
-            glass.surfaceBottom,
-        ),
-    )
-    val borderBrush = Brush.linearGradient(
-        colors = listOf(
-            glass.borderHighlight,
-            glass.borderSubtle,
-        ),
-    )
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
+    val fillBrush = remember(glass.surfaceElevated, glass.surfaceTop, glass.surfaceBottom, elevated) {
+        Brush.verticalGradient(
+            colors = listOf(
+                if (elevated) glass.surfaceElevated else glass.surfaceTop,
+                glass.surfaceBottom,
+            ),
+        )
+    }
+    val borderBrush = remember(glass.borderHighlight, glass.borderSubtle) {
+        Brush.linearGradient(
+            colors = listOf(
+                glass.borderHighlight,
+                glass.borderSubtle,
+            ),
+        )
+    }
 
     val clickableModifier = if (onClick != null) {
         Modifier.clickable(onClick = onClick)
