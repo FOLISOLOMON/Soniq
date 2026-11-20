@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "versionCode": 3,
+  "versionName": "0.3.0",
+  "releaseNotes": "First OTA release of SONIQ: Liquid Glass UI, interactive Equalizer frequency graph, and hardened in-app updater verification and cache cleanup.",
+  "apkUrl": "https://rehezvrea6xtcs58.public.blob.vercel-storage.com/releases/soniq-v0.3.0.apk",
+  "apkSizeBytes": 3126238,
+  "sha256": "f2d1e7aa99dd1de768cc780c8dd19be8efce250ed248cb93c87a388ee4dec089",
+  "minSupportedVersionCode": 2,
+  "mandatory": false,
+  "publishedAt": "2026-11-20T22:28:30Z"
+}

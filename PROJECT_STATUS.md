@@ -1,8 +1,8 @@
 # SONIQ — Project Status
 
-**Last Updated**: 2026-11-20 (First OTA Release Preparation v0.3.0)  
-**Current Stage**: **SONIQ v0.3.0 (`versionCode = 3`) Signed OTA Release APK Verified** (`https://soniq-update-server.vercel.app/manifest.json` embedded) → Awaiting explicit user approval for Vercel Blob upload & `manifest.json` publication  
-**Latest Verified Code Commit**: `0.3.0` (`versionCode = 3`, `main`)
+**Last Updated**: 2026-11-20 (First Production OTA Publication v0.3.0)  
+**Current Stage**: **SONIQ v0.3.0 (`versionCode = 3`) Published to Vercel Blob & `soniq-update-server`** (`https://soniq-update-server.vercel.app/manifest.json`) → Ready for phone-side OTA verification from v0.2.0  
+**Latest Verified Code Commit**: `8845af2` (`main`)
 
 ---
 

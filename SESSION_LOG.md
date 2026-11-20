@@ -240,4 +240,5 @@
   - `0ce664d` — `docs(release): record first verified RSA-4096 signed release APK`
   - `ee2ce04` — `docs(signing): align keytool alias example with soniq-release`
   - `4260538` — `chore(release): prepare signed bootstrap build v0.2.0 with Vercel manifest URL`
-  - *(First OTA release prep v0.3.0 commit follows immediately.)*
+  - `8845af2` — `chore(release): prepare signed OTA release v0.3.0 and harden updater verifier/cleanup`
+  - *(First production OTA publication v0.3.0 commit follows immediately.)*
