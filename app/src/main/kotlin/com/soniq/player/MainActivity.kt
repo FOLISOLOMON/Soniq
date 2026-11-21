@@ -15,10 +15,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniq.player.core.designsystem.theme.SoniqTheme
@@ -54,6 +57,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+            val showLaunchEntrance by mainViewModel.shouldShowLaunchEntrance.collectAsStateWithLifecycle()
             val playbackState by playbackViewModel.playbackState.collectAsStateWithLifecycle()
             val audioEffectsState by playbackViewModel.audioEffectsState.collectAsStateWithLifecycle()
             val sleepTimerRemainingMs by playbackViewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
@@ -115,46 +119,55 @@ class MainActivity : ComponentActivity() {
                 appearance = appearance,
                 darkTheme = darkTheme,
             ) {
-                SoniqApp(
-                    playbackState = playbackState,
-                    audioEffectsState = audioEffectsState,
-                    sleepTimerRemainingMs = sleepTimerRemainingMs,
-                    isCurrentFavorite = isCurrentFavorite,
-                    isInPipMode = inPipMode.value,
-                    player = player,
-                    onPlayAudioQueue = playbackViewModel::playAudioQueue,
-                    onPlayNext = playbackViewModel::playNext,
-                    onAddToQueue = playbackViewModel::addToQueue,
-                    onPlayVideo = playbackViewModel::playVideo,
-                    onTogglePlayPause = playbackViewModel::togglePlayPause,
-                    onSkipNext = playbackViewModel::skipToNext,
-                    onSkipPrevious = playbackViewModel::skipToPrevious,
-                    onSeekTo = playbackViewModel::seekTo,
-                    onSeekBy = playbackViewModel::seekBy,
-                    onToggleShuffle = playbackViewModel::toggleShuffle,
-                    onCycleRepeatMode = playbackViewModel::cycleRepeatMode,
-                    onCycleSpeed = playbackViewModel::cyclePlaybackSpeed,
-                    onSetSpeed = playbackViewModel::setPlaybackSpeed,
-                    onPauseIfVideo = playbackViewModel::pauseIfVideo,
-                    onToggleCurrentFavorite = playbackViewModel::toggleCurrentFavorite,
-                    onSelectQueueItem = playbackViewModel::skipToQueueIndex,
-                    onMoveQueueItem = playbackViewModel::moveQueueItem,
-                    onRemoveQueueItem = playbackViewModel::removeQueueItem,
-                    onSetEqualizerEnabled = playbackViewModel::setEqualizerEnabled,
-                    onSelectEqualizerPreset = playbackViewModel::selectEqualizerPreset,
-                    onSetEqualizerBandLevel = playbackViewModel::setEqualizerBandLevel,
-                    onSetBassBoostEnabled = playbackViewModel::setBassBoostEnabled,
-                    onSetBassBoostStrength = playbackViewModel::setBassBoostStrength,
-                    onSetGaplessEnabled = playbackViewModel::setGaplessEnabled,
-                    onSetCrossfadeDurationSec = playbackViewModel::setCrossfadeDurationSec,
-                    onStartSleepTimer = playbackViewModel::startSleepTimer,
-                    onCancelSleepTimer = playbackViewModel::cancelSleepTimer,
-                    onEnterPip = ::enterPipModeIfSupported,
-                    onSelectAudioTrack = playbackViewModel::selectAudioTrack,
-                    onSelectSubtitleTrack = playbackViewModel::selectSubtitleTrack,
-                    onAddExternalSubtitle = playbackViewModel::addExternalSubtitle,
-                    onClearPlaybackError = playbackViewModel::clearPlaybackError,
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    SoniqApp(
+                        playbackState = playbackState,
+                        audioEffectsState = audioEffectsState,
+                        sleepTimerRemainingMs = sleepTimerRemainingMs,
+                        isCurrentFavorite = isCurrentFavorite,
+                        isInPipMode = inPipMode.value,
+                        player = player,
+                        onPlayAudioQueue = playbackViewModel::playAudioQueue,
+                        onPlayNext = playbackViewModel::playNext,
+                        onAddToQueue = playbackViewModel::addToQueue,
+                        onPlayVideo = playbackViewModel::playVideo,
+                        onTogglePlayPause = playbackViewModel::togglePlayPause,
+                        onSkipNext = playbackViewModel::skipToNext,
+                        onSkipPrevious = playbackViewModel::skipToPrevious,
+                        onSeekTo = playbackViewModel::seekTo,
+                        onSeekBy = playbackViewModel::seekBy,
+                        onToggleShuffle = playbackViewModel::toggleShuffle,
+                        onCycleRepeatMode = playbackViewModel::cycleRepeatMode,
+                        onCycleSpeed = playbackViewModel::cyclePlaybackSpeed,
+                        onSetSpeed = playbackViewModel::setPlaybackSpeed,
+                        onPauseIfVideo = playbackViewModel::pauseIfVideo,
+                        onToggleCurrentFavorite = playbackViewModel::toggleCurrentFavorite,
+                        onSelectQueueItem = playbackViewModel::skipToQueueIndex,
+                        onMoveQueueItem = playbackViewModel::moveQueueItem,
+                        onRemoveQueueItem = playbackViewModel::removeQueueItem,
+                        onSetEqualizerEnabled = playbackViewModel::setEqualizerEnabled,
+                        onSelectEqualizerPreset = playbackViewModel::selectEqualizerPreset,
+                        onSetEqualizerBandLevel = playbackViewModel::setEqualizerBandLevel,
+                        onSetBassBoostEnabled = playbackViewModel::setBassBoostEnabled,
+                        onSetBassBoostStrength = playbackViewModel::setBassBoostStrength,
+                        onSetGaplessEnabled = playbackViewModel::setGaplessEnabled,
+                        onSetCrossfadeDurationSec = playbackViewModel::setCrossfadeDurationSec,
+                        onStartSleepTimer = playbackViewModel::startSleepTimer,
+                        onCancelSleepTimer = playbackViewModel::cancelSleepTimer,
+                        onEnterPip = ::enterPipModeIfSupported,
+                        onSelectAudioTrack = playbackViewModel::selectAudioTrack,
+                        onSelectSubtitleTrack = playbackViewModel::selectSubtitleTrack,
+                        onAddExternalSubtitle = playbackViewModel::addExternalSubtitle,
+                        onClearPlaybackError = playbackViewModel::clearPlaybackError,
+                    )
+
+                    if (showLaunchEntrance && !inPipMode.value) {
+                        SoniqLaunchEntrance(
+                            isReady = uiState is MainUiState.Ready,
+                            onFinished = mainViewModel::onLaunchEntranceFinished,
+                        )
+                    }
+                }
             }
         }
     }

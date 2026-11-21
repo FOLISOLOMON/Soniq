@@ -252,3 +252,16 @@
   1. **Hardened `AndroidApkVerifier` (`ApkVerifier.kt`)**: Prioritized `signingInfo.apkContentsSigners` (non-null and non-empty), fell back to `signingInfo.signingCertificateHistory` only when needed for single-signer APKs, preserved `< API 28` `signatures` handling, and separated `"Unable to read the APK signing certificate."` / `"Unable to read the installed SONIQ signing certificate."` from `"APK signing certificate does not match the installed SONIQ signature."` (`BUG-016`).
   2. **Expanded `AndroidApkVerifierTest` (`AndroidApkVerifierTest.kt`)**: Added tests for v2-only signer extraction, empty signing history with populated `apkContentsSigners`, v3 rotated preference for `apkContentsSigners`, fallback to `signingCertificateHistory`, empty/unavailable signers, legacy `< API 28`, unreadable vs mismatch vs matching certificates, and existing size/checksum/corrupt checks.
   3. **Release Candidate `v0.3.1` (`versionCode = 4`)**: Bumped `gradle.properties` to `0.3.1` / `4`, built and verified signed `app-release.apk` (`3,126,238` bytes, SHA-256 `f560f40b3d9a7afb9107d9b6ef847a9352690e0f3b5b55155c83cefe15f285b6`, v2 RSA-4096 `e49a06da...`), passed `70 / 70` unit/Robolectric tests and `lintDebug` (0 errors), and left `update-server/manifest.json` unchanged awaiting explicit publication approval.
+  - `2c1a4df` — `fix(update): harden APK certificate verification and prepare v0.3.1 release candidate`
+  - `40748c9` — `chore(ota): publish production manifest.json for SONIQ v0.3.1`
+  - `bc4112f` — `docs(release): record v0.3.1 production OTA publication and live verification`
+
+---
+
+## Session 11 — Premium Branded Launch Entrance Animation (2026-11-21)
+
+- **Objectives Executed**:
+  1. **Unmodified Logo Assets (`drawable-nodpi`)**: Copied `logo/main logo.png` → `app/src/main/res/drawable-nodpi/soniq_logo_symbol.png` and `logo/word mark.png` → `app/src/main/res/drawable-nodpi/soniq_logo_wordmark.png` byte-for-byte with identical SHA-256 hashes.
+  2. **Process-Once Lifecycle (`LaunchEntranceCoordinator`, `MainViewModel`)**: Added `@Singleton LaunchEntranceCoordinator` so the entrance plays once per terminated-process cold start and never replays on Home/reopen, lock-screen resume, navigation, recomposition, or activity recreation/rotation.
+  3. **Branded Entrance UI (`SoniqLaunchEntrance.kt`, `MainActivity.kt`)**: Implemented full-screen dark atmospheric entrance (`SoniqGlassPalettes.dark`) with 360° symbol rotation + fade/settle (`950 ms`), staggered upward wordmark entrance (`500 ms` at `700 ms` offset), `240 ms` settled hold, and `300 ms` fade transition into `SoniqApp`.
+  4. **Verification**: `assembleDebug`, `assembleRelease`, `lintDebug` (0 errors), and `testDebugUnitTest` (**71 / 71 PASS** across **33** suites, including `SoniqLaunchEntranceTest` and updated `MainViewModelTest`) passed; emulator launch/resume check on `emulator-5554` (`app-debug.apk`) completed with 0 crashes; `Infinix_X6528` was disconnected during this run.

@@ -20,7 +20,10 @@ sealed interface MainUiState {
 @HiltViewModel
 class MainViewModel @Inject constructor(
     appearanceRepository: AppearanceRepository,
+    private val launchEntranceCoordinator: LaunchEntranceCoordinator,
 ) : ViewModel() {
+
+    val shouldShowLaunchEntrance: StateFlow<Boolean> = launchEntranceCoordinator.shouldShowEntrance
 
     /**
      * Started eagerly so [MainActivity]'s `SplashScreen.setKeepOnScreenCondition` observes
@@ -34,4 +37,8 @@ class MainViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = MainUiState.Loading,
         )
+
+    fun onLaunchEntranceFinished() {
+        launchEntranceCoordinator.markCompleted()
+    }
 }

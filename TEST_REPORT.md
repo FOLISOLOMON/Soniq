@@ -1,7 +1,7 @@
 # SONIQ — Test & Verification Report
 
-**Last Updated**: 2026-11-20 (v0.3.1 OTA Verification Hardening)  
-**Latest Verified Build Commit**: Pending `v0.3.1` commit (`main` — OTA Verification Hardening)
+**Last Updated**: 2026-11-21 (Premium Branded Launch Entrance Animation)  
+**Latest Verified Build Commit**: Pending launch-entrance commit (`main`)
 
 ---
 
@@ -19,7 +19,7 @@
 
 ## 2. Automated Verification — Unit & Robolectric Tests (`./gradlew testDebugUnitTest`)
 
-**Result**: **70 / 70 PASSED** across **32 test suites** (0 failures, 0 errors, 0 skipped) — including `DefaultUpdateRepositoryTest` (`2` tests), `UpdateViewModelTest` (`1` test), `AndroidApkVerifierTest` (`4` tests covering v2-only signer extraction, empty history with populated `apkContentsSigners`, fallback to `signingCertificateHistory`, empty/unavailable signers, legacy `< API 28`, unreadable vs mismatch vs matching certificates, and size/checksum/corrupt rejection), and `SoniqAppNavigationUiTest` (`5` tests).
+**Result**: **71 / 71 PASSED** across **33 test suites** (0 failures, 0 errors, 0 skipped) — including `MainViewModelTest` (`1` test verifying eager `Ready` + `LaunchEntranceCoordinator` process-once lifecycle), `SoniqLaunchEntranceTest` (`1` Robolectric Compose UI test verifying `isReady` gating, symbol + wordmark entrance, and single completion), `DefaultUpdateRepositoryTest` (`2` tests), `UpdateViewModelTest` (`1` test), `AndroidApkVerifierTest` (`4` tests), and `SoniqAppNavigationUiTest` (`5` tests).
 
 | Test Suite | Type | Tests | Result | Scope |
 |---|---|---:|---|---|
@@ -98,4 +98,5 @@
 | 2026-11-20 | Signed Release Verification (`9f82d18`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed APK, v2 RSA-4096) |
 | 2026-11-20 | Bootstrap Update Build v0.2.0 (`4260538`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed v0.2.0 APK, URL embedded) |
 | 2026-11-20 | First OTA Release Prep v0.3.0 (`8845af2`) | 67 / 67 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed v0.3.0 APK, updater hardened) |
-| 2026-11-20 | **OTA Verification Hardening v0.3.1 (`versionCode=4`)** | **70 / 70 PASS** | **0 errors** | **3 / 3 PASS at `aeb1db6`** | **PASS (2.98 MB signed v0.3.1 RC APK, `ApkVerifier` hardened)** |
+| 2026-11-20 | OTA Verification Hardening v0.3.1 (`2c1a4df`) | 70 / 70 PASS | 0 errors | 3 / 3 PASS at `aeb1db6` | PASS (2.98 MB signed v0.3.1 APK, published at `40748c9`) |
+| 2026-11-21 | **Branded Launch Entrance Animation** | **71 / 71 PASS** | **0 errors** | **Emulator launch/resume check PASS (`app-debug.apk`); `Infinix_X6528` disconnected** | **PASS (signed `app-release.apk` built locally, not published)** |

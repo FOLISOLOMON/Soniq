@@ -33,14 +33,23 @@ class MainViewModelTest {
             override suspend fun deletePreset(id: Long) = Unit
         }
 
-        val viewModel = MainViewModel(repository)
+        val coordinator = LaunchEntranceCoordinator()
+        val viewModel = MainViewModel(repository, coordinator)
 
         // Starts in Loading so splash screen stays up until persisted appearance emits.
         assertThat(viewModel.uiState.value).isEqualTo(MainUiState.Loading)
+        assertThat(viewModel.shouldShowLaunchEntrance.value).isTrue()
 
         // Even with zero collectors attached to uiState, eager sharing delivers Ready immediately.
         val expected = AppearanceConfig(themeMode = ThemeMode.DARK, useAmoledBlack = true)
         appearanceFlow.emit(expected)
         assertThat(viewModel.uiState.value).isEqualTo(MainUiState.Ready(expected))
+
+        // Completing the entrance persists across recreated ViewModels in the same app process.
+        viewModel.onLaunchEntranceFinished()
+        assertThat(viewModel.shouldShowLaunchEntrance.value).isFalse()
+
+        val recreatedViewModel = MainViewModel(repository, coordinator)
+        assertThat(recreatedViewModel.shouldShowLaunchEntrance.value).isFalse()
     }
 }
